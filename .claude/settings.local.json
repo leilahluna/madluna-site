@@ -6,7 +6,10 @@
       "Bash(gh auth:*)",
       "Bash(cmd //c \"gh auth status\")",
       "Bash(powershell -Command \"gh auth status\")",
-      "Bash(xxd \"//192.168.1.5/Merrick & Leilah/Business/Madluna Website/index.html\")"
+      "Bash(xxd \"//192.168.1.5/Merrick & Leilah/Business/Madluna Website/index.html\")",
+      "WebFetch(domain:developers.cloudflare.com)",
+      "WebSearch",
+      "Bash(curl -s -X GET \"https://api.cloudflare.com/client/v4/zones?name=madluna.ca\" -H \"Authorization: Bearer cfut_k0nH41TNeIyTLpJS4seEfDT18S03i61yj10WLW8T665a71d7\" -H \"Content-Type: application/json\")"
     ]
   }
 }
