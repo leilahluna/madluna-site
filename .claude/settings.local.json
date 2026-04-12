@@ -5,7 +5,8 @@
       "Bash(mkdir -p \"C:/Users/merri/Desktop/madluna-site/services/plex\")",
       "Bash(gh auth:*)",
       "Bash(cmd //c \"gh auth status\")",
-      "Bash(powershell -Command \"gh auth status\")"
+      "Bash(powershell -Command \"gh auth status\")",
+      "Bash(xxd \"//192.168.1.5/Merrick & Leilah/Business/Madluna Website/index.html\")"
     ]
   }
 }
