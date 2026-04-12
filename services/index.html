@@ -40,7 +40,7 @@
           <h3>Plex Media Server</h3>
           <span id="plex-status" class="status-badge checking" style="margin: 8px 0;">
             <span class="status-dot"></span>
-            Status coming soon
+            Checking...
           </span>
           <span style="color: var(--text-secondary); margin: 0 8px;">|</span>
           <span style="color: var(--text-secondary); font-size: 0.85rem;">Movies, Shows &amp; More</span>
@@ -79,7 +79,26 @@
       }
     }
 
+    async function checkPlexStatus() {
+      const statusEl = document.getElementById('plex-status');
+      try {
+        const res = await fetch('https://plex-status.merrick-puddephatt.workers.dev');
+        const data = await res.json();
+        if (data.online) {
+          statusEl.className = 'status-badge online';
+          statusEl.innerHTML = '<span class="status-dot"></span> Online';
+        } else {
+          statusEl.className = 'status-badge offline';
+          statusEl.innerHTML = '<span class="status-dot"></span> Offline';
+        }
+      } catch {
+        statusEl.className = 'status-badge offline';
+        statusEl.innerHTML = '<span class="status-dot"></span> Unable to check';
+      }
+    }
+
     checkMinecraftStatus();
+    checkPlexStatus();
   </script>
 </body>
 </html>
