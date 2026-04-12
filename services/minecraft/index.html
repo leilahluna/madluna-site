@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minecraft Server &mdash; Madluna</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <nav>
+    <div class="container">
+      <a href="/" class="logo">MADLUNA</a>
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/services/" class="active">Services</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="container">
+    <section class="section">
+      <h1 class="section-title">Minecraft Server</h1>
+
+      <div id="server-status" style="margin-bottom: 24px;">
+        <span class="status-badge checking">
+          <span class="status-dot"></span>
+          Checking...
+        </span>
+      </div>
+
+      <div class="server-info">
+        <div class="info-row">
+          <span class="label">Server Address</span>
+          <span class="value">
+            <code style="background: var(--bg-secondary); padding: 4px 10px; border-radius: 4px;">mc.madluna.ca</code>
+            <button class="copy-btn" onclick="copyIP()">Copy</button>
+          </span>
+        </div>
+        <div class="info-row">
+          <span class="label">Type</span>
+          <span class="value">Multiplayer</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Access</span>
+          <span class="value">Friends Only</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Version</span>
+          <span class="value" id="mc-version">&mdash;</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Players Online</span>
+          <span class="value" id="mc-players">&mdash;</span>
+        </div>
+        <div class="info-row">
+          <span class="label">MOTD</span>
+          <span class="value" id="mc-motd">&mdash;</span>
+        </div>
+      </div>
+
+      <div id="mc-player-list" style="display: none;">
+        <h3 style="font-size: 1rem; margin-bottom: 12px; color: var(--text-secondary);">Who's Online</h3>
+        <div id="mc-player-names" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+      </div>
+
+      <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 24px;">
+        Status refreshes automatically every 60 seconds.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 Madluna. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    function copyIP() {
+      navigator.clipboard.writeText('mc.madluna.ca');
+      const btn = document.querySelector('.copy-btn');
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 2000);
+    }
+
+    async function checkServerStatus() {
+      const statusEl = document.getElementById('server-status');
+      const versionEl = document.getElementById('mc-version');
+      const playersEl = document.getElementById('mc-players');
+      const motdEl = document.getElementById('mc-motd');
+      const playerListEl = document.getElementById('mc-player-list');
+      const playerNamesEl = document.getElementById('mc-player-names');
+
+      try {
+        const res = await fetch('https://api.mcsrvstat.us/3/mc.madluna.ca');
+        const data = await res.json();
+
+        if (data.online) {
+          statusEl.innerHTML = `
+            <span class="status-badge online">
+              <span class="status-dot"></span>
+              Online
+            </span>`;
+
+          versionEl.textContent = data.version || '—';
+          playersEl.textContent = `${data.players?.online || 0} / ${data.players?.max || '?'}`;
+
+          if (data.motd?.clean?.length) {
+            motdEl.textContent = data.motd.clean.join(' ');
+          }
+
+          if (data.players?.list?.length) {
+            playerListEl.style.display = 'block';
+            playerNamesEl.innerHTML = data.players.list.map(p =>
+              `<span style="background: var(--bg-secondary); border: 1px solid var(--border); padding: 4px 12px; border-radius: 6px; font-size: 0.9rem;">${p.name}</span>`
+            ).join('');
+          } else {
+            playerListEl.style.display = 'none';
+          }
+        } else {
+          statusEl.innerHTML = `
+            <span class="status-badge offline">
+              <span class="status-dot"></span>
+              Offline
+            </span>`;
+          versionEl.textContent = '—';
+          playersEl.textContent = '—';
+          motdEl.textContent = '—';
+          playerListEl.style.display = 'none';
+        }
+      } catch (err) {
+        statusEl.innerHTML = `
+          <span class="status-badge offline">
+            <span class="status-dot"></span>
+            Unable to check
+          </span>`;
+      }
+    }
+
+    checkServerStatus();
+    setInterval(checkServerStatus, 60000);
+  </script>
+</body>
+</html>
