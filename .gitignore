@@ -1,0 +1,5 @@
+plex-status/
+node_modules/
+.env
+*.log
+ddns-update.sh

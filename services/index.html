@@ -59,18 +59,15 @@
   <script>
     async function checkMinecraftStatus() {
       const statusEl = document.getElementById('mc-status');
-      const detailEl = document.getElementById('mc-detail');
       try {
         const res = await fetch('https://api.mcsrvstat.us/3/mc.madluna.ca');
         const data = await res.json();
         if (data.online) {
           statusEl.className = 'status-badge online';
           statusEl.innerHTML = '<span class="status-dot"></span> Online';
-          detailEl.textContent = `${data.players?.online || 0}/${data.players?.max || '?'} players`;
         } else {
           statusEl.className = 'status-badge offline';
           statusEl.innerHTML = '<span class="status-dot"></span> Offline';
-          detailEl.textContent = '';
         }
       } catch {
         statusEl.className = 'status-badge offline';
