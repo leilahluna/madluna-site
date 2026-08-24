@@ -12,7 +12,7 @@
       <a href="/" class="logo">MADLUNA</a>
       <ul class="nav-links">
         <li><a href="/">Home</a></li>
-        <li><a href="/services/" class="active">Services</a></li>
+        <li><a href="/homeservices/" class="active">Home Services</a></li>
       </ul>
     </div>
   </nav>
@@ -68,7 +68,7 @@
     async function checkPlexStatus() {
       const statusEl = document.getElementById('plex-status');
       try {
-        const res = await fetch('https://plex-status.merrick-puddephatt.workers.dev');
+        const res = await fetch('https://plex-status.merrick-puddephatt.workers.dev?service=plex');
         const data = await res.json();
         if (data.online) {
           statusEl.className = 'status-badge online';
