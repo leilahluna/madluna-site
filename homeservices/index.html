@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home Services &mdash; Madluna</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <nav>
+    <div class="container">
+      <a href="/" class="logo">MADLUNA</a>
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/services/">Services</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="container">
+    <section class="section">
+      <h1 class="section-title">Home Services</h1>
+
+      <a href="/homeservices/seerr/" class="card-link">
+        <div class="card">
+          <h3>Overseerr</h3>
+          <span id="seerr-status" class="status-badge checking" style="margin: 8px 0;">
+            <span class="status-dot"></span>
+            Checking...
+          </span>
+          <span style="color: var(--text-secondary); margin: 0 8px;">|</span>
+          <span style="color: var(--text-secondary); font-size: 0.85rem;">Request movies and shows for the Plex library.</span>
+          <span class="arrow">&rarr;</span>
+        </div>
+      </a>
+
+      <a href="/services/plex/" class="card-link">
+        <div class="card">
+          <h3>Plex Media Server</h3>
+          <span id="plex-status" class="status-badge checking" style="margin: 8px 0;">
+            <span class="status-dot"></span>
+            Checking...
+          </span>
+          <span style="color: var(--text-secondary); margin: 0 8px;">|</span>
+          <span style="color: var(--text-secondary); font-size: 0.85rem;">Shared media library. Movies, shows &amp; more.</span>
+          <span class="arrow">&rarr;</span>
+        </div>
+      </a>
+
+      <a href="/services/minecraft/" class="card-link">
+        <div class="card">
+          <h3>Minecraft Server</h3>
+          <span id="mc-status" class="status-badge checking" style="margin: 8px 0;">
+            <span class="status-dot"></span>
+            Checking...
+          </span>
+          <span style="color: var(--text-secondary); margin: 0 8px;">|</span>
+          <span style="color: var(--text-secondary); font-size: 0.85rem;">Multiplayer server for friends.</span>
+          <span class="arrow">&rarr;</span>
+        </div>
+      </a>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 Madluna. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    const WORKER_URL = 'https://plex-status.merrick-puddephatt.workers.dev';
+
+    async function checkStatus(service, elementId) {
+      const el = document.getElementById(elementId);
+      try {
+        const url = service === 'mc'
+          ? 'https://api.mcsrvstat.us/3/mc.madluna.ca'
+          : `${WORKER_URL}?service=${service}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        const online = service === 'mc' ? data.online : data.online;
+        if (online) {
+          el.className = 'status-badge online';
+          el.innerHTML = '<span class="status-dot"></span> Online';
+        } else {
+          el.className = 'status-badge offline';
+          el.innerHTML = '<span class="status-dot"></span> Offline';
+        }
+      } catch {
+        el.className = 'status-badge offline';
+        el.innerHTML = '<span class="status-dot"></span> Unable to check';
+      }
+    }
+
+    checkStatus('seerr', 'seerr-status');
+    checkStatus('plex', 'plex-status');
+    checkStatus('mc', 'mc-status');
+  </script>
+</body>
+</html>
