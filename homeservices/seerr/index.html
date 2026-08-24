@@ -24,7 +24,7 @@
       <div style="margin-bottom: 24px;">
         <span class="status-badge checking" id="seerr-status">
           <span class="status-dot"></span>
-          Checking...
+          checking...
         </span>
       </div>
 
@@ -77,14 +77,14 @@
         const data = await res.json();
         if (data.online) {
           statusEl.className = 'status-badge online';
-          statusEl.innerHTML = '<span class="status-dot"></span> Online';
+          statusEl.innerHTML = '<span class="status-dot"></span> online';
         } else {
           statusEl.className = 'status-badge offline';
-          statusEl.innerHTML = '<span class="status-dot"></span> Offline';
+          statusEl.innerHTML = '<span class="status-dot"></span> offline';
         }
       } catch {
         statusEl.className = 'status-badge offline';
-        statusEl.innerHTML = '<span class="status-dot"></span> Unable to check';
+        statusEl.innerHTML = '<span class="status-dot"></span> unable to check';
       }
     }
 

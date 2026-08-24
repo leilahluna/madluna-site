@@ -232,8 +232,8 @@ nav .nav-links a.active {
   background: currentColor;
 }
 
-.status-badge.online .status-dot {
-  animation: pulse 2s infinite;
+.status-badge.checking {
+  animation: pulse 1.4s ease-in-out infinite;
 }
 
 @keyframes pulse {

@@ -26,7 +26,7 @@
           <h3>Overseerr</h3>
           <span id="seerr-status" class="status-badge checking" style="margin: 8px 0;">
             <span class="status-dot"></span>
-            Checking...
+            checking...
           </span>
           <span style="color: var(--text-secondary); margin: 0 8px;">|</span>
           <span style="color: var(--text-secondary); font-size: 0.85rem;">request movies and shows for the Plex library.</span>
@@ -39,7 +39,7 @@
           <h3>Plex Media Server</h3>
           <span id="plex-status" class="status-badge checking" style="margin: 8px 0;">
             <span class="status-dot"></span>
-            Checking...
+            checking...
           </span>
           <span style="color: var(--text-secondary); margin: 0 8px;">|</span>
           <span style="color: var(--text-secondary); font-size: 0.85rem;">shared media library. movies, shows &amp; more.</span>
@@ -52,7 +52,7 @@
           <h3>Minecraft Server</h3>
           <span id="mc-status" class="status-badge checking" style="margin: 8px 0;">
             <span class="status-dot"></span>
-            Checking...
+            checking...
           </span>
           <span style="color: var(--text-secondary); margin: 0 8px;">|</span>
           <span style="color: var(--text-secondary); font-size: 0.85rem;">multiplayer server for friends.</span>
@@ -82,14 +82,14 @@
         const online = service === 'mc' ? data.online : data.online;
         if (online) {
           el.className = 'status-badge online';
-          el.innerHTML = '<span class="status-dot"></span> Online';
+          el.innerHTML = '<span class="status-dot"></span> online';
         } else {
           el.className = 'status-badge offline';
-          el.innerHTML = '<span class="status-dot"></span> Offline';
+          el.innerHTML = '<span class="status-dot"></span> offline';
         }
       } catch {
         el.className = 'status-badge offline';
-        el.innerHTML = '<span class="status-dot"></span> Unable to check';
+        el.innerHTML = '<span class="status-dot"></span> unable to check';
       }
     }
 
