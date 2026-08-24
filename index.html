@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Madluna</title>
   <link rel="stylesheet" href="/styles.css">
+  <style>
+    .glow-button {
+      transition: box-shadow 0.3s ease;
+    }
+    .glow-button:hover {
+      box-shadow: 0 0 24px rgba(128, 123, 77, 0.6) !important;
+    }
+  </style>
 </head>
 <body>
   <nav>
@@ -38,7 +46,7 @@
       <p style="color: var(--text-secondary); font-size: 1.05rem; max-width: 480px; margin: 0 auto 32px;">
         more coming soon. in the meantime, check out what we're running.
       </p>
-      <a href="/homeservices/" style="padding: 12px 28px; background: var(--accent); color: var(--bg-primary); border-radius: 8px; font-weight: 600; font-size: 0.95rem; display: inline-block; box-shadow: 0 0 24px rgba(93, 90, 55, 0.5); transition: box-shadow 0.2s;">view home services &rarr;</a>
+      <a href="/homeservices/" class="glow-button" style="padding: 12px 28px; background: var(--accent); color: var(--bg-primary); border-radius: 8px; font-weight: 600; font-size: 0.95rem; display: inline-block;">view home services &rarr;</a>
     </section>
   </main>
 
