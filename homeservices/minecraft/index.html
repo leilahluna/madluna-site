@@ -132,7 +132,7 @@
         statusEl.innerHTML = `
           <span class="status-badge offline">
             <span class="status-dot"></span>
-            Unable to check
+            unable to check
           </span>`;
       }
     }
@@ -140,5 +140,7 @@
     checkServerStatus();
     setInterval(checkServerStatus, 60000);
   </script>
+
+  <script src="/devtools.js"></script>
 </body>
 </html>

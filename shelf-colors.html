@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shelf Color Reference - Madluna</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+    :root {
+      --bg-primary: #231d1a;
+      --bg-card: #2d2725;
+      --text-primary: #ebe7e0;
+      --text-secondary: #a39c8f;
+      --accent: #4d806f;
+      --border: #3a3530;
+      --radius: 12px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    h1, h2, h3, .section-title, .color-name, nav .logo {
+      font-family: 'Playfair Display', serif;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    a:hover {
+      opacity: 0.8;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    nav {
+      padding: 20px 0;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-primary);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    nav .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    nav .logo {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    nav .nav-links {
+      display: flex;
+      gap: 28px;
+      list-style: none;
+    }
+
+    nav .nav-links a {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    nav .nav-links a:hover,
+    nav .nav-links a.active {
+      color: var(--text-primary);
+    }
+
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin: 40px 0;
+    }
+
+    .color-swatch {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: var(--bg-card);
+    }
+
+    .color-sample {
+      width: 100%;
+      height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .color-info {
+      padding: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .color-name {
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+    }
+
+    .color-usage {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      margin-bottom: 12px;
+    }
+
+    .color-hex {
+      font-family: 'Courier New', monospace;
+      font-weight: 500;
+      font-size: 0.9rem;
+      background: var(--bg-primary);
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      display: inline-block;
+      color: var(--accent);
+      user-select: all;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .color-hex:hover {
+      border-color: var(--accent);
+      background: rgba(77, 128, 111, 0.08);
+    }
+
+    .section-title {
+      font-size: 1.8rem;
+      margin-top: 60px;
+      margin-bottom: 32px;
+      color: var(--text-primary);
+    }
+
+    .section {
+      padding: 60px 0;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 16px;
+    }
+
+    .text-sample {
+      padding: 24px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+    }
+
+    footer {
+      text-align: center;
+      padding: 40px 0;
+      border-top: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+
+    .subsection-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 40px 0 24px 0;
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.8rem;
+      }
+
+      nav .nav-links {
+        gap: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="container">
+      <a href="/" class="logo">shelf colors</a>
+      <ul class="nav-links">
+        <li><a href="/">madluna</a></li>
+        <li><a href="/shelf-colors.html" class="active">shelf palette</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="container">
+    <section class="section">
+      <h1>Shelf Color Reference</h1>
+      <p style="color: var(--text-secondary); font-size: 1.05rem;">Complete color palette for shelf.madluna.ca</p>
+    </section>
+
+    <!-- Background Colors -->
+    <div class="section">
+      <h2 class="section-title">Background Colors</h2>
+      <div class="color-grid">
+        <div class="color-swatch">
+          <div class="color-sample" style="background: #231d1a;"></div>
+          <div class="color-info">
+            <div class="color-name">Primary Background</div>
+            <div class="color-usage">Main page background</div>
+            <div class="color-hex">#231d1a</div>
+          </div>
+        </div>
+
+        <div class="color-swatch">
+          <div class="color-sample" style="background: #2d2725;"></div>
+          <div class="color-info">
+            <div class="color-name">Card Background</div>
+            <div class="color-usage">Cards and containers</div>
+            <div class="color-hex">#2d2725</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Text Colors -->
+    <div class="section">
+      <h2 class="section-title">Text Colors</h2>
+
+      <h3 class="subsection-title">Primary Text</h3>
+      <div class="text-sample">
+        <p style="font-size: 1.1rem; margin: 0;">This is primary text color (#ebe7e0)</p>
+        <p style="font-size: 0.95rem; margin: 8px 0 0 0;">Used for headings, main content, and primary information</p>
+      </div>
+      <div class="color-hex">#ebe7e0</div>
+
+      <h3 class="subsection-title">Secondary Text</h3>
+      <div class="text-sample" style="color: #a39c8f;">
+        <p style="font-size: 1.1rem; margin: 0;">This is secondary text color (#a39c8f)</p>
+        <p style="font-size: 0.95rem; margin: 8px 0 0 0;">Used for subtitles, descriptions, icons, and muted information</p>
+      </div>
+      <div class="color-hex">#a39c8f</div>
+    </div>
+
+    <!-- Accent Color -->
+    <div class="section">
+      <h2 class="section-title">Accent Color</h2>
+      <div class="color-grid">
+        <div class="color-swatch">
+          <div class="color-sample" style="background: #4d806f;"></div>
+          <div class="color-info">
+            <div class="color-name">Accent / Primary Action</div>
+            <div class="color-usage">Buttons, links, highlights, logo</div>
+            <div class="color-hex">#4d806f</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- UI Elements -->
+    <div class="section">
+      <h2 class="section-title">UI Elements</h2>
+
+      <h3 class="subsection-title">Border Color</h3>
+      <div class="text-sample" style="border: 2px solid #3a3530;">
+        <p style="color: var(--text-primary); margin: 0;">Borders and dividers use this color for subtle separation</p>
+      </div>
+      <div class="color-hex">#3a3530</div>
+    </div>
+
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 madluna &mdash; <a href="/shelf-colors.html">shelf palette reference</a></p>
+    </div>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.color-hex').forEach(el => {
+        el.addEventListener('click', async () => {
+          const hex = el.textContent;
+          try {
+            await navigator.clipboard.writeText(hex);
+            const originalText = el.textContent;
+            el.textContent = 'Copied!';
+            setTimeout(() => {
+              el.textContent = originalText;
+            }, 1500);
+          } catch (err) {
+            console.error('Failed to copy:', err);
+          }
+        });
+      });
+    });
+  </script>
+
+  <script src="/devtools.js"></script>
+</body>
+</html>
