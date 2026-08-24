@@ -3,6 +3,14 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;700&display=swap');
 
+@font-face {
+  font-family: 'ACME Gothic';
+  src: url('/media/fonts/Acme Gothic.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --bg-primary: #0a0e1a;
   --bg-secondary: #111827;
