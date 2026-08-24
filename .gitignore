@@ -1,4 +1,5 @@
 plex-status/
+seerr-banner/
 node_modules/
 .env
 *.log
