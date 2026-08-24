@@ -6,6 +6,15 @@
   <title>Color Reference - Madluna</title>
   <link rel="stylesheet" href="/styles.css">
   <style>
+    :root {
+      --bg-card: #2C2326 !important;
+      --border: #3B2B2F !important;
+    }
+    
+    nav {
+      background-color: #21181A !important;
+    }
+    
     .color-reference {
       max-width: 100%;
     }
@@ -13,27 +22,85 @@
     .color-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 24px;
-      margin: 40px 0;
+      gap: 12px;
+      margin: 12px 0;
     }
 
     .color-swatch {
-      border: 1px solid var(--border);
+      border: 2px solid var(--border);
       border-radius: var(--radius);
       overflow: hidden;
-      background: var(--bg-card);
+      background: #2C2326 !important;
     }
 
     .color-sample {
       width: 100%;
-      height: 140px;
+      height: 80px;
       display: flex;
       align-items: center;
       justify-content: center;
     }
+    
+    .example-section {
+      background: #2C2326;
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-top: 20px;
+    }
+    
+    .example-row {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .example-row:last-child {
+      margin-bottom: 0;
+    }
+    
+    .example-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    
+    .example-label {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+    }
+    
+    .btn-example {
+      padding: 8px 16px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    
+    .btn-primary {
+      background: #807b4d;
+      color: #241a1d;
+    }
+    
+    .btn-primary:hover {
+      background: #98946F;
+    }
+    
+    .accent-glow {
+      width: 40px;
+      height: 40px;
+      border-radius: 4px;
+      background: #5D5A37;
+      box-shadow: 0 0 16px rgba(93, 90, 55, 0.3);
+    }
 
     .color-info {
-      padding: 20px;
+      padding: 8px 12px;
       border-top: 1px solid var(--border);
     }
 
@@ -70,12 +137,35 @@
       background: rgba(201, 168, 76, 0.08);
     }
 
+    .section {
+      margin-bottom: 16px;
+    }
+    
     .section-title {
       font-family: 'Playfair Display', serif;
-      font-size: 1.8rem;
-      margin-top: 60px;
-      margin-bottom: 32px;
+      font-size: 1.4rem;
+      margin-top: 0px;
+      margin-bottom: 8px;
       color: var(--text-primary);
+    }
+    
+    body {
+      background-color: #241a1d !important;
+    }
+    
+    .intro-section {
+      margin-bottom: 0px;
+      padding-bottom: 12px;
+    }
+    
+    .intro-section h1 {
+      margin: 0 0 2px 0 !important;
+      font-size: 1.8rem !important;
+    }
+    
+    .intro-section p {
+      margin: 0 !important;
+      font-size: 0.9rem !important;
     }
 
     .subsection-title {
@@ -129,8 +219,8 @@
   </nav>
 
   <main class="container color-reference">
-    <section class="section">
-      <h1 style="font-family: 'Playfair Display', serif; font-size: 2.5rem; margin-bottom: 16px;">Color Reference</h1>
+    <section class="section intro-section">
+      <h1 style="font-family: 'Playfair Display', serif; font-size: 2.5rem;">Color Reference</h1>
       <p style="color: var(--text-secondary); font-size: 1.05rem;">Complete color palette used throughout the Madluna site.</p>
     </section>
 
@@ -139,29 +229,62 @@
       <h2 class="section-title">Background Colors</h2>
       <div class="color-grid">
         <div class="color-swatch">
-          <div class="color-sample" style="background: #1f1115;"></div>
+          <div class="color-sample" style="background: #241a1d;"></div>
           <div class="color-info">
             <div class="color-name">Primary Background</div>
             <div class="color-usage">Main page background</div>
-            <div class="color-hex">#1f1115</div>
+            <div class="color-hex">#241a1d</div>
           </div>
         </div>
 
         <div class="color-swatch">
-          <div class="color-sample" style="background: #14090C;"></div>
+          <div class="color-sample" style="background: #21181A;"></div>
           <div class="color-info">
             <div class="color-name">Secondary Background</div>
-            <div class="color-usage">Darker background areas</div>
-            <div class="color-hex">#14090C</div>
+            <div class="color-usage">Header, darker sections</div>
+            <div class="color-hex">#21181A</div>
           </div>
         </div>
 
         <div class="color-swatch">
-          <div class="color-sample" style="background: #0A0405;"></div>
+          <div class="color-sample" style="background: #2C2326;"></div>
           <div class="color-info">
             <div class="color-name">Card Background</div>
             <div class="color-usage">Card and container backgrounds</div>
-            <div class="color-hex">#0A0405</div>
+            <div class="color-hex">#2C2326</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Accent Colors -->
+    <div class="section">
+      <h2 class="section-title">Accent Colors</h2>
+      <div class="color-grid">
+        <div class="color-swatch">
+          <div class="color-sample" style="background: #807b4d;"></div>
+          <div class="color-info">
+            <div class="color-name">Accent Primary</div>
+            <div class="color-usage">Links, buttons, highlights</div>
+            <div class="color-hex">#807b4d</div>
+          </div>
+        </div>
+
+        <div class="color-swatch">
+          <div class="color-sample" style="background: #98946F;"></div>
+          <div class="color-info">
+            <div class="color-name">Accent Hover</div>
+            <div class="color-usage">Hover state for accent elements</div>
+            <div class="color-hex">#98946F</div>
+          </div>
+        </div>
+
+        <div class="color-swatch">
+          <div class="color-sample" style="background: #5D5A37;"></div>
+          <div class="color-info">
+            <div class="color-name">Accent Glow</div>
+            <div class="color-usage">Shadow and glow effects</div>
+            <div class="color-hex">#5D5A37</div>
           </div>
         </div>
       </div>
@@ -184,39 +307,6 @@
         <p style="font-size: 0.95rem; margin: 8px 0 0 0;">Used for subtitles, descriptions, and muted information</p>
       </div>
       <div class="color-hex">#CDC9CA</div>
-    </div>
-
-    <!-- Accent Colors -->
-    <div class="section">
-      <h2 class="section-title">Accent Colors</h2>
-      <div class="color-grid">
-        <div class="color-swatch">
-          <div class="color-sample" style="background: #C9C16E;"></div>
-          <div class="color-info">
-            <div class="color-name">Accent Primary</div>
-            <div class="color-usage">Links, buttons, highlights</div>
-            <div class="color-hex">#C9C16E</div>
-          </div>
-        </div>
-
-        <div class="color-swatch">
-          <div class="color-sample" style="background: #CEC77E;"></div>
-          <div class="color-info">
-            <div class="color-name">Accent Hover</div>
-            <div class="color-usage">Hover state for accent elements</div>
-            <div class="color-hex">#CEC77E</div>
-          </div>
-        </div>
-
-        <div class="color-swatch">
-          <div class="color-sample" style="background: #494728;"></div>
-          <div class="color-info">
-            <div class="color-name">Accent Glow</div>
-            <div class="color-usage">Shadow and glow effects</div>
-            <div class="color-hex">#494728</div>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- Status Colors -->
@@ -248,10 +338,10 @@
       <h2 class="section-title">UI Elements</h2>
 
       <h3 class="subsection-title">Border Color</h3>
-      <div class="text-sample" style="border: 2px solid #1e293b;">
+      <div class="text-sample" style="border: 2px solid #3B2B2F;">
         <p style="color: var(--text-primary); margin: 0;">Borders use this color for subtle separation</p>
       </div>
-      <div class="color-hex">#1e293b</div>
+      <div class="color-hex">#3B2B2F</div>
 
       <h3 class="subsection-title">Logo Color</h3>
       <div class="text-sample" style="background: var(--bg-card);">
@@ -311,6 +401,42 @@
           <p>This shows how cards look with the color scheme. Hover to see the accent color highlight.</p>
           <span class="arrow">→</span>
         </a>
+      </div>
+    </div>
+
+    <!-- Examples -->
+    <div class="section">
+      <h2 class="section-title">Color Usage Examples</h2>
+      
+      <div class="example-section">
+        <div class="example-row">
+          <div class="example-item">
+            <span class="example-label">Primary Button</span>
+            <button class="btn-example btn-primary">Click me</button>
+          </div>
+          
+          <div class="example-item">
+            <span class="example-label">Hover State</span>
+            <button class="btn-example btn-primary" style="background: #98946F;">Hovering</button>
+          </div>
+          
+          <div class="example-item">
+            <span class="example-label">Accent Glow</span>
+            <div class="accent-glow"></div>
+          </div>
+        </div>
+        
+        <div class="example-row">
+          <div class="example-item">
+            <span class="example-label">Text on Background</span>
+            <p style="margin: 0; color: #E6E4E4;">Primary text (#E6E4E4)</p>
+          </div>
+          
+          <div class="example-item">
+            <span class="example-label">Secondary Text</span>
+            <p style="margin: 0; color: #CDC9CA;">Secondary text (#CDC9CA)</p>
+          </div>
+        </div>
       </div>
     </div>
 

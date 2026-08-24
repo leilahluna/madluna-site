@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Comparison Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f5f5f5;
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --border-color: #e0e0e0;
+            --slider-track: #e0e0e0;
+            --slider-thumb: #1a1a1a;
+        }
+
+        html.dark-mode {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #0f0f0f;
+            --text-primary: #ffffff;
+            --text-secondary: #aaaaaa;
+            --border-color: #333333;
+            --slider-track: #333333;
+            --slider-thumb: #ffffff;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg-secondary);
+            padding: 2rem 1rem;
+            color: var(--text-primary);
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 800px;
+            margin: 0 auto 2rem;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .theme-toggle {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-primary);
+            transition: background 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-secondary);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--bg-primary);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .color-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .swatch {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .info {
+            font-size: 13px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .info-label {
+            color: var(--text-secondary);
+        }
+
+        .info-value {
+            color: var(--text-primary);
+            font-weight: 500;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .info-value:hover {
+            background: var(--slider-track);
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .control-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .control-section-title {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .slider-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .slider-value {
+            color: var(--text-secondary);
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            min-width: 45px;
+            text-align: right;
+        }
+
+        .lock-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lock-btn:hover {
+            background: var(--slider-track);
+        }
+
+        .lock-btn.locked {
+            background: var(--slider-track);
+            border-color: var(--text-primary);
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--slider-track);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        input[type="range"]:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--slider-thumb);
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--slider-thumb);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--border-color);
+        }
+
+        @media (max-width: 600px) {
+            .comparison {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .container {
+                padding: 1.5rem;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Color Comparison</h1>
+        <button class="theme-toggle" id="themeToggle">🌙 Dark Mode</button>
+    </div>
+
+    <div class="container">
+        <div class="comparison">
+            <div class="color-section">
+                <div class="swatch" id="swatch1"></div>
+                <div class="info">
+                    <div class="info-row">
+                        <span class="info-label">Hex</span>
+                        <span class="info-value" id="hex1">#231d1a</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">RGB</span>
+                        <span class="info-value" id="rgb1">rgb(35, 29, 26)</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">HSV</span>
+                        <span class="info-value" id="hsv1">H: 15° S: 26% V: 14%</span>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="control-section">
+                    <div class="control-section-title">Left Color Controls</div>
+                    
+                    <div class="control-group">
+                        <div class="slider-label">
+                            <span>Hue</span>
+                            <div class="slider-controls">
+                                <span class="slider-value" id="hue1Val">15°</span>
+                                <button class="lock-btn" id="hue1Lock" data-color="1" data-slider="hue">🔓</button>
+                            </div>
+                        </div>
+                        <input type="range" id="hue1Slider" min="0" max="360" value="15" step="1">
+                    </div>
+
+                    <div class="control-group">
+                        <div class="slider-label">
+                            <span>Saturation</span>
+                            <div class="slider-controls">
+                                <span class="slider-value" id="sat1Val">26%</span>
+                                <button class="lock-btn" id="sat1Lock" data-color="1" data-slider="sat">🔓</button>
+                            </div>
+                        </div>
+                        <input type="range" id="sat1Slider" min="0" max="100" value="26" step="1">
+                    </div>
+
+                    <div class="control-group">
+                        <div class="slider-label">
+                            <span>Value</span>
+                            <div class="slider-controls">
+                                <span class="slider-value" id="val1Val">14%</span>
+                                <button class="lock-btn" id="val1Lock" data-color="1" data-slider="val">🔓</button>
+                            </div>
+                        </div>
+                        <input type="range" id="val1Slider" min="0" max="100" value="14" step="1">
+                    </div>
+                </div>
+            </div>
+
+            <div class="color-section">
+                <div class="swatch" id="swatch2"></div>
+                <div class="info">
+                    <div class="info-row">
+                        <span class="info-label">Hex</span>
+                        <span class="info-value" id="hex2">#d4537e</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">RGB</span>
+                        <span class="info-value" id="rgb2">rgb(212, 83, 126)</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">HSV</span>
+                        <span class="info-value" id="hsv2">H: 342° S: 61% V: 83%</span>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="control-section">
+                    <div class="control-section-title">Right Color Controls</div>
+                    
+                    <div class="control-group">
+                        <div class="slider-label">
+                            <span>Hue</span>
+                            <div class="slider-controls">
+                                <span class="slider-value" id="hue2Val">342°</span>
+                                <button class="lock-btn" id="hue2Lock" data-color="2" data-slider="hue">🔓</button>
+                            </div>
+                        </div>
+                        <input type="range" id="hue2Slider" min="0" max="360" value="342" step="1">
+                    </div>
+
+                    <div class="control-group">
+                        <div class="slider-label">
+                            <span>Saturation</span>
+                            <div class="slider-controls">
+                                <span class="slider-value" id="sat2Val">61%</span>
+                                <button class="lock-btn" id="sat2Lock" data-color="2" data-slider="sat">🔓</button>
+                            </div>
+                        </div>
+                        <input type="range" id="sat2Slider" min="0" max="100" value="61" step="1">
+                    </div>
+
+                    <div class="control-group">
+                        <div class="slider-label">
+                            <span>Value</span>
+                            <div class="slider-controls">
+                                <span class="slider-value" id="val2Val">83%</span>
+                                <button class="lock-btn" id="val2Lock" data-color="2" data-slider="val">🔓</button>
+                            </div>
+                        </div>
+                        <input type="range" id="val2Slider" min="0" max="100" value="83" step="1">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const locks = {
+            '1': { hue: false, sat: false, val: false },
+            '2': { hue: false, sat: false, val: false }
+        };
+
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
+
+        function rgbToHex(r, g, b) {
+            return "#" + [r, g, b].map(x => {
+                const hex = Math.round(x).toString(16);
+                return hex.length === 1 ? "0" + hex : hex;
+            }).join('');
+        }
+
+        function rgbToHsv(r, g, b) {
+            r /= 255;
+            g /= 255;
+            b /= 255;
+            const max = Math.max(r, g, b);
+            const min = Math.min(r, g, b);
+            const d = max - min;
+            let h = 0;
+            if (d !== 0) {
+                if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+                else if (max === g) h = ((b - r) / d + 2) / 6;
+                else h = ((r - g) / d + 4) / 6;
+            }
+            const s = max === 0 ? 0 : d / max;
+            const v = max;
+            return {
+                h: Math.round(h * 360),
+                s: Math.round(s * 100),
+                v: Math.round(v * 100)
+            };
+        }
+
+        function hsvToRgb(h, s, v) {
+            h = h / 360;
+            s = s / 100;
+            v = v / 100;
+            const c = v * s;
+            const x = c * (1 - Math.abs((h * 6) % 2 - 1));
+            const m = v - c;
+            let r, g, b;
+            if (h < 1 / 6) [r, g, b] = [c, x, 0];
+            else if (h < 2 / 6) [r, g, b] = [x, c, 0];
+            else if (h < 3 / 6) [r, g, b] = [0, c, x];
+            else if (h < 4 / 6) [r, g, b] = [0, x, c];
+            else if (h < 5 / 6) [r, g, b] = [x, 0, c];
+            else [r, g, b] = [c, 0, x];
+            return {
+                r: Math.round((r + m) * 255),
+                g: Math.round((g + m) * 255),
+                b: Math.round((b + m) * 255)
+            };
+        }
+
+        function updateColor(colorNum, h, s, v) {
+            const rgb = hsvToRgb(h, s, v);
+            const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+            
+            try {
+                document.getElementById(`swatch${colorNum}`).style.backgroundColor = hex;
+            } catch(e) {}
+            
+            try {
+                const hexEl = document.getElementById(`hex${colorNum}`);
+                if (hexEl && hexEl.tagName !== 'INPUT') {
+                    hexEl.textContent = hex;
+                }
+            } catch(e) {}
+            
+            try {
+                document.getElementById(`rgb${colorNum}`).textContent = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+            } catch(e) {}
+            
+            try {
+                document.getElementById(`hsv${colorNum}`).textContent = `H: ${h}° S: ${s}% V: ${v}%`;
+            } catch(e) {}
+            
+            try {
+                const hueVal = document.getElementById(`hue${colorNum}Val`);
+                if (hueVal && hueVal.tagName === 'SPAN') hueVal.textContent = `${h}°`;
+            } catch(e) {}
+            
+            try {
+                const satVal = document.getElementById(`sat${colorNum}Val`);
+                if (satVal && satVal.tagName === 'SPAN') satVal.textContent = `${s}%`;
+            } catch(e) {}
+            
+            try {
+                const valVal = document.getElementById(`val${colorNum}Val`);
+                if (valVal && valVal.tagName === 'SPAN') valVal.textContent = `${v}%`;
+            } catch(e) {}
+        }
+
+        function toggleLock(colorNum, slider) {
+            locks[colorNum][slider] = !locks[colorNum][slider];
+            const btn = document.getElementById(`${slider}${colorNum}Lock`);
+            const sliderEl = document.getElementById(`${slider}${colorNum}Slider`);
+            
+            if (locks[colorNum][slider]) {
+                btn.textContent = '🔒';
+                btn.classList.add('locked');
+                sliderEl.disabled = true;
+            } else {
+                btn.textContent = '🔓';
+                btn.classList.remove('locked');
+                sliderEl.disabled = false;
+            }
+        }
+
+        function makeHexEditable(colorNum) {
+            const hexEl = document.getElementById(`hex${colorNum}`);
+            hexEl.addEventListener('click', () => {
+                const currentValue = hexEl.textContent;
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = currentValue;
+                input.style.fontFamily = 'Monaco, Menlo, Ubuntu Mono, monospace';
+                input.style.fontSize = '13px';
+                
+                hexEl.replaceWith(input);
+                input.focus();
+
+                function saveHex() {
+                    let hex = input.value.trim();
+                    if (!hex.startsWith('#')) hex = '#' + hex;
+                    
+                    if (hex.length === 7 && /^#[0-9a-f]{6}$/i.test(hex)) {
+                        const rgb = hexToRgb(hex);
+                        if (rgb) {
+                            const hsv = rgbToHsv(rgb.r, rgb.g, rgb.b);
+                            const hueSlider = document.getElementById(`hue${colorNum}Slider`);
+                            const satSlider = document.getElementById(`sat${colorNum}Slider`);
+                            const valSlider = document.getElementById(`val${colorNum}Slider`);
+                            
+                            hueSlider.value = hsv.h;
+                            satSlider.value = hsv.s;
+                            valSlider.value = hsv.v;
+                            
+                            updateColor(colorNum, hsv.h, hsv.s, hsv.v);
+                        }
+                    }
+                    
+                    const newHexEl = document.createElement('span');
+                    newHexEl.className = 'info-value';
+                    newHexEl.id = `hex${colorNum}`;
+                    newHexEl.textContent = hex;
+                    input.replaceWith(newHexEl);
+                    makeHexEditable(colorNum);
+                }
+
+                input.addEventListener('blur', saveHex);
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') saveHex();
+                });
+            });
+        }
+
+        // Theme toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const htmlEl = document.documentElement;
+        
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') {
+            htmlEl.classList.add('dark-mode');
+            themeToggle.textContent = '☀️ Light Mode';
+        }
+
+        themeToggle.addEventListener('click', () => {
+            htmlEl.classList.toggle('dark-mode');
+            const isDark = htmlEl.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            themeToggle.textContent = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
+        });
+
+        // Initialize colors
+        document.getElementById('swatch1').style.backgroundColor = '#231d1a';
+        document.getElementById('swatch2').style.backgroundColor = '#d4537e';
+
+        // Color 1 sliders
+        document.getElementById('hue1Slider').addEventListener('input', function() {
+            if (locks['1']['hue']) return;
+            const h = parseInt(this.value);
+            const s = parseInt(document.getElementById('sat1Slider').value);
+            const v = parseInt(document.getElementById('val1Slider').value);
+            updateColor('1', h, s, v);
+        });
+
+        document.getElementById('sat1Slider').addEventListener('input', function() {
+            if (locks['1']['sat']) return;
+            const h = parseInt(document.getElementById('hue1Slider').value);
+            const s = parseInt(this.value);
+            const v = parseInt(document.getElementById('val1Slider').value);
+            updateColor('1', h, s, v);
+        });
+
+        document.getElementById('val1Slider').addEventListener('input', function() {
+            if (locks['1']['val']) return;
+            const h = parseInt(document.getElementById('hue1Slider').value);
+            const s = parseInt(document.getElementById('sat1Slider').value);
+            const v = parseInt(this.value);
+            updateColor('1', h, s, v);
+        });
+
+        // Color 2 sliders
+        document.getElementById('hue2Slider').addEventListener('input', function() {
+            if (locks['2']['hue']) return;
+            const h = parseInt(this.value);
+            const s = parseInt(document.getElementById('sat2Slider').value);
+            const v = parseInt(document.getElementById('val2Slider').value);
+            updateColor('2', h, s, v);
+        });
+
+        document.getElementById('sat2Slider').addEventListener('input', function() {
+            if (locks['2']['sat']) return;
+            const h = parseInt(document.getElementById('hue2Slider').value);
+            const s = parseInt(this.value);
+            const v = parseInt(document.getElementById('val2Slider').value);
+            updateColor('2', h, s, v);
+        });
+
+        document.getElementById('val2Slider').addEventListener('input', function() {
+            if (locks['2']['val']) return;
+            const h = parseInt(document.getElementById('hue2Slider').value);
+            const s = parseInt(document.getElementById('sat2Slider').value);
+            const v = parseInt(this.value);
+            updateColor('2', h, s, v);
+        });
+
+        // Lock buttons
+        document.getElementById('hue1Lock').addEventListener('click', () => toggleLock('1', 'hue'));
+        document.getElementById('sat1Lock').addEventListener('click', () => toggleLock('1', 'sat'));
+        document.getElementById('val1Lock').addEventListener('click', () => toggleLock('1', 'val'));
+        document.getElementById('hue2Lock').addEventListener('click', () => toggleLock('2', 'hue'));
+        document.getElementById('sat2Lock').addEventListener('click', () => toggleLock('2', 'sat'));
+        document.getElementById('val2Lock').addEventListener('click', () => toggleLock('2', 'val'));
+
+        function makeValueEditable(colorNum, sliderType) {
+            const valueEl = document.getElementById(`${sliderType}${colorNum}Val`);
+            valueEl.addEventListener('click', () => {
+                const currentValue = valueEl.textContent;
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = currentValue;
+                input.style.fontFamily = 'Monaco, Menlo, Ubuntu Mono, monospace';
+                input.style.fontSize = '13px';
+                
+                valueEl.replaceWith(input);
+                input.focus();
+
+                function saveValue() {
+                    let val = input.value.trim().replace(/[°%]/g, '');
+                    val = parseInt(val);
+                    
+                    if (!isNaN(val)) {
+                        if (sliderType === 'hue') val = Math.max(0, Math.min(360, val));
+                        else val = Math.max(0, Math.min(100, val));
+                        
+                        document.getElementById(`${sliderType}${colorNum}Slider`).value = val;
+                        const h = parseInt(document.getElementById(`hue${colorNum}Slider`).value);
+                        const s = parseInt(document.getElementById(`sat${colorNum}Slider`).value);
+                        const v = parseInt(document.getElementById(`val${colorNum}Slider`).value);
+                        updateColor(colorNum, h, s, v);
+                    }
+                    
+                    const newValEl = document.createElement('span');
+                    newValEl.className = 'slider-value';
+                    newValEl.id = `${sliderType}${colorNum}Val`;
+                    newValEl.textContent = sliderType === 'hue' ? `${val}°` : `${val}%`;
+                    input.replaceWith(newValEl);
+                    makeValueEditable(colorNum, sliderType);
+                }
+
+                input.addEventListener('blur', saveValue);
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') saveValue();
+                });
+            });
+        }
+
+        // Make hex codes and HSV values clickable
+        makeHexEditable('1');
+        makeHexEditable('2');
+        
+        ['hue', 'sat', 'val'].forEach(slider => {
+            makeValueEditable('1', slider);
+            makeValueEditable('2', slider);
+        });
+    </script>
+</body>
+</html>

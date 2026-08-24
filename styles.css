@@ -12,15 +12,15 @@
 }
 
 :root {
-  --bg-primary: #1f1115;
-  --bg-secondary: #14090C;
-  --bg-card: #0A0405;
+  --bg-primary: #241a1d;
+  --bg-secondary: #21181A;
+  --bg-card: #2C2326;
   --text-primary: #E6E4E4;
   --text-secondary: #CDC9CA;
-  --accent: #C9C16E;
-  --accent-glow: #494728;
-  --accent-hover: #CEC77E;
-  --border: #1e293b;
+  --accent: #807b4d;
+  --accent-glow: #5D5A37;
+  --accent-hover: #98946F;
+  --border: #3B2B2F;
   --green: #56DE1B;
   --red: #de211b;
   --logo-color: #9ca3af;
@@ -67,7 +67,7 @@ a:hover {
 
 nav {
   padding: 20px 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 2px solid var(--border);
   background: var(--bg-primary);
   position: sticky;
   top: 0;
@@ -156,7 +156,7 @@ nav .nav-links a.active {
 
 .card {
   background: var(--bg-card);
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   border-radius: var(--radius);
   padding: 28px;
   margin-bottom: 16px;
@@ -210,19 +210,19 @@ nav .nav-links a.active {
 .status-badge.online {
   background: rgba(34, 197, 94, 0.1);
   color: var(--green);
-  border: 1px solid rgba(34, 197, 94, 0.2);
+  border: 2px solid rgba(34, 197, 94, 0.2);
 }
 
 .status-badge.offline {
   background: rgba(239, 68, 68, 0.1);
   color: var(--red);
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  border: 2px solid rgba(239, 68, 68, 0.2);
 }
 
 .status-badge.checking {
   background: rgba(201, 168, 76, 0.1);
   color: var(--accent);
-  border: 1px solid rgba(201, 168, 76, 0.2);
+  border: 2px solid rgba(201, 168, 76, 0.2);
 }
 
 .status-dot {
@@ -245,7 +245,7 @@ nav .nav-links a.active {
 
 .server-info {
   background: var(--bg-card);
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   border-radius: var(--radius);
   padding: 32px;
   margin: 24px 0;
@@ -256,7 +256,7 @@ nav .nav-links a.active {
   justify-content: space-between;
   align-items: center;
   padding: 12px 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 2px solid var(--border);
 }
 
 .server-info .info-row:last-child {
@@ -275,7 +275,7 @@ nav .nav-links a.active {
 
 .copy-btn {
   background: var(--bg-secondary);
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   color: var(--text-primary);
   padding: 6px 14px;
   border-radius: 6px;
@@ -294,7 +294,7 @@ nav .nav-links a.active {
 footer {
   text-align: center;
   padding: 40px 0;
-  border-top: 1px solid var(--border);
+  border-top: 2px solid var(--border);
   color: var(--text-secondary);
   font-size: 0.85rem;
 }
