@@ -73,11 +73,12 @@ nav .container {
 }
 
 nav .logo {
-  font-family: 'Playfair Display', serif;
+  font-family: 'ACME Gothic', 'Inter', sans-serif;
   font-size: 1.4rem;
-  font-weight: 700;
+  font-weight: 300;
   color: var(--accent);
-  letter-spacing: 1px;
+  letter-spacing: 2px;
+  text-transform: lowercase;
 }
 
 nav .nav-links {
@@ -106,13 +107,11 @@ nav .nav-links a.active {
   position: relative;
 }
 
-.hero .moon {
-  width: 80px;
-  height: 80px;
-  background: radial-gradient(circle at 35% 35%, #f5e6b8, #c9a84c, #8a6914);
-  border-radius: 50%;
+.hero-logo {
+  width: 195px;
+  height: auto;
   margin: 0 auto 32px;
-  box-shadow: 0 0 60px rgba(201, 168, 76, 0.3), 0 0 120px rgba(201, 168, 76, 0.1);
+  display: block;
 }
 
 .hero h1 {
