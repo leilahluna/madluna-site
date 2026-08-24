@@ -12,17 +12,17 @@
 }
 
 :root {
-  --bg-primary: #282130;
-  --bg-secondary: #111827;
-  --bg-card: #1a2035;
-  --text-primary: #e8e8ed;
-  --text-secondary: #9ca3af;
-  --accent: #c9a84c;
-  --accent-glow: rgba(201, 168, 76, 0.15);
-  --accent-hover: #dab85c;
+  --bg-primary: #1f1115;
+  --bg-secondary: #14090C;
+  --bg-card: #0A0405;
+  --text-primary: #E6E4E4;
+  --text-secondary: #CDC9CA;
+  --accent: #C9C16E;
+  --accent-glow: #494728;
+  --accent-hover: #CEC77E;
   --border: #1e293b;
-  --green: #22c55e;
-  --red: #ef4444;
+  --green: #56DE1B;
+  --red: #de211b;
   --logo-color: #9ca3af;
   --radius: 12px;
 }
