@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Dev Links</title>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .link-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 32px;
+      max-width: 480px;
+    }
+
+    .link-list a {
+      display: block;
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      color: var(--text-primary);
+      font-weight: 500;
+      transition: border-color 0.2s;
+    }
+
+    .link-list a:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .link-list a span {
+      display: block;
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      font-weight: 400;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <main class="container" style="padding-top: 60px;">
+    <h1 style="font-family: 'Playfair Display', serif; font-size: 2rem;">dev links</h1>
+    <p style="color: var(--text-secondary);">internal reference pages, not linked anywhere on the site.</p>
+
+    <div class="link-list">
+      <a href="/stylereferences.html">
+        style references
+        <span>colors, borders, buttons &amp; status badges</span>
+      </a>
+      <a href="/shelf-colors.html">
+        shelf palette
+        <span>original shelf color reference</span>
+      </a>
+      <a href="/color-comparison.html">
+        color comparison tool
+        <span>HSV sliders for testing new colors</span>
+      </a>
+    </div>
+  </main>
+</body>
+</html>
