@@ -260,16 +260,11 @@
       font-size: 0.75rem;
       z-index: 200;
       line-height: 1.4;
-      animation: commit-badge-pulse 2s ease-in-out infinite;
+      animation: pulse 1.4s ease-in-out infinite;
     }
 
     .commit-badge:hover {
       animation: none;
-    }
-
-    @keyframes commit-badge-pulse {
-      0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 35%, transparent); }
-      50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 0%, transparent); }
     }
 
     .commit-badge-label {
