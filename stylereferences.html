@@ -492,9 +492,9 @@
       <div class="color-hex" data-dark="#D3D2D3" data-light="#120C11">#D3D2D3</div>
 
       <h3 class="subsection-title">Hyperlinks (card)</h3>
-      <div class="text-sample" style="background: var(--bg-card);">
-        <p style="font-size: 1.1rem; margin: 0;"><a href="#" style="color: var(--card-link); text-decoration: underline;" onclick="return false;">This is the hyperlink color inside cards (<span data-dark="#A9A8A9" data-light="#A9A8A9">#A9A8A9</span>)</a></p>
-        <p style="font-size: 0.95rem; margin: 8px 0 0 0; color: var(--text-secondary);">Used for <code>.card a:hover</code> / <code>.server-info a:hover</code> — resting state stays the normal accent link color, and all card hyperlinks are now underlined</p>
+      <div class="card" style="cursor: default;">
+        <h3>Header with a <a href="#" onclick="return false;">hyperlinked text</a> — inherits primary text color at rest</h3>
+        <p>Body text with a <a href="#" onclick="return false;">hyperlinked text</a> — inherits secondary text color at rest. Hover either link to see the shared hover color live.</p>
       </div>
       <div class="color-hex" data-dark="#A9A8A9" data-light="#A9A8A9">#A9A8A9</div>
     </div>

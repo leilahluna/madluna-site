@@ -221,7 +221,7 @@ nav .nav-links a.active {
 
 .card a,
 .server-info a {
-  color: var(--text-secondary);
+  color: inherit;
   text-decoration: underline;
 }
 
