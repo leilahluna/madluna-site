@@ -94,7 +94,7 @@ nav .container {
 nav .logo {
   font-family: 'Playfair Display', serif;
   font-size: 1.4rem;
-  font-weight: 300;
+  font-weight: 600;
   color: var(--accent);
   letter-spacing: 2px;
   text-transform: lowercase;
