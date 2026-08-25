@@ -6,15 +6,62 @@
   <title>Color Reference - Madluna</title>
   <link rel="stylesheet" href="/styles.css">
   <style>
+    /* Frozen dark-mode reference values — intentionally independent of styles.css so this page doesn't drift if the live site palette changes later. */
     :root {
-      --bg-card: #2C2326 !important;
-      --border: #3B2B2F !important;
+      --bg-primary: #241a1d;
+      --bg-secondary: #21181A;
+      --bg-card: #2C2326;
+      --text-primary: #E6E4E4;
+      --text-secondary: #CDC9CA;
+      --accent: #807b4d;
+      --accent-hover: #98946F;
+      --accent-glow: #5D5A37;
+      --border: #3B2B2F;
     }
-    
+
+    body[data-theme="light"] {
+      --bg-primary: #dbdbdb;
+      --bg-secondary: #D7D5D5;
+      --bg-card: #9b9797;
+      --text-primary: #1a1a1a;
+      --text-secondary: #333232;
+      --accent: #4d5280;
+      --accent-hover: #6D7299;
+      --accent-glow: #373B5D;
+      --border: #676DAA;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+    }
+
     nav {
-      background-color: #21181A !important;
+      background-color: var(--bg-secondary);
     }
-    
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .theme-toggle-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      transition: border-color 0.2s, background 0.2s;
+      white-space: nowrap;
+    }
+
+    .theme-toggle-btn:hover {
+      border-color: var(--accent);
+    }
+
     .color-reference {
       max-width: 100%;
     }
@@ -30,7 +77,7 @@
       border: 2px solid var(--border);
       border-radius: var(--radius);
       overflow: hidden;
-      background: #2C2326 !important;
+      background: var(--bg-card);
     }
 
     .color-sample {
@@ -42,7 +89,7 @@
     }
     
     .example-section {
-      background: #2C2326;
+      background: var(--bg-card);
       border: 2px solid var(--border);
       border-radius: var(--radius);
       padding: 16px;
@@ -83,20 +130,20 @@
     }
     
     .btn-primary {
-      background: #807b4d;
-      color: #241a1d;
+      background: var(--accent);
+      color: var(--bg-primary);
     }
     
     .btn-primary:hover {
-      background: #98946F;
+      background: var(--accent-hover);
     }
     
     .accent-glow {
       width: 40px;
       height: 40px;
       border-radius: 4px;
-      background: #5D5A37;
-      box-shadow: 0 0 16px rgba(93, 90, 55, 0.3);
+      background: var(--accent-glow);
+      box-shadow: 0 0 16px var(--accent-glow);
     }
 
     .color-info {
@@ -147,10 +194,6 @@
       margin-top: 0px;
       margin-bottom: 8px;
       color: var(--text-primary);
-    }
-    
-    body {
-      background-color: #241a1d !important;
     }
     
     .intro-section {
@@ -210,11 +253,14 @@
   <nav>
     <div class="container">
       <a href="/" class="logo">madluna</a>
-      <ul class="nav-links">
-        <li><a href="/">home</a></li>
-        <li><a href="/homeservices/">home services</a></li>
-        <li><a href="/stylereferences.html" class="active">style references</a></li>
-      </ul>
+      <div class="nav-right">
+        <ul class="nav-links">
+          <li><a href="/">home</a></li>
+          <li><a href="/homeservices/">home services</a></li>
+          <li><a href="/stylereferences.html" class="active">style references</a></li>
+        </ul>
+        <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle light/dark mode">☀️ light mode</button>
+      </div>
     </div>
   </nav>
 
@@ -229,29 +275,29 @@
       <h2 class="section-title">Background Colors</h2>
       <div class="color-grid">
         <div class="color-swatch">
-          <div class="color-sample" style="background: #241a1d;"></div>
+          <div class="color-sample" data-dark="#241a1d" data-light="#dbdbdb" style="background: #241a1d;"></div>
           <div class="color-info">
             <div class="color-name">Primary Background</div>
             <div class="color-usage">Main page background</div>
-            <div class="color-hex">#241a1d</div>
+            <div class="color-hex" data-dark="#241a1d" data-light="#dbdbdb">#241a1d</div>
           </div>
         </div>
 
         <div class="color-swatch">
-          <div class="color-sample" style="background: #21181A;"></div>
+          <div class="color-sample" data-dark="#21181A" data-light="#D7D5D5" style="background: #21181A;"></div>
           <div class="color-info">
             <div class="color-name">Secondary Background</div>
             <div class="color-usage">Header, darker sections</div>
-            <div class="color-hex">#21181A</div>
+            <div class="color-hex" data-dark="#21181A" data-light="#D7D5D5">#21181A</div>
           </div>
         </div>
 
         <div class="color-swatch">
-          <div class="color-sample" style="background: #2C2326;"></div>
+          <div class="color-sample" data-dark="#2C2326" data-light="#9b9797" style="background: #2C2326;"></div>
           <div class="color-info">
             <div class="color-name">Card Background</div>
             <div class="color-usage">Card and container backgrounds</div>
-            <div class="color-hex">#2C2326</div>
+            <div class="color-hex" data-dark="#2C2326" data-light="#9b9797">#2C2326</div>
           </div>
         </div>
       </div>
@@ -262,29 +308,29 @@
       <h2 class="section-title">Accent Colors</h2>
       <div class="color-grid">
         <div class="color-swatch">
-          <div class="color-sample" style="background: #807b4d;"></div>
+          <div class="color-sample" data-dark="#807b4d" data-light="#4d5280" style="background: #807b4d;"></div>
           <div class="color-info">
             <div class="color-name">Accent Primary</div>
             <div class="color-usage">Links, buttons, highlights</div>
-            <div class="color-hex">#807b4d</div>
+            <div class="color-hex" data-dark="#807b4d" data-light="#4d5280">#807b4d</div>
           </div>
         </div>
 
         <div class="color-swatch">
-          <div class="color-sample" style="background: #98946F;"></div>
+          <div class="color-sample" data-dark="#98946F" data-light="#6D7299" style="background: #98946F;"></div>
           <div class="color-info">
             <div class="color-name">Accent Hover</div>
             <div class="color-usage">Hover state for accent elements</div>
-            <div class="color-hex">#98946F</div>
+            <div class="color-hex" data-dark="#98946F" data-light="#6D7299">#98946F</div>
           </div>
         </div>
 
         <div class="color-swatch">
-          <div class="color-sample" style="background: #5D5A37;"></div>
+          <div class="color-sample" data-dark="#5D5A37" data-light="#373B5D" style="background: #5D5A37;"></div>
           <div class="color-info">
             <div class="color-name">Accent Glow</div>
             <div class="color-usage">Shadow and glow effects</div>
-            <div class="color-hex">#5D5A37</div>
+            <div class="color-hex" data-dark="#5D5A37" data-light="#373B5D">#5D5A37</div>
           </div>
         </div>
       </div>
@@ -296,17 +342,17 @@
 
       <h3 class="subsection-title">Primary Text</h3>
       <div class="text-sample text-primary-sample">
-        <p style="font-size: 1.1rem; margin: 0;">This is primary text color (#E6E4E4)</p>
+        <p style="font-size: 1.1rem; margin: 0;">This is primary text color (<span data-dark="#E6E4E4" data-light="#1a1a1a">#E6E4E4</span>)</p>
         <p style="font-size: 0.95rem; margin: 8px 0 0 0;">Used for headings, main content, and primary information</p>
       </div>
-      <div class="color-hex">#E6E4E4</div>
+      <div class="color-hex" data-dark="#E6E4E4" data-light="#1a1a1a">#E6E4E4</div>
 
       <h3 class="subsection-title">Secondary Text</h3>
       <div class="text-sample text-secondary-sample">
-        <p style="font-size: 1.1rem; margin: 0;">This is secondary text color (#CDC9CA)</p>
+        <p style="font-size: 1.1rem; margin: 0;">This is secondary text color (<span data-dark="#CDC9CA" data-light="#333232">#CDC9CA</span>)</p>
         <p style="font-size: 0.95rem; margin: 8px 0 0 0;">Used for subtitles, descriptions, and muted information</p>
       </div>
-      <div class="color-hex">#CDC9CA</div>
+      <div class="color-hex" data-dark="#CDC9CA" data-light="#333232">#CDC9CA</div>
     </div>
 
     <!-- Status Colors -->
@@ -338,10 +384,10 @@
       <h2 class="section-title">UI Elements</h2>
 
       <h3 class="subsection-title">Border Color</h3>
-      <div class="text-sample" style="border: 2px solid #3B2B2F;">
+      <div class="text-sample" style="border: 2px solid var(--border);">
         <p style="color: var(--text-primary); margin: 0;">Borders use this color for subtle separation</p>
       </div>
-      <div class="color-hex">#3B2B2F</div>
+      <div class="color-hex" data-dark="#3B2B2F" data-light="#676DAA">#3B2B2F</div>
 
       <h3 class="subsection-title">Logo Color</h3>
       <div class="text-sample" style="background: var(--bg-card);">
@@ -417,7 +463,7 @@
           
           <div class="example-item">
             <span class="example-label">Hover State</span>
-            <button class="btn-example btn-primary" style="background: #98946F;">Hovering</button>
+            <button class="btn-example btn-primary" style="background: var(--accent-hover);">Hovering</button>
           </div>
           
           <div class="example-item">
@@ -429,12 +475,12 @@
         <div class="example-row">
           <div class="example-item">
             <span class="example-label">Text on Background</span>
-            <p style="margin: 0; color: #E6E4E4;">Primary text (#E6E4E4)</p>
+            <p style="margin: 0; color: var(--text-primary);">Primary text (<span data-dark="#E6E4E4" data-light="#1a1a1a">#E6E4E4</span>)</p>
           </div>
           
           <div class="example-item">
             <span class="example-label">Secondary Text</span>
-            <p style="margin: 0; color: #CDC9CA;">Secondary text (#CDC9CA)</p>
+            <p style="margin: 0; color: var(--text-secondary);">Secondary text (<span data-dark="#CDC9CA" data-light="#333232">#CDC9CA</span>)</p>
           </div>
         </div>
 
@@ -477,7 +523,7 @@
   <script>
     document.querySelectorAll('.color-hex').forEach(el => {
       el.addEventListener('click', async () => {
-        const hex = el.textContent;
+        const hex = el.dataset.dark ? (document.body.dataset.theme === 'light' ? el.dataset.light : el.dataset.dark) : el.textContent;
         try {
           await navigator.clipboard.writeText(hex);
           const originalText = el.textContent;
@@ -490,6 +536,32 @@
         }
       });
     });
+
+    const THEME_KEY = 'madluna-stylerefs-theme';
+    const toggleBtn = document.getElementById('theme-toggle');
+
+    function applyTheme(theme) {
+      document.body.dataset.theme = theme;
+
+      document.querySelectorAll('[data-dark][data-light]').forEach(el => {
+        const value = theme === 'light' ? el.dataset.light : el.dataset.dark;
+        if (el.classList.contains('color-sample')) {
+          el.style.background = value;
+        } else {
+          el.textContent = value;
+        }
+      });
+
+      toggleBtn.textContent = theme === 'light' ? '🌙 dark mode' : '☀️ light mode';
+      localStorage.setItem(THEME_KEY, theme);
+    }
+
+    toggleBtn.addEventListener('click', () => {
+      const next = document.body.dataset.theme === 'light' ? 'dark' : 'light';
+      applyTheme(next);
+    });
+
+    applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
   </script>
 
 </body>

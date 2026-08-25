@@ -19,17 +19,17 @@
   --radius: 12px;
 }
 
-/* Light mode — placeholder values, to be tuned later */
+/* Light mode — values defined via stylereferences.html toggle */
 :root[data-theme="light"] {
-  --bg-primary: #241a1d;
-  --bg-secondary: #21181A;
-  --bg-card: #2C2326;
-  --text-primary: #E6E4E4;
-  --text-secondary: #CDC9CA;
-  --accent: #807b4d;
-  --accent-glow: #5D5A37;
-  --accent-hover: #98946F;
-  --border: #3B2B2F;
+  --bg-primary: #dbdbdb;
+  --bg-secondary: #D7D5D5;
+  --bg-card: #9b9797;
+  --text-primary: #1a1a1a;
+  --text-secondary: #333232;
+  --accent: #4d5280;
+  --accent-glow: #373B5D;
+  --accent-hover: #6D7299;
+  --border: #676DAA;
   --logo-color: #9ca3af;
 }
 
