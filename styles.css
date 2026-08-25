@@ -249,6 +249,10 @@ nav .nav-links a.active {
   background: rgba(34, 197, 94, 0.1);
   color: var(--green);
   border: 2px solid rgba(34, 197, 94, 0.2);
+  transition: box-shadow 0.2s ease;
+}
+
+.status-badge.online:hover {
   box-shadow: 0 0 12px rgba(34, 197, 94, 0.35);
 }
 
@@ -256,6 +260,10 @@ nav .nav-links a.active {
   background: rgba(239, 68, 68, 0.1);
   color: var(--red);
   border: 2px solid rgba(239, 68, 68, 0.2);
+  transition: box-shadow 0.2s ease;
+}
+
+.status-badge.offline:hover {
   box-shadow: 0 0 12px rgba(239, 68, 68, 0.35);
 }
 
@@ -263,6 +271,10 @@ nav .nav-links a.active {
   background: rgba(201, 168, 76, 0.1);
   color: var(--accent);
   border: 2px solid rgba(201, 168, 76, 0.2);
+  transition: box-shadow 0.2s ease;
+}
+
+.status-badge.checking:hover {
   box-shadow: 0 0 12px rgba(201, 168, 76, 0.35);
 }
 
