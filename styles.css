@@ -267,7 +267,7 @@ nav .nav-links a.active {
 
 .status-badge.online {
   background: color-mix(in srgb, var(--green) 20%, transparent);
-  color: var(--text-primary);
+  color: var(--text-secondary);
   border: 2px solid color-mix(in srgb, var(--green) 30%, transparent);
   transition: box-shadow 0.2s ease;
 }
@@ -278,7 +278,7 @@ nav .nav-links a.active {
 
 .status-badge.offline {
   background: color-mix(in srgb, var(--red) 20%, transparent);
-  color: var(--text-primary);
+  color: var(--text-secondary);
   border: 2px solid color-mix(in srgb, var(--red) 30%, transparent);
   transition: box-shadow 0.2s ease;
 }
@@ -289,7 +289,7 @@ nav .nav-links a.active {
 
 .status-badge.checking {
   background: color-mix(in srgb, var(--status-checking) 40%, transparent);
-  color: var(--text-primary);
+  color: var(--text-secondary);
   border: 2px solid color-mix(in srgb, var(--status-checking) 55%, transparent);
   transition: box-shadow 0.2s ease;
 }
