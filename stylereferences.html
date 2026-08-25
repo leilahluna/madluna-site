@@ -567,13 +567,25 @@
     <!-- Card Examples -->
     <div class="section" id="card-example">
       <h2 class="section-title">Card Component Example</h2>
+
+      <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 12px;">
+        this is a <a href="#">hyperlinked text</a> above the card — normal links use accent-hover on hover.
+      </p>
+
       <div class="card">
         <a href="#" class="card-link">
           <h3>Example Card</h3>
           <p>This shows how cards look with the color scheme. Hover to see the accent color highlight.</p>
           <span class="arrow">→</span>
         </a>
+        <p style="margin-top: 12px; font-size: 0.9rem;">
+          this is a <a href="#">hyperlinked text</a> inside the card — hover stays secondary text color instead of accent.
+        </p>
       </div>
+
+      <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 12px;">
+        this is a <a href="#">hyperlinked text</a> below the card — back to normal accent-hover behavior.
+      </p>
     </div>
 
     <!-- Examples -->
