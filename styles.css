@@ -247,9 +247,9 @@ nav .nav-links a.active {
 }
 
 .status-badge.online {
-  background: var(--green);
-  color: var(--bg-primary);
-  border: 2px solid var(--green);
+  background: rgba(34, 197, 94, 0.5);
+  color: var(--green);
+  border: 2px solid rgba(34, 197, 94, 0.6);
   transition: box-shadow 0.2s ease;
 }
 
@@ -258,9 +258,9 @@ nav .nav-links a.active {
 }
 
 .status-badge.offline {
-  background: var(--red);
-  color: var(--bg-primary);
-  border: 2px solid var(--red);
+  background: rgba(239, 68, 68, 0.5);
+  color: var(--red);
+  border: 2px solid rgba(239, 68, 68, 0.6);
   transition: box-shadow 0.2s ease;
 }
 
@@ -269,9 +269,9 @@ nav .nav-links a.active {
 }
 
 .status-badge.checking {
-  background: var(--accent);
-  color: var(--bg-primary);
-  border: 2px solid var(--accent);
+  background: rgba(102, 83, 27, 0.5);
+  color: var(--accent);
+  border: 2px solid rgba(102, 83, 27, 0.6);
   transition: box-shadow 0.2s ease;
 }
 
