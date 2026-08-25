@@ -56,5 +56,15 @@
     </div>
   </footer>
 
+  <script>
+    (function () {
+      var text = "madluna - est. 2025 · ";
+      var pos = 0;
+      setInterval(function () {
+        document.title = text.slice(pos) + text.slice(0, pos);
+        pos = (pos + 1) % text.length;
+      }, 300);
+    })();
+  </script>
 </body>
 </html>
