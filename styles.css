@@ -221,6 +221,7 @@ nav .nav-links a.active {
 
 .card a,
 .server-info a {
+  color: var(--text-secondary);
   text-decoration: underline;
 }
 
@@ -230,6 +231,7 @@ nav .nav-links a.active {
 }
 
 .card h3 {
+  color: var(--text-primary);
   font-size: 1.2rem;
   font-weight: 600;
   margin-bottom: 8px;
