@@ -248,6 +248,51 @@
       padding: 0 32px;
     }
 
+    .commit-badge {
+      position: fixed;
+      bottom: 16px;
+      left: 16px;
+      max-width: 320px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.75rem;
+      z-index: 200;
+      line-height: 1.4;
+    }
+
+    .commit-badge-label {
+      display: block;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+      font-size: 0.65rem;
+      margin-bottom: 4px;
+    }
+
+    .commit-badge-msg {
+      color: var(--text-primary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .commit-badge-meta {
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .commit-badge a {
+      color: inherit;
+    }
+
+    @media (max-width: 700px) {
+      .commit-badge {
+        display: none;
+      }
+    }
+
     @media (max-width: 600px) {
       .container {
         padding: 0 28px;
@@ -670,6 +715,12 @@
     </div>
   </footer>
 
+  <div class="commit-badge" id="commit-badge">
+    <span class="commit-badge-label">latest commit</span>
+    <div class="commit-badge-msg" id="commit-badge-msg">loading…</div>
+    <div class="commit-badge-meta" id="commit-badge-meta"></div>
+  </div>
+
   <script>
     document.querySelectorAll('.color-hex').forEach(el => {
       el.addEventListener('click', async () => {
@@ -712,6 +763,42 @@
     });
 
     applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
+
+    function timeAgo(dateStr) {
+      const seconds = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+      const units = [
+        ['year', 31536000], ['month', 2592000], ['day', 86400],
+        ['hour', 3600], ['minute', 60], ['second', 1]
+      ];
+      for (const [name, secs] of units) {
+        const value = Math.floor(seconds / secs);
+        if (value >= 1) return `${value} ${name}${value > 1 ? 's' : ''} ago`;
+      }
+      return 'just now';
+    }
+
+    async function loadLatestCommit() {
+      const msgEl = document.getElementById('commit-badge-msg');
+      const metaEl = document.getElementById('commit-badge-meta');
+      try {
+        const res = await fetch('https://api.github.com/repos/leilahluna/madluna-site/commits/master');
+        if (!res.ok) throw new Error('GitHub API error');
+        const data = await res.json();
+        const subject = data.commit.message.split('\n')[0];
+        const sha = data.sha.slice(0, 7);
+        const when = timeAgo(data.commit.author.date);
+
+        msgEl.textContent = subject;
+        msgEl.title = subject;
+        metaEl.innerHTML = `<a href="${data.html_url}" target="_blank" rel="noopener">${sha}</a> &middot; ${when}`;
+      } catch (err) {
+        msgEl.textContent = 'unable to load latest commit';
+        metaEl.textContent = '';
+      }
+    }
+
+    loadLatestCommit();
+    setInterval(loadLatestCommit, 60000);
   </script>
 
 </body>
