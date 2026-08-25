@@ -219,6 +219,11 @@ nav .nav-links a.active {
   color: inherit;
 }
 
+.card a,
+.server-info a {
+  text-decoration: underline;
+}
+
 .card a:hover,
 .server-info a:hover {
   color: var(--card-link);
