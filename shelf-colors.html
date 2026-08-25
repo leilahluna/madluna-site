@@ -379,6 +379,7 @@
       <a href="#border-color">border color</a>
       <a href="#text-colors">text colors</a>
       <a href="#accent-colors">accent colors</a>
+      <a href="#example-post">example post</a>
     </div>
   </div>
 
@@ -460,6 +461,51 @@
             <div class="color-usage">Buttons, links, highlights, logo</div>
             <div class="color-hex" data-dark="#4d806f" data-light="#4d806f">#4d806f</div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Example Feed Post -->
+    <div class="section" id="example-post">
+      <h2 class="section-title">Example Feed Post</h2>
+      <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 16px;">A representative feed card, built with the site's real component structure and colors.</p>
+
+      <div style="max-width: 420px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden;">
+        <!-- Header -->
+        <div style="display: flex; align-items: center; gap: 12px; padding: 16px;">
+          <div style="height: 36px; width: 36px; border-radius: 50%; background: var(--bg-primary); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-weight: 600; font-size: 0.875rem; color: var(--text-primary);">@example</div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary); display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
+              added a <span style="display: inline-flex; align-items: center; background: var(--bg-primary); color: var(--text-primary); padding: 1px 6px; border-radius: 6px; font-weight: 500; font-size: 0.75rem;">vinyl</span> to their shelf · 2h ago
+            </div>
+          </div>
+        </div>
+
+        <!-- Cover art (text fallback state) -->
+        <div style="width: 100%; aspect-ratio: 1 / 1; background: var(--bg-primary); display: flex; align-items: center; justify-content: center; text-align: center; padding: 24px;">
+          <div>
+            <div style="font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700; color: var(--text-primary);">example album</div>
+            <div style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 4px;">example artist</div>
+          </div>
+        </div>
+
+        <!-- Action bar -->
+        <div style="padding: 12px 16px 4px;">
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+          </div>
+          <p style="font-size: 0.875rem; font-weight: 600; margin-top: 8px; color: var(--text-primary);">12 likes</p>
+          <p style="font-size: 0.875rem; margin-top: 6px; color: var(--text-primary);"><span style="font-weight: 600;">@example</span> added <span style="font-weight: 600;">example album</span> <span style="color: var(--text-secondary);">by example artist</span></p>
+          <button style="font-size: 0.875rem; color: var(--text-secondary); background: none; border: none; padding: 0; margin-top: 4px; cursor: pointer;">view all 3 comments</button>
+        </div>
+
+        <!-- Comment input -->
+        <div style="display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--border);">
+          <span style="font-size: 0.875rem; color: var(--text-secondary);">add a comment...</span>
         </div>
       </div>
     </div>
