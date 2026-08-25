@@ -11,6 +11,8 @@
   --text-secondary: #d4cfd3;
   --accent: #66531b;
   --accent-secondary: #2F2508;
+  --accent-secondary-hover: #A09475;
+  --accent-secondary-glow: #201904;
   --accent-glow: #4a3b11;
   --accent-hover: #837349;
   --border: #4A3B11;
@@ -204,7 +206,7 @@ nav .nav-links a.active {
 
 .card:hover {
   border-color: var(--accent-secondary);
-  box-shadow: 0 0 20px var(--accent-glow);
+  box-shadow: 0 0 20px var(--accent-secondary-glow);
 }
 
 .card-link {
