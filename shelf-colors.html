@@ -17,6 +17,39 @@
       --radius: 12px;
     }
 
+    /* Light mode — placeholder values (same as dark), to be tuned */
+    body[data-theme="light"] {
+      --bg-primary: #231d1a;
+      --bg-card: #2d2725;
+      --text-primary: #ebe7e0;
+      --text-secondary: #a39c8f;
+      --accent: #4d806f;
+      --border: #3a3530;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .theme-toggle-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      transition: border-color 0.2s, background 0.2s;
+      white-space: nowrap;
+    }
+
+    .theme-toggle-btn:hover {
+      border-color: var(--accent);
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -208,12 +241,15 @@
   <nav>
     <div class="container">
       <a href="/" class="logo">shelf colors</a>
-      <ul class="nav-links">
-        <li><a href="/dev1025202542069.html">dev links</a></li>
-        <li><a href="/stylereferences.html">style references</a></li>
-        <li><a href="/shelf-colors.html" class="active">shelf palette</a></li>
-        <li><a href="/color-comparison.html">color comparison</a></li>
-      </ul>
+      <div class="nav-right">
+        <ul class="nav-links">
+          <li><a href="/dev1025202542069.html">dev links</a></li>
+          <li><a href="/stylereferences.html">style references</a></li>
+          <li><a href="/shelf-colors.html" class="active">shelf palette</a></li>
+          <li><a href="/color-comparison.html">color comparison</a></li>
+        </ul>
+        <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle light/dark mode">☀︎ light mode</button>
+      </div>
     </div>
   </nav>
 
@@ -228,20 +264,20 @@
       <h2 class="section-title">Background Colors</h2>
       <div class="color-grid">
         <div class="color-swatch">
-          <div class="color-sample" style="background: #231d1a;"></div>
+          <div class="color-sample" data-dark="#231d1a" data-light="#231d1a" style="background: #231d1a;"></div>
           <div class="color-info">
             <div class="color-name">Primary Background</div>
             <div class="color-usage">Main page background</div>
-            <div class="color-hex">#231d1a</div>
+            <div class="color-hex" data-dark="#231d1a" data-light="#231d1a">#231d1a</div>
           </div>
         </div>
 
         <div class="color-swatch">
-          <div class="color-sample" style="background: #2d2725;"></div>
+          <div class="color-sample" data-dark="#2d2725" data-light="#2d2725" style="background: #2d2725;"></div>
           <div class="color-info">
             <div class="color-name">Card Background</div>
             <div class="color-usage">Cards and containers</div>
-            <div class="color-hex">#2d2725</div>
+            <div class="color-hex" data-dark="#2d2725" data-light="#2d2725">#2d2725</div>
           </div>
         </div>
       </div>
@@ -253,17 +289,17 @@
 
       <h3 class="subsection-title">Primary Text</h3>
       <div class="text-sample">
-        <p style="font-size: 1.1rem; margin: 0;">This is primary text color (#ebe7e0)</p>
+        <p style="font-size: 1.1rem; margin: 0;">This is primary text color (<span data-dark="#ebe7e0" data-light="#ebe7e0">#ebe7e0</span>)</p>
         <p style="font-size: 0.95rem; margin: 8px 0 0 0;">Used for headings, main content, and primary information</p>
       </div>
-      <div class="color-hex">#ebe7e0</div>
+      <div class="color-hex" data-dark="#ebe7e0" data-light="#ebe7e0">#ebe7e0</div>
 
       <h3 class="subsection-title">Secondary Text</h3>
-      <div class="text-sample" style="color: #a39c8f;">
-        <p style="font-size: 1.1rem; margin: 0;">This is secondary text color (#a39c8f)</p>
+      <div class="text-sample" style="color: var(--text-secondary);">
+        <p style="font-size: 1.1rem; margin: 0;">This is secondary text color (<span data-dark="#a39c8f" data-light="#a39c8f">#a39c8f</span>)</p>
         <p style="font-size: 0.95rem; margin: 8px 0 0 0;">Used for subtitles, descriptions, icons, and muted information</p>
       </div>
-      <div class="color-hex">#a39c8f</div>
+      <div class="color-hex" data-dark="#a39c8f" data-light="#a39c8f">#a39c8f</div>
     </div>
 
     <!-- Accent Color -->
@@ -271,11 +307,11 @@
       <h2 class="section-title">Accent Color</h2>
       <div class="color-grid">
         <div class="color-swatch">
-          <div class="color-sample" style="background: #4d806f;"></div>
+          <div class="color-sample" data-dark="#4d806f" data-light="#4d806f" style="background: #4d806f;"></div>
           <div class="color-info">
             <div class="color-name">Accent / Primary Action</div>
             <div class="color-usage">Buttons, links, highlights, logo</div>
-            <div class="color-hex">#4d806f</div>
+            <div class="color-hex" data-dark="#4d806f" data-light="#4d806f">#4d806f</div>
           </div>
         </div>
       </div>
@@ -286,10 +322,10 @@
       <h2 class="section-title">UI Elements</h2>
 
       <h3 class="subsection-title">Border Color</h3>
-      <div class="text-sample" style="border: 2px solid #3a3530;">
+      <div class="text-sample" style="border: 2px solid var(--border);">
         <p style="color: var(--text-primary); margin: 0;">Borders and dividers use this color for subtle separation</p>
       </div>
-      <div class="color-hex">#3a3530</div>
+      <div class="color-hex" data-dark="#3a3530" data-light="#3a3530">#3a3530</div>
     </div>
 
   </main>
@@ -304,7 +340,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.color-hex').forEach(el => {
         el.addEventListener('click', async () => {
-          const hex = el.textContent;
+          const hex = el.dataset.dark ? (document.body.dataset.theme === 'light' ? el.dataset.light : el.dataset.dark) : el.textContent;
           try {
             await navigator.clipboard.writeText(hex);
             const originalText = el.textContent;
@@ -317,6 +353,32 @@
           }
         });
       });
+
+      const THEME_KEY = 'madluna-shelfcolors-theme';
+      const toggleBtn = document.getElementById('theme-toggle');
+
+      function applyTheme(theme) {
+        document.body.dataset.theme = theme;
+
+        document.querySelectorAll('[data-dark][data-light]').forEach(el => {
+          const value = theme === 'light' ? el.dataset.light : el.dataset.dark;
+          if (el.classList.contains('color-sample')) {
+            el.style.background = value;
+          } else {
+            el.textContent = value;
+          }
+        });
+
+        toggleBtn.textContent = theme === 'light' ? '⏾ dark mode' : '☀︎ light mode';
+        localStorage.setItem(THEME_KEY, theme);
+      }
+
+      toggleBtn.addEventListener('click', () => {
+        const next = document.body.dataset.theme === 'light' ? 'dark' : 'light';
+        applyTheme(next);
+      });
+
+      applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
     });
   </script>
 

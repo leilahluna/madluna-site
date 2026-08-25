@@ -301,7 +301,7 @@
 
     <div class="header">
         <h1>Color Comparison</h1>
-        <button class="theme-toggle" id="themeToggle">🌙 Dark Mode</button>
+        <button class="theme-toggle" id="themeToggle">⏾ Dark Mode</button>
     </div>
 
     <div class="container">
@@ -597,14 +597,14 @@
         const savedTheme = localStorage.getItem('theme') || 'light';
         if (savedTheme === 'dark') {
             htmlEl.classList.add('dark-mode');
-            themeToggle.textContent = '☀️ Light Mode';
+            themeToggle.textContent = '☀︎ Light Mode';
         }
 
         themeToggle.addEventListener('click', () => {
             htmlEl.classList.toggle('dark-mode');
             const isDark = htmlEl.classList.contains('dark-mode');
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            themeToggle.textContent = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
+            themeToggle.textContent = isDark ? '☀︎ Light Mode' : '⏾ Dark Mode';
         });
 
         // Initialize colors
