@@ -249,7 +249,7 @@
           <li><a href="/shelf-colors.html" class="active">shelf. style</a></li>
           <li><a href="/color-comparison.html">color comparison</a></li>
         </ul>
-        <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle light/dark mode">☀︎ light mode</button>
+        <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle light/dark mode">☀︎</button>
       </div>
     </div>
   </nav>
@@ -370,7 +370,7 @@
           }
         });
 
-        toggleBtn.textContent = theme === 'light' ? '⏾ dark mode' : '☀︎ light mode';
+        toggleBtn.textContent = theme === 'light' ? '⏾' : '☀︎';
         localStorage.setItem(THEME_KEY, theme);
       }
 
