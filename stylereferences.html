@@ -14,11 +14,13 @@
       --text-primary: #e9e7e9;
       --text-secondary: #d4cfd3;
       --accent: #66531b;
+      --accent-secondary: #2F2508;
       --accent-hover: #837349;
       --accent-glow: #4a3b11;
       --border: #4A3B11;
     }
 
+    /* --accent-secondary has no light-mode value yet — placeholder (same as dark) */
     body[data-theme="light"] {
       --bg-primary: #dbdbdb;
       --bg-secondary: #A2A2A2;
@@ -26,6 +28,7 @@
       --text-primary: #010001;
       --text-secondary: #120C11;
       --accent: #80697c;
+      --accent-secondary: #2F2508;
       --accent-hover: #988595;
       --accent-glow: #5D4C5A;
       --border: #3D313B;
@@ -328,6 +331,15 @@
             <div class="color-name">Accent Primary</div>
             <div class="color-usage">Links, buttons, highlights</div>
             <div class="color-hex" data-dark="#66531b" data-light="#80697c">#66531b</div>
+          </div>
+        </div>
+
+        <div class="color-swatch">
+          <div class="color-sample" data-dark="#2F2508" data-light="#2F2508" style="background: #2F2508;"></div>
+          <div class="color-info">
+            <div class="color-name">Accent Secondary</div>
+            <div class="color-usage">Card hover border (dark mode only used here so far)</div>
+            <div class="color-hex" data-dark="#2F2508" data-light="#2F2508">#2F2508</div>
           </div>
         </div>
 
