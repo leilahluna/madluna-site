@@ -208,6 +208,11 @@
             border-color: var(--text-primary);
         }
 
+        .lock-icon {
+            width: 18px;
+            height: 18px;
+        }
+
         input[type="range"] {
             width: 100%;
             height: 6px;
@@ -373,7 +378,7 @@
                             <span>Hue</span>
                             <div class="slider-controls">
                                 <span class="slider-value" id="hue1Val">15°</span>
-                                <button class="lock-btn" id="hue1Lock" data-color="1" data-slider="hue">🔓</button>
+                                <button class="lock-btn" id="hue1Lock" data-color="1" data-slider="hue"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg></button>
                             </div>
                         </div>
                         <input type="range" id="hue1Slider" min="0" max="360" value="15" step="1">
@@ -384,7 +389,7 @@
                             <span>Saturation</span>
                             <div class="slider-controls">
                                 <span class="slider-value" id="sat1Val">26%</span>
-                                <button class="lock-btn" id="sat1Lock" data-color="1" data-slider="sat">🔓</button>
+                                <button class="lock-btn" id="sat1Lock" data-color="1" data-slider="sat"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg></button>
                             </div>
                         </div>
                         <input type="range" id="sat1Slider" min="0" max="100" value="26" step="1">
@@ -395,7 +400,7 @@
                             <span>Value</span>
                             <div class="slider-controls">
                                 <span class="slider-value" id="val1Val">14%</span>
-                                <button class="lock-btn" id="val1Lock" data-color="1" data-slider="val">🔓</button>
+                                <button class="lock-btn" id="val1Lock" data-color="1" data-slider="val"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg></button>
                             </div>
                         </div>
                         <input type="range" id="val1Slider" min="0" max="100" value="14" step="1">
@@ -435,7 +440,7 @@
                             <span>Hue</span>
                             <div class="slider-controls">
                                 <span class="slider-value" id="hue2Val">342°</span>
-                                <button class="lock-btn" id="hue2Lock" data-color="2" data-slider="hue">🔓</button>
+                                <button class="lock-btn" id="hue2Lock" data-color="2" data-slider="hue"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg></button>
                             </div>
                         </div>
                         <input type="range" id="hue2Slider" min="0" max="360" value="342" step="1">
@@ -446,7 +451,7 @@
                             <span>Saturation</span>
                             <div class="slider-controls">
                                 <span class="slider-value" id="sat2Val">61%</span>
-                                <button class="lock-btn" id="sat2Lock" data-color="2" data-slider="sat">🔓</button>
+                                <button class="lock-btn" id="sat2Lock" data-color="2" data-slider="sat"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg></button>
                             </div>
                         </div>
                         <input type="range" id="sat2Slider" min="0" max="100" value="61" step="1">
@@ -457,7 +462,7 @@
                             <span>Value</span>
                             <div class="slider-controls">
                                 <span class="slider-value" id="val2Val">83%</span>
-                                <button class="lock-btn" id="val2Lock" data-color="2" data-slider="val">🔓</button>
+                                <button class="lock-btn" id="val2Lock" data-color="2" data-slider="val"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg></button>
                             </div>
                         </div>
                         <input type="range" id="val2Slider" min="0" max="100" value="83" step="1">
@@ -651,17 +656,20 @@
             }
         });
 
+        const LOCK_ICON = '<svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+        const UNLOCK_ICON = '<svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>';
+
         function toggleLock(colorNum, slider) {
             locks[colorNum][slider] = !locks[colorNum][slider];
             const btn = document.getElementById(`${slider}${colorNum}Lock`);
             const sliderEl = document.getElementById(`${slider}${colorNum}Slider`);
             
             if (locks[colorNum][slider]) {
-                btn.textContent = '🔒';
+                btn.innerHTML = LOCK_ICON;
                 btn.classList.add('locked');
                 sliderEl.disabled = true;
             } else {
-                btn.textContent = '🔓';
+                btn.innerHTML = UNLOCK_ICON;
                 btn.classList.remove('locked');
                 sliderEl.disabled = false;
             }
