@@ -190,6 +190,46 @@
     .section {
       margin-bottom: 16px;
       padding: 12px 0;
+      scroll-margin-top: 90px;
+    }
+
+    .side-nav {
+      position: fixed;
+      top: 110px;
+      right: 24px;
+      width: 190px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      max-height: calc(100vh - 150px);
+      overflow-y: auto;
+    }
+
+    .side-nav h4 {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    .side-nav a {
+      display: block;
+      padding: 5px 0;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .side-nav a:hover {
+      color: var(--accent);
+    }
+
+    @media (max-width: 1400px) {
+      .side-nav {
+        display: none;
+      }
     }
     
     .section-title {
@@ -273,6 +313,20 @@
     </div>
   </nav>
 
+  <div class="side-nav" role="navigation" aria-label="Section jump links">
+    <h4>jump to</h4>
+    <a href="#text-casing">text casing</a>
+    <a href="#background-colors">background colors</a>
+    <a href="#accent-colors">accent colors</a>
+    <a href="#border-color">border color</a>
+    <a href="#text-colors">text colors</a>
+    <a href="#status-colors">status colors</a>
+    <a href="#ui-elements">ui elements</a>
+    <a href="#status-badges">status badges</a>
+    <a href="#card-example">card example</a>
+    <a href="#usage-examples">usage examples</a>
+  </div>
+
   <main class="container color-reference">
     <section class="section intro-section">
       <h1 style="font-family: 'Playfair Display', serif; font-size: 2.5rem;">Color Reference</h1>
@@ -280,7 +334,7 @@
     </section>
 
     <!-- Text Casing Rule -->
-    <div class="section">
+    <div class="section" id="text-casing">
       <h2 class="section-title">Text Casing</h2>
       <div class="text-sample" style="border: 1px solid var(--border);">
         <p style="color: var(--text-primary); margin: 0 0 8px 0;">site text is strictly lowercase by default.</p>
@@ -289,7 +343,7 @@
     </div>
 
     <!-- Background Colors -->
-    <div class="section">
+    <div class="section" id="background-colors">
       <h2 class="section-title">Background Colors</h2>
       <div class="color-grid">
         <div class="color-swatch">
@@ -322,7 +376,7 @@
     </div>
 
     <!-- Accent Colors -->
-    <div class="section">
+    <div class="section" id="accent-colors">
       <h2 class="section-title">Accent Colors</h2>
       <div class="color-grid">
         <div class="color-swatch">
@@ -364,7 +418,7 @@
     </div>
 
     <!-- Border Color -->
-    <div class="section">
+    <div class="section" id="border-color">
       <h3 class="subsection-title">Border Color</h3>
       <div class="text-sample" style="border: 2px solid var(--border);">
         <p style="color: var(--text-primary); margin: 0;">Borders use this color for subtle separation</p>
@@ -373,7 +427,7 @@
     </div>
 
     <!-- Text Colors -->
-    <div class="section">
+    <div class="section" id="text-colors">
       <h2 class="section-title">Text Colors</h2>
 
       <h3 class="subsection-title">Primary Text</h3>
@@ -392,7 +446,7 @@
     </div>
 
     <!-- Status Colors -->
-    <div class="section">
+    <div class="section" id="status-colors">
       <h2 class="section-title">Status Colors</h2>
       <div class="color-grid">
         <div class="color-swatch">
@@ -416,7 +470,7 @@
     </div>
 
     <!-- UI Elements -->
-    <div class="section">
+    <div class="section" id="ui-elements">
       <h2 class="section-title">UI Elements</h2>
 
       <h3 class="subsection-title">Logo Color</h3>
@@ -437,7 +491,7 @@
     </div>
 
     <!-- Status Badge Examples -->
-    <div class="section">
+    <div class="section" id="status-badges">
       <h2 class="section-title">Status Badge Examples</h2>
       <p style="color: var(--text-secondary); margin-bottom: 24px;">How status colors appear in context:</p>
 
@@ -469,7 +523,7 @@
     </div>
 
     <!-- Card Examples -->
-    <div class="section">
+    <div class="section" id="card-example">
       <h2 class="section-title">Card Component Example</h2>
       <div class="card">
         <a href="#" class="card-link">
@@ -481,7 +535,7 @@
     </div>
 
     <!-- Examples -->
-    <div class="section">
+    <div class="section" id="usage-examples">
       <h2 class="section-title">Color Usage Examples</h2>
       
       <div class="example-section">
