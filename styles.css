@@ -1,15 +1,7 @@
 /* ===== Madluna Global Styles ===== */
 /* Moon-themed dark design */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;700&display=swap');
-
-@font-face {
-  font-family: 'ACME Gothic';
-  src: url('/media/fonts/Acme Gothic.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
 
 :root {
   --bg-primary: #241a1d;
@@ -52,7 +44,7 @@ html {
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   line-height: 1.6;
@@ -96,7 +88,7 @@ nav .container {
 }
 
 nav .logo {
-  font-family: 'ACME Gothic', 'Inter', sans-serif;
+  font-family: 'Playfair Display', serif;
   font-size: 1.4rem;
   font-weight: 300;
   color: var(--accent);
