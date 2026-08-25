@@ -15,6 +15,7 @@
   --accent-secondary-glow: #201904;
   --accent-glow: #4a3b11;
   --accent-hover: #837349;
+  --card-link: #BEBCBE;
   --border: #4A3B11;
   --green: #56DE1B;
   --red: #de211b;
@@ -220,7 +221,7 @@ nav .nav-links a.active {
 
 .card a:hover,
 .server-info a:hover {
-  color: var(--text-secondary);
+  color: var(--card-link);
 }
 
 .card h3 {

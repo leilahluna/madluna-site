@@ -19,10 +19,11 @@
       --accent-secondary-glow: #201904;
       --accent-hover: #837349;
       --accent-glow: #4a3b11;
+      --card-link: #BEBCBE;
       --border: #4A3B11;
     }
 
-    /* --accent-secondary and its hover/glow have no light-mode values yet — placeholder (same as dark) */
+    /* --accent-secondary, its hover/glow, and --card-link have no light-mode values yet — placeholder (same as dark) */
     body[data-theme="light"] {
       --bg-primary: #dbdbdb;
       --bg-secondary: #A2A2A2;
@@ -35,6 +36,7 @@
       --accent-secondary-glow: #201904;
       --accent-hover: #988595;
       --accent-glow: #5D4C5A;
+      --card-link: #BEBCBE;
       --border: #3D313B;
     }
 
@@ -485,6 +487,13 @@
         <p style="font-size: 0.95rem; margin: 8px 0 0 0;">Used for subtitles, descriptions, and muted information</p>
       </div>
       <div class="color-hex" data-dark="#d4cfd3" data-light="#120C11">#d4cfd3</div>
+
+      <h3 class="subsection-title">Card Hyperlink (hover)</h3>
+      <div class="text-sample" style="background: var(--bg-card); color: var(--card-link);">
+        <p style="font-size: 1.1rem; margin: 0;">This is the hovered hyperlink color inside cards (<span data-dark="#BEBCBE" data-light="#BEBCBE">#BEBCBE</span>)</p>
+        <p style="font-size: 0.95rem; margin: 8px 0 0 0; color: var(--text-secondary);">Used for <code>.card a:hover</code> / <code>.server-info a:hover</code> — resting state stays the normal accent link color</p>
+      </div>
+      <div class="color-hex" data-dark="#BEBCBE" data-light="#BEBCBE">#BEBCBE</div>
     </div>
 
     <!-- Status Colors -->
@@ -579,7 +588,7 @@
           <span class="arrow">→</span>
         </a>
         <p style="margin-top: 12px; font-size: 0.9rem;">
-          this is a <a href="#">hyperlinked text</a> inside the card — hover stays secondary text color instead of accent.
+          this is a <a href="#">hyperlinked text</a> inside the card — hover uses the dedicated card-link color instead of accent.
         </p>
       </div>
 
