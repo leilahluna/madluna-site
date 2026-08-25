@@ -228,7 +228,7 @@ nav .nav-links a.active {
 }
 
 .card .arrow {
-  color: var(--accent);
+  color: var(--accent-secondary);
   font-size: 1.2rem;
   float: right;
   margin-top: -28px;
