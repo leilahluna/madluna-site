@@ -113,7 +113,10 @@ nav .nav-links a {
   transition: color 0.2s;
 }
 
-nav .nav-links a:hover,
+nav .nav-links a:hover {
+  color: var(--card-link);
+}
+
 nav .nav-links a.active {
   color: var(--text-primary);
 }
