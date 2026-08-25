@@ -70,10 +70,35 @@
     (function () {
       var text = "madluna - est. 2025 ☆ ";
       var pos = 0;
-      setInterval(function () {
+      var timer = null;
+
+      function tick() {
         document.title = text.slice(pos) + text.slice(0, pos);
         pos = (pos + 1) % text.length;
-      }, 300);
+      }
+
+      function start() {
+        if (timer) return;
+        tick();
+        timer = setInterval(tick, 300);
+      }
+
+      function stop() {
+        clearInterval(timer);
+        timer = null;
+        pos = 0;
+        document.title = "Madluna";
+      }
+
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden) {
+          stop();
+        } else {
+          start();
+        }
+      });
+
+      if (!document.hidden) start();
     })();
   </script>
 </body>
