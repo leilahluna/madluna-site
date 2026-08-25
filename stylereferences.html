@@ -78,8 +78,8 @@
     .color-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 12px;
-      margin: 12px 0;
+      gap: 24px;
+      margin: 16px 0;
     }
 
     .color-swatch {
@@ -248,6 +248,16 @@
     @media (max-width: 1400px) {
       .side-nav {
         display: none;
+      }
+    }
+
+    .container {
+      padding: 0 32px;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 0 28px;
       }
     }
     
