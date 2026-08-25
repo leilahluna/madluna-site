@@ -251,6 +251,43 @@
             background: var(--border-color);
         }
 
+        .history-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .history-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            min-height: 28px;
+        }
+
+        .history-swatch {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            padding: 0;
+            transition: transform 0.15s;
+        }
+
+        .history-swatch:hover {
+            transform: scale(1.1);
+        }
+
+        .history-empty {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .undo-hint {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
         .devnav {
             display: flex;
             gap: 20px;
@@ -301,7 +338,10 @@
 
     <div class="header">
         <h1>Color Comparison</h1>
-        <button class="theme-toggle" id="themeToggle">⏾ Dark Mode</button>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <span class="undo-hint">ctrl+z to undo</span>
+            <button class="theme-toggle" id="themeToggle">⏾ Dark Mode</button>
+        </div>
     </div>
 
     <div class="container">
@@ -361,6 +401,11 @@
                         <input type="range" id="val1Slider" min="0" max="100" value="14" step="1">
                     </div>
                 </div>
+
+                <div class="history-section">
+                    <div class="control-section-title">History</div>
+                    <div class="history-row" id="history1"></div>
+                </div>
             </div>
 
             <div class="color-section">
@@ -418,6 +463,11 @@
                         <input type="range" id="val2Slider" min="0" max="100" value="83" step="1">
                     </div>
                 </div>
+
+                <div class="history-section">
+                    <div class="control-section-title">History</div>
+                    <div class="history-row" id="history2"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -427,6 +477,9 @@
             '1': { hue: false, sat: false, val: false },
             '2': { hue: false, sat: false, val: false }
         };
+
+        const history = { '1': [], '2': [] };
+        const undoStack = [];
 
         function hexToRgb(hex) {
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -526,6 +579,78 @@
             } catch(e) {}
         }
 
+        function renderHistory(colorNum) {
+            const container = document.getElementById(`history${colorNum}`);
+            container.innerHTML = '';
+            if (history[colorNum].length === 0) {
+                const empty = document.createElement('span');
+                empty.className = 'history-empty';
+                empty.textContent = 'no changes yet';
+                container.appendChild(empty);
+                return;
+            }
+            history[colorNum].forEach(hex => {
+                const btn = document.createElement('button');
+                btn.className = 'history-swatch';
+                btn.style.backgroundColor = hex;
+                btn.title = hex;
+                btn.addEventListener('click', () => revertToHex(colorNum, hex));
+                container.appendChild(btn);
+            });
+        }
+
+        function commitChange(colorNum, prevH, prevS, prevV) {
+            const rgb = hsvToRgb(prevH, prevS, prevV);
+            const prevHex = rgbToHex(rgb.r, rgb.g, rgb.b);
+
+            undoStack.push({ colorNum, h: prevH, s: prevS, v: prevV });
+            if (undoStack.length > 50) undoStack.shift();
+
+            const hist = history[colorNum];
+            if (hist.length === 0 || hist[0] !== prevHex) {
+                hist.unshift(prevHex);
+                if (hist.length > 8) hist.pop();
+                renderHistory(colorNum);
+            }
+        }
+
+        function revertToHex(colorNum, hex) {
+            const rgb = hexToRgb(hex);
+            if (!rgb) return;
+            const hsv = rgbToHsv(rgb.r, rgb.g, rgb.b);
+
+            const prevH = parseInt(document.getElementById(`hue${colorNum}Slider`).value);
+            const prevS = parseInt(document.getElementById(`sat${colorNum}Slider`).value);
+            const prevV = parseInt(document.getElementById(`val${colorNum}Slider`).value);
+
+            if (prevH === hsv.h && prevS === hsv.s && prevV === hsv.v) return;
+
+            commitChange(colorNum, prevH, prevS, prevV);
+
+            document.getElementById(`hue${colorNum}Slider`).value = hsv.h;
+            document.getElementById(`sat${colorNum}Slider`).value = hsv.s;
+            document.getElementById(`val${colorNum}Slider`).value = hsv.v;
+            updateColor(colorNum, hsv.h, hsv.s, hsv.v);
+        }
+
+        function undo() {
+            if (undoStack.length === 0) return;
+            const { colorNum, h, s, v } = undoStack.pop();
+            document.getElementById(`hue${colorNum}Slider`).value = h;
+            document.getElementById(`sat${colorNum}Slider`).value = s;
+            document.getElementById(`val${colorNum}Slider`).value = v;
+            updateColor(colorNum, h, s, v);
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+                const active = document.activeElement;
+                if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) return;
+                e.preventDefault();
+                undo();
+            }
+        });
+
         function toggleLock(colorNum, slider) {
             locks[colorNum][slider] = !locks[colorNum][slider];
             const btn = document.getElementById(`${slider}${colorNum}Lock`);
@@ -566,6 +691,14 @@
                             const hueSlider = document.getElementById(`hue${colorNum}Slider`);
                             const satSlider = document.getElementById(`sat${colorNum}Slider`);
                             const valSlider = document.getElementById(`val${colorNum}Slider`);
+                            
+                            const prevH = parseInt(hueSlider.value);
+                            const prevS = parseInt(satSlider.value);
+                            const prevV = parseInt(valSlider.value);
+                            
+                            if (prevH !== hsv.h || prevS !== hsv.s || prevV !== hsv.v) {
+                                commitChange(colorNum, prevH, prevS, prevV);
+                            }
                             
                             hueSlider.value = hsv.h;
                             satSlider.value = hsv.s;
@@ -610,55 +743,45 @@
         // Initialize colors
         document.getElementById('swatch1').style.backgroundColor = '#231d1a';
         document.getElementById('swatch2').style.backgroundColor = '#d4537e';
+        renderHistory('1');
+        renderHistory('2');
 
-        // Color 1 sliders
-        document.getElementById('hue1Slider').addEventListener('input', function() {
-            if (locks['1']['hue']) return;
-            const h = parseInt(this.value);
-            const s = parseInt(document.getElementById('sat1Slider').value);
-            const v = parseInt(document.getElementById('val1Slider').value);
-            updateColor('1', h, s, v);
-        });
+        // Sliders for both colors
+        function setupSlider(colorNum, sliderType) {
+            const slider = document.getElementById(`${sliderType}${colorNum}Slider`);
+            let startValue = null;
 
-        document.getElementById('sat1Slider').addEventListener('input', function() {
-            if (locks['1']['sat']) return;
-            const h = parseInt(document.getElementById('hue1Slider').value);
-            const s = parseInt(this.value);
-            const v = parseInt(document.getElementById('val1Slider').value);
-            updateColor('1', h, s, v);
-        });
+            slider.addEventListener('pointerdown', function() {
+                startValue = this.value;
+            });
 
-        document.getElementById('val1Slider').addEventListener('input', function() {
-            if (locks['1']['val']) return;
-            const h = parseInt(document.getElementById('hue1Slider').value);
-            const s = parseInt(document.getElementById('sat1Slider').value);
-            const v = parseInt(this.value);
-            updateColor('1', h, s, v);
-        });
+            slider.addEventListener('input', function() {
+                if (locks[colorNum][sliderType]) return;
+                const h = parseInt(document.getElementById(`hue${colorNum}Slider`).value);
+                const s = parseInt(document.getElementById(`sat${colorNum}Slider`).value);
+                const v = parseInt(document.getElementById(`val${colorNum}Slider`).value);
+                updateColor(colorNum, h, s, v);
+            });
 
-        // Color 2 sliders
-        document.getElementById('hue2Slider').addEventListener('input', function() {
-            if (locks['2']['hue']) return;
-            const h = parseInt(this.value);
-            const s = parseInt(document.getElementById('sat2Slider').value);
-            const v = parseInt(document.getElementById('val2Slider').value);
-            updateColor('2', h, s, v);
-        });
+            slider.addEventListener('change', function() {
+                if (locks[colorNum][sliderType]) return;
+                if (startValue === null || parseInt(startValue) === parseInt(this.value)) {
+                    startValue = null;
+                    return;
+                }
+                const prev = {
+                    hue: parseInt(document.getElementById(`hue${colorNum}Slider`).value),
+                    sat: parseInt(document.getElementById(`sat${colorNum}Slider`).value),
+                    val: parseInt(document.getElementById(`val${colorNum}Slider`).value)
+                };
+                prev[sliderType] = parseInt(startValue);
+                commitChange(colorNum, prev.hue, prev.sat, prev.val);
+                startValue = null;
+            });
+        }
 
-        document.getElementById('sat2Slider').addEventListener('input', function() {
-            if (locks['2']['sat']) return;
-            const h = parseInt(document.getElementById('hue2Slider').value);
-            const s = parseInt(this.value);
-            const v = parseInt(document.getElementById('val2Slider').value);
-            updateColor('2', h, s, v);
-        });
-
-        document.getElementById('val2Slider').addEventListener('input', function() {
-            if (locks['2']['val']) return;
-            const h = parseInt(document.getElementById('hue2Slider').value);
-            const s = parseInt(document.getElementById('sat2Slider').value);
-            const v = parseInt(this.value);
-            updateColor('2', h, s, v);
+        ['1', '2'].forEach(colorNum => {
+            ['hue', 'sat', 'val'].forEach(sliderType => setupSlider(colorNum, sliderType));
         });
 
         // Lock buttons
@@ -690,10 +813,23 @@
                         if (sliderType === 'hue') val = Math.max(0, Math.min(360, val));
                         else val = Math.max(0, Math.min(100, val));
                         
+                        const hueSlider = document.getElementById(`hue${colorNum}Slider`);
+                        const satSlider = document.getElementById(`sat${colorNum}Slider`);
+                        const valSlider = document.getElementById(`val${colorNum}Slider`);
+                        
+                        const prevH = parseInt(hueSlider.value);
+                        const prevS = parseInt(satSlider.value);
+                        const prevV = parseInt(valSlider.value);
+                        
                         document.getElementById(`${sliderType}${colorNum}Slider`).value = val;
-                        const h = parseInt(document.getElementById(`hue${colorNum}Slider`).value);
-                        const s = parseInt(document.getElementById(`sat${colorNum}Slider`).value);
-                        const v = parseInt(document.getElementById(`val${colorNum}Slider`).value);
+                        const h = parseInt(hueSlider.value);
+                        const s = parseInt(satSlider.value);
+                        const v = parseInt(valSlider.value);
+                        
+                        if (prevH !== h || prevS !== s || prevV !== v) {
+                            commitChange(colorNum, prevH, prevS, prevV);
+                        }
+                        
                         updateColor(colorNum, h, s, v);
                     }
                     
