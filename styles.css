@@ -286,6 +286,11 @@ nav .nav-links a.active {
   box-shadow: 0 0 12px var(--accent-glow);
 }
 
+.card .status-badge.checking {
+  background: color-mix(in srgb, var(--accent) 60%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 75%, transparent);
+}
+
 .status-dot {
   width: 8px;
   height: 8px;
