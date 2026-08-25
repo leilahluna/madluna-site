@@ -218,6 +218,11 @@ nav .nav-links a.active {
   color: inherit;
 }
 
+.card a:hover,
+.server-info a:hover {
+  color: var(--text-secondary);
+}
+
 .card h3 {
   font-size: 1.2rem;
   font-weight: 600;
