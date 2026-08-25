@@ -19,6 +19,7 @@
   --border: #4A3B11;
   --green: #56DE1B;
   --red: #de211b;
+  --status-checking: #C9A84C;
   --logo-color: #9ca3af;
   --radius: 12px;
 }
@@ -287,19 +288,19 @@ nav .nav-links a.active {
 }
 
 .status-badge.checking {
-  background: color-mix(in srgb, var(--accent) 40%, transparent);
-  color: var(--accent);
-  border: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  background: color-mix(in srgb, var(--status-checking) 40%, transparent);
+  color: var(--status-checking);
+  border: 2px solid color-mix(in srgb, var(--status-checking) 55%, transparent);
   transition: box-shadow 0.2s ease;
 }
 
 .status-badge.checking:hover {
-  box-shadow: 0 0 12px var(--accent-glow);
+  box-shadow: 0 0 12px var(--status-checking);
 }
 
 .card .status-badge.checking {
-  background: color-mix(in srgb, var(--accent) 60%, transparent);
-  border-color: color-mix(in srgb, var(--accent) 75%, transparent);
+  background: color-mix(in srgb, var(--status-checking) 60%, transparent);
+  border-color: color-mix(in srgb, var(--status-checking) 75%, transparent);
 }
 
 .status-dot {
