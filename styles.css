@@ -21,7 +21,7 @@
 
 /* Light mode — values defined via stylereferences.html toggle */
 :root[data-theme="light"] {
-  --bg-primary: #dbdbdb;
+  --bg-primary: #dbb09e;
   --bg-secondary: #D7D5D5;
   --bg-card: #9b9797;
   --text-primary: #1a1a1a;
