@@ -247,9 +247,9 @@ nav .nav-links a.active {
 }
 
 .status-badge.online {
-  background: rgba(34, 197, 94, 0.1);
-  color: var(--green);
-  border: 2px solid rgba(34, 197, 94, 0.2);
+  background: var(--green);
+  color: var(--bg-primary);
+  border: 2px solid var(--green);
   transition: box-shadow 0.2s ease;
 }
 
@@ -258,9 +258,9 @@ nav .nav-links a.active {
 }
 
 .status-badge.offline {
-  background: rgba(239, 68, 68, 0.1);
-  color: var(--red);
-  border: 2px solid rgba(239, 68, 68, 0.2);
+  background: var(--red);
+  color: var(--bg-primary);
+  border: 2px solid var(--red);
   transition: box-shadow 0.2s ease;
 }
 
@@ -269,14 +269,14 @@ nav .nav-links a.active {
 }
 
 .status-badge.checking {
-  background: rgba(201, 168, 76, 0.1);
-  color: var(--accent);
-  border: 2px solid rgba(201, 168, 76, 0.2);
+  background: var(--accent);
+  color: var(--bg-primary);
+  border: 2px solid var(--accent);
   transition: box-shadow 0.2s ease;
 }
 
 .status-badge.checking:hover {
-  box-shadow: 0 0 12px rgba(201, 168, 76, 0.35);
+  box-shadow: 0 0 12px var(--accent-glow);
 }
 
 .status-dot {
