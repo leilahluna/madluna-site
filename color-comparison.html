@@ -251,6 +251,30 @@
             background: var(--border-color);
         }
 
+        .devnav {
+            display: flex;
+            gap: 20px;
+            max-width: 800px;
+            margin: 0 auto 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.85rem;
+        }
+
+        .devnav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+
+        .devnav a:hover {
+            color: var(--text-primary);
+        }
+
+        .devnav a.active {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
         @media (max-width: 600px) {
             .comparison {
                 grid-template-columns: 1fr;
@@ -268,6 +292,13 @@
     </style>
 </head>
 <body>
+    <nav class="devnav">
+        <a href="/dev1025202542069.html">dev links</a>
+        <a href="/stylereferences.html">style references</a>
+        <a href="/shelf-colors.html">shelf palette</a>
+        <a href="/color-comparison.html" class="active">color comparison</a>
+    </nav>
+
     <div class="header">
         <h1>Color Comparison</h1>
         <button class="theme-toggle" id="themeToggle">🌙 Dark Mode</button>
