@@ -269,9 +269,9 @@ nav .nav-links a.active {
 }
 
 .status-badge.checking {
-  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  background: color-mix(in srgb, var(--accent) 40%, transparent);
   color: var(--accent);
-  border: 2px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
   transition: box-shadow 0.2s ease;
 }
 
