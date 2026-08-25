@@ -28,29 +28,6 @@
       --border: #3a3530;
     }
 
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 24px;
-    }
-
-    .theme-toggle-btn {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      color: var(--text-primary);
-      padding: 8px 16px;
-      border-radius: 20px;
-      cursor: pointer;
-      font-size: 0.85rem;
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      transition: border-color 0.2s, background 0.2s;
-      white-space: nowrap;
-    }
-
-    .theme-toggle-btn:hover {
-      border-color: var(--accent);
-    }
-
     * {
       margin: 0;
       padding: 0;
@@ -84,9 +61,15 @@
     }
 
     .container {
-      max-width: 900px;
+      max-width: 1000px;
       margin: 0 auto;
-      padding: 0 24px;
+      padding: 0 32px;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 0 28px;
+      }
     }
 
     nav {
@@ -128,11 +111,135 @@
       color: var(--text-primary);
     }
 
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .theme-toggle-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      transition: border-color 0.2s, background 0.2s;
+      white-space: nowrap;
+    }
+
+    .theme-toggle-btn:hover {
+      border-color: var(--accent);
+    }
+
+    .side-nav {
+      position: fixed;
+      top: 110px;
+      right: 24px;
+      width: 260px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      max-height: calc(100vh - 150px);
+      overflow-y: auto;
+    }
+
+    .side-nav h4 {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    .side-nav-links {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px 10px;
+    }
+
+    .side-nav a {
+      display: block;
+      padding: 5px 0;
+      font-size: 0.78rem;
+      line-height: 1.3;
+      color: var(--text-secondary);
+    }
+
+    .side-nav a:hover {
+      color: var(--text-secondary);
+    }
+
+    @media (max-width: 1600px) {
+      .side-nav {
+        display: none;
+      }
+    }
+
+    .commit-badge {
+      position: fixed;
+      bottom: 16px;
+      left: 16px;
+      max-width: 320px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.75rem;
+      z-index: 200;
+      line-height: 1.4;
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+
+    .commit-badge:hover {
+      animation: none;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .commit-badge-label {
+      display: block;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+      font-size: 0.65rem;
+      margin-bottom: 4px;
+    }
+
+    .commit-badge-msg {
+      color: var(--text-primary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .commit-badge-meta {
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .commit-badge a {
+      color: inherit;
+    }
+
+    @media (max-width: 700px) {
+      .commit-badge {
+        display: none;
+      }
+    }
+
     .color-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 24px;
-      margin: 40px 0;
+      margin: 16px 0;
     }
 
     .color-swatch {
@@ -144,14 +251,14 @@
 
     .color-sample {
       width: 100%;
-      height: 140px;
+      height: 80px;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
     .color-info {
-      padding: 20px;
+      padding: 8px 12px;
       border-top: 1px solid var(--border);
     }
 
@@ -189,19 +296,31 @@
     }
 
     .section-title {
-      font-size: 1.8rem;
-      margin-top: 60px;
-      margin-bottom: 32px;
+      font-size: 1.4rem;
+      margin-top: 0px;
+      margin-bottom: 8px;
       color: var(--text-primary);
     }
 
     .section {
-      padding: 60px 0;
+      margin-bottom: 16px;
+      padding: 12px 0;
+      scroll-margin-top: 90px;
     }
 
-    h1 {
-      font-size: 2.5rem;
-      margin-bottom: 16px;
+    .intro-section {
+      margin-bottom: 0px;
+      padding-bottom: 12px;
+    }
+
+    .intro-section h1 {
+      margin: 0 0 2px 0;
+      font-size: 1.8rem;
+    }
+
+    .intro-section p {
+      margin: 0;
+      font-size: 0.9rem;
     }
 
     .text-sample {
@@ -224,17 +343,15 @@
       font-size: 1.2rem;
       font-weight: 600;
       color: var(--text-primary);
-      margin: 40px 0 24px 0;
+      margin: 16px 0 8px 0;
     }
 
-    @media (max-width: 600px) {
-      h1 {
-        font-size: 1.8rem;
-      }
+    .section > .subsection-title:first-child {
+      margin-top: 0;
+    }
 
-      nav .nav-links {
-        gap: 16px;
-      }
+    h1 {
+      font-size: 2.5rem;
     }
   </style>
 </head>
@@ -254,14 +371,25 @@
     </div>
   </nav>
 
+  <div class="side-nav" role="navigation" aria-label="Section jump links">
+    <h4>jump to</h4>
+    <div class="side-nav-links">
+      <a href="#text-casing">text casing</a>
+      <a href="#background-colors">background colors</a>
+      <a href="#text-colors">text colors</a>
+      <a href="#accent-colors">accent colors</a>
+      <a href="#border-color">border color</a>
+    </div>
+  </div>
+
   <main class="container">
-    <section class="section">
-      <h1>Shelf Color Reference</h1>
+    <section class="section intro-section">
+      <h1 style="font-family: 'Playfair Display', serif;">Shelf Color Reference</h1>
       <p style="color: var(--text-secondary); font-size: 1.05rem;">Complete color palette for shelf.madluna.ca</p>
     </section>
 
     <!-- Text Casing Rule -->
-    <div class="section">
+    <div class="section" id="text-casing">
       <h2 class="section-title">Text Casing</h2>
       <div class="text-sample" style="border: 1px solid var(--border);">
         <p style="color: var(--text-primary); margin: 0 0 8px 0;">site text is strictly lowercase by default.</p>
@@ -270,7 +398,7 @@
     </div>
 
     <!-- Background Colors -->
-    <div class="section">
+    <div class="section" id="background-colors">
       <h2 class="section-title">Background Colors</h2>
       <div class="color-grid">
         <div class="color-swatch">
@@ -294,7 +422,7 @@
     </div>
 
     <!-- Text Colors -->
-    <div class="section">
+    <div class="section" id="text-colors">
       <h2 class="section-title">Text Colors</h2>
 
       <h3 class="subsection-title">Primary Text</h3>
@@ -313,7 +441,7 @@
     </div>
 
     <!-- Accent Color -->
-    <div class="section">
+    <div class="section" id="accent-colors">
       <h2 class="section-title">Accent Color</h2>
       <div class="color-grid">
         <div class="color-swatch">
@@ -327,10 +455,8 @@
       </div>
     </div>
 
-    <!-- UI Elements -->
-    <div class="section">
-      <h2 class="section-title">UI Elements</h2>
-
+    <!-- Border Color -->
+    <div class="section" id="border-color">
       <h3 class="subsection-title">Border Color</h3>
       <div class="text-sample" style="border: 2px solid var(--border);">
         <p style="color: var(--text-primary); margin: 0;">Borders and dividers use this color for subtle separation</p>
@@ -346,50 +472,90 @@
     </div>
   </footer>
 
+  <div class="commit-badge" id="commit-badge">
+    <span class="commit-badge-label">latest commit</span>
+    <div class="commit-badge-msg" id="commit-badge-msg">loading…</div>
+    <div class="commit-badge-meta" id="commit-badge-meta"></div>
+  </div>
+
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      document.querySelectorAll('.color-hex').forEach(el => {
-        el.addEventListener('click', async () => {
-          const hex = el.dataset.dark ? (document.body.dataset.theme === 'light' ? el.dataset.light : el.dataset.dark) : el.textContent;
-          try {
-            await navigator.clipboard.writeText(hex);
-            const originalText = el.textContent;
-            el.textContent = 'Copied!';
-            setTimeout(() => {
-              el.textContent = originalText;
-            }, 1500);
-          } catch (err) {
-            console.error('Failed to copy:', err);
-          }
-        });
+    document.querySelectorAll('.color-hex').forEach(el => {
+      el.addEventListener('click', async () => {
+        const hex = el.dataset.dark ? (document.body.dataset.theme === 'light' ? el.dataset.light : el.dataset.dark) : el.textContent;
+        try {
+          await navigator.clipboard.writeText(hex);
+          const originalText = el.textContent;
+          el.textContent = 'Copied!';
+          setTimeout(() => {
+            el.textContent = originalText;
+          }, 1500);
+        } catch (err) {
+          console.error('Failed to copy:', err);
+        }
       });
-
-      const THEME_KEY = 'madluna-shelfcolors-theme';
-      const toggleBtn = document.getElementById('theme-toggle');
-
-      function applyTheme(theme) {
-        document.body.dataset.theme = theme;
-
-        document.querySelectorAll('[data-dark][data-light]').forEach(el => {
-          const value = theme === 'light' ? el.dataset.light : el.dataset.dark;
-          if (el.classList.contains('color-sample')) {
-            el.style.background = value;
-          } else {
-            el.textContent = value;
-          }
-        });
-
-        toggleBtn.textContent = theme === 'light' ? '⏾' : '☀︎';
-        localStorage.setItem(THEME_KEY, theme);
-      }
-
-      toggleBtn.addEventListener('click', () => {
-        const next = document.body.dataset.theme === 'light' ? 'dark' : 'light';
-        applyTheme(next);
-      });
-
-      applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
     });
+
+    const THEME_KEY = 'madluna-shelfcolors-theme';
+    const toggleBtn = document.getElementById('theme-toggle');
+
+    function applyTheme(theme) {
+      document.body.dataset.theme = theme;
+
+      document.querySelectorAll('[data-dark][data-light]').forEach(el => {
+        const value = theme === 'light' ? el.dataset.light : el.dataset.dark;
+        if (el.classList.contains('color-sample')) {
+          el.style.background = value;
+        } else {
+          el.textContent = value;
+        }
+      });
+
+      toggleBtn.textContent = theme === 'light' ? '⏾' : '☀︎';
+      localStorage.setItem(THEME_KEY, theme);
+    }
+
+    toggleBtn.addEventListener('click', () => {
+      const next = document.body.dataset.theme === 'light' ? 'dark' : 'light';
+      applyTheme(next);
+    });
+
+    applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
+
+    function timeAgo(dateStr) {
+      const seconds = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+      const units = [
+        ['year', 31536000], ['month', 2592000], ['day', 86400],
+        ['hour', 3600], ['minute', 60], ['second', 1]
+      ];
+      for (const [name, secs] of units) {
+        const value = Math.floor(seconds / secs);
+        if (value >= 1) return `${value} ${name}${value > 1 ? 's' : ''} ago`;
+      }
+      return 'just now';
+    }
+
+    async function loadLatestCommit() {
+      const msgEl = document.getElementById('commit-badge-msg');
+      const metaEl = document.getElementById('commit-badge-meta');
+      try {
+        const res = await fetch('https://api.github.com/repos/leilahluna/madluna-site/commits/master');
+        if (!res.ok) throw new Error('GitHub API error');
+        const data = await res.json();
+        const subject = data.commit.message.split('\n')[0];
+        const sha = data.sha.slice(0, 7);
+        const when = timeAgo(data.commit.author.date);
+
+        msgEl.textContent = subject;
+        msgEl.title = subject;
+        metaEl.innerHTML = `<a href="${data.html_url}" target="_blank" rel="noopener">${sha}</a> &middot; ${when}`;
+      } catch (err) {
+        msgEl.textContent = 'unable to load latest commit';
+        metaEl.textContent = '';
+      }
+    }
+
+    loadLatestCommit();
+    setInterval(loadLatestCommit, 60000);
   </script>
 
 </body>
