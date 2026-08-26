@@ -79,9 +79,56 @@
 
         .comparison {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
             gap: 2rem;
             margin-bottom: 1rem;
+        }
+
+        .add-color-btn {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-primary);
+            transition: background 0.2s;
+        }
+
+        .add-color-btn:hover {
+            background: var(--slider-track);
+        }
+
+        .control-section-title.with-remove {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .remove-color-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 14px;
+            line-height: 1;
+            width: 22px;
+            height: 22px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .remove-color-btn:hover:not(:disabled) {
+            background: var(--slider-track);
+            color: var(--text-primary);
+        }
+
+        .remove-color-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
         }
 
         .color-section {
@@ -345,13 +392,14 @@
         <h1>Color Comparison</h1>
         <div style="display: flex; align-items: center; gap: 12px;">
             <span class="undo-hint">ctrl+z to undo</span>
+            <button class="add-color-btn" id="addColorBtn">+ add color</button>
             <button class="theme-toggle" id="themeToggle">⏾</button>
         </div>
     </div>
 
     <div class="container">
-        <div class="comparison">
-            <div class="color-section">
+        <div class="comparison" id="comparison">
+            <div class="color-section" data-color="1">
                 <div class="swatch" id="swatch1"></div>
                 <div class="info">
                     <div class="info-row">
@@ -371,7 +419,10 @@
                 <div class="divider"></div>
 
                 <div class="control-section">
-                    <div class="control-section-title">Left Color Controls</div>
+                    <div class="control-section-title with-remove">
+                        <span>Color 1 Controls</span>
+                        <button class="remove-color-btn" data-color="1" title="remove color" disabled>&times;</button>
+                    </div>
                     
                     <div class="control-group">
                         <div class="slider-label">
@@ -413,7 +464,7 @@
                 </div>
             </div>
 
-            <div class="color-section">
+            <div class="color-section" data-color="2">
                 <div class="swatch" id="swatch2"></div>
                 <div class="info">
                     <div class="info-row">
@@ -433,7 +484,10 @@
                 <div class="divider"></div>
 
                 <div class="control-section">
-                    <div class="control-section-title">Right Color Controls</div>
+                    <div class="control-section-title with-remove">
+                        <span>Color 2 Controls</span>
+                        <button class="remove-color-btn" data-color="2" title="remove color" disabled>&times;</button>
+                    </div>
                     
                     <div class="control-group">
                         <div class="slider-label">
@@ -731,6 +785,125 @@
             });
         }
 
+        // Dynamic color add/remove
+        const activeColors = ['1', '2'];
+        let nextColorNum = 3;
+        const DEFAULT_PALETTE = ['#4d806f', '#d4537e', '#5b7fd4', '#d4a853', '#8a5bd4', '#53d4a0'];
+
+        function colorSectionHTML(n) {
+            const sliders = ['hue', 'sat', 'val'].map(type => {
+                const label = type === 'hue' ? 'Hue' : type === 'sat' ? 'Saturation' : 'Value';
+                const max = type === 'hue' ? 360 : 100;
+                const suffix = type === 'hue' ? '°' : '%';
+                return `
+                    <div class="control-group">
+                        <div class="slider-label">
+                            <span>${label}</span>
+                            <div class="slider-controls">
+                                <span class="slider-value" id="${type}${n}Val">0${suffix}</span>
+                                <button class="lock-btn" id="${type}${n}Lock" data-color="${n}" data-slider="${type}">${UNLOCK_ICON}</button>
+                            </div>
+                        </div>
+                        <input type="range" id="${type}${n}Slider" min="0" max="${max}" value="0" step="1">
+                    </div>`;
+            }).join('');
+
+            return `
+                <div class="swatch" id="swatch${n}"></div>
+                <div class="info">
+                    <div class="info-row">
+                        <span class="info-label">Hex</span>
+                        <span class="info-value" id="hex${n}">#000000</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">RGB</span>
+                        <span class="info-value" id="rgb${n}">rgb(0, 0, 0)</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">HSV</span>
+                        <span class="info-value" id="hsv${n}">H: 0° S: 0% V: 0%</span>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="control-section">
+                    <div class="control-section-title with-remove">
+                        <span>Color ${n} Controls</span>
+                        <button class="remove-color-btn" data-color="${n}" title="remove color">&times;</button>
+                    </div>
+                    ${sliders}
+                </div>
+
+                <div class="history-section">
+                    <div class="control-section-title">History</div>
+                    <div class="history-row" id="history${n}"></div>
+                </div>`;
+        }
+
+        function wireColorEvents(n) {
+            ['hue', 'sat', 'val'].forEach(type => setupSlider(n, type));
+            document.getElementById(`hue${n}Lock`).addEventListener('click', () => toggleLock(n, 'hue'));
+            document.getElementById(`sat${n}Lock`).addEventListener('click', () => toggleLock(n, 'sat'));
+            document.getElementById(`val${n}Lock`).addEventListener('click', () => toggleLock(n, 'val'));
+            makeHexEditable(n);
+            ['hue', 'sat', 'val'].forEach(type => makeValueEditable(n, type));
+        }
+
+        function updateRemoveButtonsState() {
+            document.querySelectorAll('.remove-color-btn').forEach(btn => {
+                btn.disabled = activeColors.length <= 1;
+            });
+        }
+
+        function addColor() {
+            const n = String(nextColorNum++);
+            const hex = DEFAULT_PALETTE[(parseInt(n) - 3) % DEFAULT_PALETTE.length];
+            const rgb = hexToRgb(hex);
+            const hsv = rgbToHsv(rgb.r, rgb.g, rgb.b);
+
+            const section = document.createElement('div');
+            section.className = 'color-section';
+            section.dataset.color = n;
+            section.innerHTML = colorSectionHTML(n);
+            document.getElementById('comparison').appendChild(section);
+
+            locks[n] = { hue: false, sat: false, val: false };
+            history[n] = [];
+            activeColors.push(n);
+
+            document.getElementById(`hue${n}Slider`).value = hsv.h;
+            document.getElementById(`sat${n}Slider`).value = hsv.s;
+            document.getElementById(`val${n}Slider`).value = hsv.v;
+            updateColor(n, hsv.h, hsv.s, hsv.v);
+            renderHistory(n);
+            wireColorEvents(n);
+            updateRemoveButtonsState();
+        }
+
+        function removeColor(n) {
+            if (activeColors.length <= 1) return;
+            const section = document.querySelector(`.color-section[data-color="${n}"]`);
+            if (section) section.remove();
+
+            delete locks[n];
+            delete history[n];
+            const idx = activeColors.indexOf(n);
+            if (idx !== -1) activeColors.splice(idx, 1);
+
+            for (let i = undoStack.length - 1; i >= 0; i--) {
+                if (undoStack[i].colorNum === n) undoStack.splice(i, 1);
+            }
+
+            updateRemoveButtonsState();
+        }
+
+        document.getElementById('addColorBtn').addEventListener('click', addColor);
+        document.getElementById('comparison').addEventListener('click', (e) => {
+            const btn = e.target.closest('.remove-color-btn');
+            if (btn && !btn.disabled) removeColor(btn.dataset.color);
+        });
+
         // Theme toggle
         const themeToggle = document.getElementById('themeToggle');
         const htmlEl = document.documentElement;
@@ -788,18 +961,6 @@
             });
         }
 
-        ['1', '2'].forEach(colorNum => {
-            ['hue', 'sat', 'val'].forEach(sliderType => setupSlider(colorNum, sliderType));
-        });
-
-        // Lock buttons
-        document.getElementById('hue1Lock').addEventListener('click', () => toggleLock('1', 'hue'));
-        document.getElementById('sat1Lock').addEventListener('click', () => toggleLock('1', 'sat'));
-        document.getElementById('val1Lock').addEventListener('click', () => toggleLock('1', 'val'));
-        document.getElementById('hue2Lock').addEventListener('click', () => toggleLock('2', 'hue'));
-        document.getElementById('sat2Lock').addEventListener('click', () => toggleLock('2', 'sat'));
-        document.getElementById('val2Lock').addEventListener('click', () => toggleLock('2', 'val'));
-
         function makeValueEditable(colorNum, sliderType) {
             const valueEl = document.getElementById(`${sliderType}${colorNum}Val`);
             valueEl.addEventListener('click', () => {
@@ -856,14 +1017,9 @@
             });
         }
 
-        // Make hex codes and HSV values clickable
-        makeHexEditable('1');
-        makeHexEditable('2');
-        
-        ['hue', 'sat', 'val'].forEach(slider => {
-            makeValueEditable('1', slider);
-            makeValueEditable('2', slider);
-        });
+        // Wire up sliders, locks, and editable fields for the initial two colors
+        activeColors.forEach(wireColorEvents);
+        updateRemoveButtonsState();
     </script>
 
 </body>
