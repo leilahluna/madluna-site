@@ -93,8 +93,8 @@
           statusEl.innerHTML = '<span class="status-dot"></span> offline';
         }
       } catch {
-        statusEl.className = 'status-badge offline';
-        statusEl.innerHTML = '<span class="status-dot"></span> unable to check';
+        statusEl.className = 'status-badge unknown';
+        statusEl.innerHTML = '<span class="status-mark">?</span> unable to check';
       }
     }
 

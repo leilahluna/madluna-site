@@ -98,8 +98,8 @@
           el.innerHTML = '<span class="status-dot"></span> offline';
         }
       } catch {
-        el.className = 'status-badge offline';
-        el.innerHTML = '<span class="status-dot"></span> unable to check';
+        el.className = 'status-badge unknown';
+        el.innerHTML = '<span class="status-mark">?</span> unable to check';
       }
     }
 

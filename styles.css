@@ -20,6 +20,7 @@
   --green: #56DE1B;
   --red: #de211b;
   --status-checking: #9A801B;
+  --status-unknown: #8a8a8a;
   --logo-color: #9ca3af;
   --radius: 12px;
 }
@@ -309,11 +310,33 @@ nav .nav-links a.active {
   border-color: color-mix(in srgb, var(--status-checking) 75%, transparent);
 }
 
+.status-badge.unknown {
+  background: color-mix(in srgb, var(--status-unknown) 40%, transparent);
+  color: var(--text-secondary);
+  border: 2px solid color-mix(in srgb, var(--status-unknown) 55%, transparent);
+  transition: box-shadow 0.2s ease;
+}
+
+.status-badge.unknown:hover {
+  box-shadow: 0 0 12px var(--status-unknown);
+}
+
+.card .status-badge.unknown {
+  background: color-mix(in srgb, var(--status-unknown) 60%, transparent);
+  border-color: color-mix(in srgb, var(--status-unknown) 75%, transparent);
+}
+
 .status-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: currentColor;
+}
+
+.status-mark {
+  font-size: 0.8em;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .status-badge.online .status-dot {
@@ -328,7 +351,12 @@ nav .nav-links a.active {
   background: var(--status-checking);
 }
 
-.status-badge.checking {
+.status-badge.unknown .status-mark {
+  color: var(--status-unknown);
+}
+
+.status-badge.checking,
+.status-badge.unknown {
   animation: pulse 1.4s ease-in-out infinite;
 }
 
