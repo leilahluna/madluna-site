@@ -4,9 +4,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --bg-primary: #382835;
-  --bg-secondary: #2F212D;
-  --bg-card: #5C4E59;
+  --bg-primary: #38282c;
+  --bg-secondary: #2e2024;
+  --bg-card: #5c4e51;
   --text-primary: #e9e7e9;
   --text-secondary: #D3D2D3;
   --accent: #66531b;
@@ -27,9 +27,9 @@
 
 /* Light mode — values defined via stylereferences.html toggle */
 :root[data-theme="light"] {
-  --bg-primary: #dbdbdb;
+  --bg-primary: #c7c7c7;
   --bg-secondary: #A2A2A2;
-  --bg-card: #6D6D6D;
+  --bg-card: #a3a3a3;
   --text-primary: #010001;
   --text-secondary: #120C11;
   --accent: #80697c;
