@@ -340,6 +340,109 @@
             color: var(--text-secondary);
         }
 
+        .palette-container {
+            max-width: 800px;
+            margin: 0 auto 2rem;
+            background: var(--bg-primary);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .palette-container h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .palette-container .palette-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 1.25rem;
+        }
+
+        .palette-head-row, .palette-row {
+            display: grid;
+            grid-template-columns: minmax(120px, 1fr) 1.4fr 1.4fr;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .palette-head-row {
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .palette-head-row span {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+        }
+
+        .palette-row {
+            padding: 0.6rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .palette-row:last-child {
+            border-bottom: none;
+        }
+
+        .palette-label {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .palette-value {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .palette-swatch {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .palette-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+
+        .palette-hex {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 12px;
+        }
+
+        .palette-hsv {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 600px) {
+            .palette-container {
+                padding: 1.5rem;
+            }
+
+            .palette-head-row, .palette-row {
+                grid-template-columns: minmax(90px, 1fr) 1fr 1fr;
+                gap: 0.5rem;
+            }
+
+            .palette-swatch {
+                width: 24px;
+                height: 24px;
+            }
+        }
+
         .devnav {
             display: flex;
             gap: 20px;
@@ -395,6 +498,17 @@
             <button class="add-color-btn" id="addColorBtn">+ add color</button>
             <button class="theme-toggle" id="themeToggle">⏾</button>
         </div>
+    </div>
+
+    <div class="palette-container">
+        <h2>Site Palette — Dark vs Light</h2>
+        <p class="palette-subtitle">Live values read from styles.css — always matches the current site.</p>
+        <div class="palette-head-row">
+            <span></span>
+            <span>Dark Mode</span>
+            <span>Light Mode</span>
+        </div>
+        <div id="paletteGrid"></div>
     </div>
 
     <div class="container">
@@ -1020,6 +1134,76 @@
         // Wire up sliders, locks, and editable fields for the initial two colors
         activeColors.forEach(wireColorEvents);
         updateRemoveButtonsState();
+
+        // Site Palette table — reads the live values straight out of styles.css
+        // so it can never drift from the real site colors.
+        const PALETTE_VARS = [
+            ['--bg-primary', 'Primary Background'],
+            ['--bg-secondary', 'Secondary Background'],
+            ['--bg-card', 'Card Background'],
+            ['--accent', 'Accent Primary'],
+            ['--accent-hover', 'Accent Hover'],
+            ['--accent-glow', 'Accent Glow'],
+            ['--accent-secondary', 'Accent Secondary'],
+            ['--accent-secondary-hover', 'Accent Secondary Hover'],
+            ['--accent-secondary-glow', 'Accent Secondary Glow'],
+        ];
+
+        function parseCssVarBlock(block) {
+            const vars = {};
+            const re = /--([\w-]+)\s*:\s*([^;]+);/g;
+            let m;
+            while ((m = re.exec(block))) vars[`--${m[1]}`] = m[2].trim();
+            return vars;
+        }
+
+        async function fetchSiteVars() {
+            const res = await fetch('/styles.css');
+            const css = await res.text();
+            const darkMatch = css.match(/:root\s*{([^}]*)}/);
+            const lightMatch = css.match(/:root\[data-theme="light"\]\s*{([^}]*)}/);
+            return {
+                dark: darkMatch ? parseCssVarBlock(darkMatch[1]) : {},
+                light: lightMatch ? parseCssVarBlock(lightMatch[1]) : {},
+            };
+        }
+
+        function paletteCellHTML(hex) {
+            const rgb = hexToRgb(hex);
+            const hsvLabel = rgb ? (() => {
+                const { h, s, v } = rgbToHsv(rgb.r, rgb.g, rgb.b);
+                return `H: ${h}° S: ${s}% V: ${v}%`;
+            })() : '';
+            return `
+                <div class="palette-value">
+                    <div class="palette-swatch" style="background: ${hex};"></div>
+                    <div class="palette-text">
+                        <span class="palette-hex">${hex}</span>
+                        <span class="palette-hsv">${hsvLabel}</span>
+                    </div>
+                </div>`;
+        }
+
+        async function renderSitePalette() {
+            const grid = document.getElementById('paletteGrid');
+            try {
+                const { dark, light } = await fetchSiteVars();
+                grid.innerHTML = PALETTE_VARS.map(([varName, label]) => {
+                    const darkHex = dark[varName] || '#000000';
+                    const lightHex = light[varName] || darkHex;
+                    return `
+                        <div class="palette-row">
+                            <div class="palette-label">${label}</div>
+                            ${paletteCellHTML(darkHex)}
+                            ${paletteCellHTML(lightHex)}
+                        </div>`;
+                }).join('');
+            } catch (err) {
+                grid.innerHTML = '<p class="palette-subtitle">Unable to load styles.css.</p>';
+            }
+        }
+
+        renderSitePalette();
     </script>
 
 </body>
