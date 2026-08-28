@@ -190,6 +190,53 @@
       background: rgba(201, 168, 76, 0.08);
     }
 
+    .color-compare {
+      margin-top: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .compare-block {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 0.78rem;
+    }
+
+    .compare-tag {
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-size: 0.65rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .compare-swatch {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .compare-hex {
+      font-family: 'Courier New', monospace;
+      color: var(--accent);
+      white-space: nowrap;
+    }
+
+    .compare-hsv {
+      color: var(--text-secondary);
+      font-family: 'Courier New', monospace;
+      white-space: nowrap;
+    }
+
     .section {
       margin-bottom: 16px;
       padding: 12px 0;
@@ -752,6 +799,54 @@
       });
     });
 
+    function hexToRgb(hex) {
+      hex = hex.replace('#', '');
+      if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+      const num = parseInt(hex, 16);
+      return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+    }
+
+    function rgbToHsv(r, g, b) {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      const d = max - min;
+      let h = 0;
+      if (d !== 0) {
+        if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+        else if (max === g) h = ((b - r) / d + 2) / 6;
+        else h = ((r - g) / d + 4) / 6;
+      }
+      const s = max === 0 ? 0 : d / max;
+      const v = max;
+      return { h: Math.round(h * 360), s: Math.round(s * 100), v: Math.round(v * 100) };
+    }
+
+    function hsvLabel(hex) {
+      const { r, g, b } = hexToRgb(hex);
+      const { h, s, v } = rgbToHsv(r, g, b);
+      return `H: ${h}° S: ${s}% V: ${v}%`;
+    }
+
+    document.querySelectorAll('.color-hex[data-dark][data-light]').forEach(el => {
+      const compare = document.createElement('div');
+      compare.className = 'color-compare';
+      compare.innerHTML = `
+        <div class="compare-block compare-current">
+          <span class="compare-tag">this mode</span>
+          <span class="compare-hsv" data-role="current-hsv"></span>
+        </div>
+        <div class="compare-block compare-other">
+          <span class="compare-tag" data-role="other-tag"></span>
+          <span class="compare-swatch" data-role="other-swatch"></span>
+          <span class="compare-hex" data-role="other-hex"></span>
+          <span class="compare-hsv" data-role="other-hsv"></span>
+        </div>
+      `;
+      el.insertAdjacentElement('afterend', compare);
+      el._compareEl = compare;
+    });
+
     const THEME_KEY = 'madluna-stylerefs-theme';
     const toggleBtn = document.getElementById('theme-toggle');
 
@@ -764,6 +859,16 @@
           el.style.background = value;
         } else {
           el.textContent = value;
+        }
+
+        if (el.classList.contains('color-hex') && el._compareEl) {
+          const otherValue = theme === 'light' ? el.dataset.dark : el.dataset.light;
+          const compare = el._compareEl;
+          compare.querySelector('[data-role="current-hsv"]').textContent = hsvLabel(value);
+          compare.querySelector('[data-role="other-tag"]').textContent = theme === 'light' ? 'dark mode' : 'light mode';
+          compare.querySelector('[data-role="other-swatch"]').style.background = otherValue;
+          compare.querySelector('[data-role="other-hex"]').textContent = otherValue;
+          compare.querySelector('[data-role="other-hsv"]').textContent = hsvLabel(otherValue);
         }
       });
 
