@@ -6,39 +6,7 @@
   <title>Color Reference - Madluna</title>
   <link rel="stylesheet" href="/styles.css">
   <style>
-    /* Frozen dark-mode reference values — intentionally independent of styles.css so this page doesn't drift if the live site palette changes later. */
-    :root {
-      --bg-primary: #382835;
-      --bg-secondary: #2F212D;
-      --bg-card: #5C4E59;
-      --text-primary: #e9e7e9;
-      --text-secondary: #D3D2D3;
-      --accent: #66531b;
-      --accent-secondary: #2F2508;
-      --accent-secondary-hover: #A09475;
-      --accent-secondary-glow: #201904;
-      --accent-hover: #837349;
-      --accent-glow: #4a3b11;
-      --card-link: #A9A8A9;
-      --border: #382600;
-    }
-
-    /* --accent-secondary, its hover/glow, and --card-link have no light-mode values yet — placeholder (same as dark) */
-    body[data-theme="light"] {
-      --bg-primary: #dbdbdb;
-      --bg-secondary: #A2A2A2;
-      --bg-card: #6D6D6D;
-      --text-primary: #010001;
-      --text-secondary: #120C11;
-      --accent: #80697c;
-      --accent-secondary: #2F2508;
-      --accent-secondary-hover: #A09475;
-      --accent-secondary-glow: #201904;
-      --accent-hover: #988595;
-      --accent-glow: #5D4C5A;
-      --card-link: #A9A8A9;
-      --border: #3D313B;
-    }
+    /* Palette values are read live from styles.css's real :root / :root[data-theme="light"] variables — see hydrateFromCSSVars() below. No hardcoded colors here. */
 
     body {
       background-color: var(--bg-primary);
@@ -469,29 +437,29 @@
       <h2 class="section-title">Background Colors</h2>
       <div class="color-grid">
         <div class="color-swatch">
-          <div class="color-sample" data-dark="#382835" data-light="#dbdbdb" style="background: #382835;"></div>
+          <div class="color-sample" data-var="--bg-primary" style="background: var(--bg-primary);"></div>
           <div class="color-info">
             <div class="color-name">Primary Background</div>
             <div class="color-usage">Main page background</div>
-            <div class="color-hex" data-dark="#382835" data-light="#dbdbdb">#382835</div>
+            <div class="color-hex" data-var="--bg-primary"></div>
           </div>
         </div>
 
         <div class="color-swatch">
-          <div class="color-sample" data-dark="#2F212D" data-light="#A2A2A2" style="background: #2F212D;"></div>
+          <div class="color-sample" data-var="--bg-secondary" style="background: var(--bg-secondary);"></div>
           <div class="color-info">
             <div class="color-name">Secondary Background</div>
             <div class="color-usage">Header, darker sections</div>
-            <div class="color-hex" data-dark="#2F212D" data-light="#A2A2A2">#2F212D</div>
+            <div class="color-hex" data-var="--bg-secondary"></div>
           </div>
         </div>
 
         <div class="color-swatch">
-          <div class="color-sample" data-dark="#5C4E59" data-light="#6D6D6D" style="background: #5C4E59;"></div>
+          <div class="color-sample" data-var="--bg-card" style="background: var(--bg-card);"></div>
           <div class="color-info">
             <div class="color-name">Card Background</div>
             <div class="color-usage">Card and container backgrounds</div>
-            <div class="color-hex" data-dark="#5C4E59" data-light="#6D6D6D">#5C4E59</div>
+            <div class="color-hex" data-var="--bg-card"></div>
           </div>
         </div>
       </div>
@@ -504,29 +472,29 @@
       <h3 class="subsection-title">Primary</h3>
       <div class="color-grid">
         <div class="color-swatch">
-          <div class="color-sample" data-dark="#66531b" data-light="#80697c" style="background: #66531b;"></div>
+          <div class="color-sample" data-var="--accent" style="background: var(--accent);"></div>
           <div class="color-info">
             <div class="color-name">Accent Primary</div>
             <div class="color-usage">Links, buttons, highlights</div>
-            <div class="color-hex" data-dark="#66531b" data-light="#80697c">#66531b</div>
+            <div class="color-hex" data-var="--accent"></div>
           </div>
         </div>
 
         <div class="color-swatch">
-          <div class="color-sample" data-dark="#837349" data-light="#988595" style="background: #837349;"></div>
+          <div class="color-sample" data-var="--accent-hover" style="background: var(--accent-hover);"></div>
           <div class="color-info">
             <div class="color-name">Accent Hover</div>
             <div class="color-usage">Hover state for accent elements</div>
-            <div class="color-hex" data-dark="#837349" data-light="#988595">#837349</div>
+            <div class="color-hex" data-var="--accent-hover"></div>
           </div>
         </div>
 
         <div class="color-swatch">
-          <div class="color-sample" data-dark="#4a3b11" data-light="#5D4C5A" style="background: #4a3b11;"></div>
+          <div class="color-sample" data-var="--accent-glow" style="background: var(--accent-glow);"></div>
           <div class="color-info">
             <div class="color-name">Accent Glow</div>
             <div class="color-usage">Shadow and glow effects</div>
-            <div class="color-hex" data-dark="#4a3b11" data-light="#5D4C5A">#4a3b11</div>
+            <div class="color-hex" data-var="--accent-glow"></div>
           </div>
         </div>
       </div>
@@ -534,29 +502,29 @@
       <h3 class="subsection-title">Secondary (used on cards)</h3>
       <div class="color-grid">
         <div class="color-swatch">
-          <div class="color-sample" data-dark="#2F2508" data-light="#2F2508" style="background: #2F2508;"></div>
+          <div class="color-sample" data-var="--accent-secondary" style="background: var(--accent-secondary);"></div>
           <div class="color-info">
             <div class="color-name">Accent Secondary</div>
             <div class="color-usage">Card hover border, card arrow icon</div>
-            <div class="color-hex" data-dark="#2F2508" data-light="#2F2508">#2F2508</div>
+            <div class="color-hex" data-var="--accent-secondary"></div>
           </div>
         </div>
 
         <div class="color-swatch">
-          <div class="color-sample" data-dark="#A09475" data-light="#A09475" style="background: #A09475;"></div>
+          <div class="color-sample" data-var="--accent-secondary-hover" style="background: var(--accent-secondary-hover);"></div>
           <div class="color-info">
             <div class="color-name">Accent Secondary Hover</div>
             <div class="color-usage">Reserved for card accent hover states</div>
-            <div class="color-hex" data-dark="#A09475" data-light="#A09475">#A09475</div>
+            <div class="color-hex" data-var="--accent-secondary-hover"></div>
           </div>
         </div>
 
         <div class="color-swatch">
-          <div class="color-sample" data-dark="#201904" data-light="#201904" style="background: #201904;"></div>
+          <div class="color-sample" data-var="--accent-secondary-glow" style="background: var(--accent-secondary-glow);"></div>
           <div class="color-info">
             <div class="color-name">Accent Secondary Glow</div>
             <div class="color-usage">Card hover shadow/glow</div>
-            <div class="color-hex" data-dark="#201904" data-light="#201904">#201904</div>
+            <div class="color-hex" data-var="--accent-secondary-glow"></div>
           </div>
         </div>
       </div>
@@ -568,7 +536,7 @@
       <div class="text-sample" style="border: 2px solid var(--border);">
         <p style="color: var(--text-primary); margin: 0;">Borders use this color for subtle separation</p>
       </div>
-      <div class="color-hex" data-dark="#382600" data-light="#3D313B">#382600</div>
+      <div class="color-hex" data-var="--border"></div>
     </div>
 
     <!-- Text Colors -->
@@ -577,24 +545,24 @@
 
       <h3 class="subsection-title">Primary Text</h3>
       <div class="text-sample text-primary-sample">
-        <p style="font-size: 1.1rem; margin: 0;">This is primary text color (<span data-dark="#e9e7e9" data-light="#010001">#e9e7e9</span>)</p>
+        <p style="font-size: 1.1rem; margin: 0;">This is primary text color (<span data-var="--text-primary"></span>)</p>
         <p style="font-size: 0.95rem; margin: 8px 0 0 0;">Used for headings, main content, and primary information</p>
       </div>
-      <div class="color-hex" data-dark="#e9e7e9" data-light="#010001">#e9e7e9</div>
+      <div class="color-hex" data-var="--text-primary"></div>
 
       <h3 class="subsection-title">Secondary Text</h3>
       <div class="text-sample text-secondary-sample">
-        <p style="font-size: 1.1rem; margin: 0;">This is secondary text color (<span data-dark="#D3D2D3" data-light="#120C11">#D3D2D3</span>)</p>
+        <p style="font-size: 1.1rem; margin: 0;">This is secondary text color (<span data-var="--text-secondary"></span>)</p>
         <p style="font-size: 0.95rem; margin: 8px 0 0 0;">Used for subtitles, descriptions, and muted information</p>
       </div>
-      <div class="color-hex" data-dark="#D3D2D3" data-light="#120C11">#D3D2D3</div>
+      <div class="color-hex" data-var="--text-secondary"></div>
 
       <h3 class="subsection-title">Hyperlinks (card)</h3>
       <div class="card" style="cursor: default;">
         <h3>Header with a <a href="#" onclick="return false;">hyperlinked text</a> — inherits primary text color at rest</h3>
         <p>Body text with a <a href="#" onclick="return false;">hyperlinked text</a> — inherits secondary text color at rest. Hover either link to see the shared hover color live.</p>
       </div>
-      <div class="color-hex" data-dark="#A9A8A9" data-light="#A9A8A9">#A9A8A9</div>
+      <div class="color-hex" data-var="--card-link"></div>
     </div>
 
     <!-- Status Colors -->
@@ -732,12 +700,12 @@
         <div class="example-row">
           <div class="example-item">
             <span class="example-label">Text on Background</span>
-            <p style="margin: 0; color: var(--text-primary);">Primary text (<span data-dark="#e9e7e9" data-light="#010001">#e9e7e9</span>)</p>
+            <p style="margin: 0; color: var(--text-primary);">Primary text (<span data-var="--text-primary"></span>)</p>
           </div>
-          
+
           <div class="example-item">
             <span class="example-label">Secondary Text</span>
-            <p style="margin: 0; color: var(--text-secondary);">Secondary text (<span data-dark="#D3D2D3" data-light="#120C11">#D3D2D3</span>)</p>
+            <p style="margin: 0; color: var(--text-secondary);">Secondary text (<span data-var="--text-secondary"></span>)</p>
           </div>
         </div>
 
@@ -786,7 +754,7 @@
   <script>
     document.querySelectorAll('.color-hex').forEach(el => {
       el.addEventListener('click', async () => {
-        const hex = el.dataset.dark ? (document.body.dataset.theme === 'light' ? el.dataset.light : el.dataset.dark) : el.textContent;
+        const hex = el.dataset.dark ? (document.documentElement.dataset.theme === 'light' ? el.dataset.light : el.dataset.dark) : el.textContent;
         try {
           await navigator.clipboard.writeText(hex);
           const originalText = el.textContent;
@@ -829,6 +797,42 @@
       return `H: ${h}° S: ${s}% V: ${v}%`;
     }
 
+    // Reads the real dark/light values for every --var referenced on this page
+    // directly from styles.css's :root and :root[data-theme="light"] rules, so
+    // this page can never drift from the live site palette.
+    function hydrateFromCSSVars() {
+      const varEls = document.querySelectorAll('[data-var]');
+      const varNames = [...new Set([...varEls].map(el => el.dataset.var))];
+      const root = document.documentElement;
+      const originalTheme = root.dataset.theme;
+
+      root.dataset.theme = 'dark';
+      const darkValues = {};
+      varNames.forEach(name => {
+        darkValues[name] = getComputedStyle(root).getPropertyValue(name).trim();
+      });
+
+      root.dataset.theme = 'light';
+      const lightValues = {};
+      varNames.forEach(name => {
+        lightValues[name] = getComputedStyle(root).getPropertyValue(name).trim();
+      });
+
+      if (originalTheme === undefined) {
+        delete root.dataset.theme;
+      } else {
+        root.dataset.theme = originalTheme;
+      }
+
+      varEls.forEach(el => {
+        const name = el.dataset.var;
+        el.dataset.dark = darkValues[name];
+        el.dataset.light = lightValues[name];
+      });
+    }
+
+    hydrateFromCSSVars();
+
     document.querySelectorAll('.color-hex[data-dark][data-light]').forEach(el => {
       const compare = document.createElement('div');
       compare.className = 'color-compare';
@@ -852,7 +856,7 @@
     const toggleBtn = document.getElementById('theme-toggle');
 
     function applyTheme(theme) {
-      document.body.dataset.theme = theme;
+      document.documentElement.dataset.theme = theme;
 
       document.querySelectorAll('[data-dark][data-light]').forEach(el => {
         const value = theme === 'light' ? el.dataset.light : el.dataset.dark;
@@ -878,7 +882,7 @@
     }
 
     toggleBtn.addEventListener('click', () => {
-      const next = document.body.dataset.theme === 'light' ? 'dark' : 'light';
+      const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
       applyTheme(next);
     });
 
