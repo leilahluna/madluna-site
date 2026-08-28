@@ -385,6 +385,7 @@ footer {
   text-align: center;
   padding: 40px 0;
   border-top: 2px solid var(--border);
+  background: var(--bg-secondary);
   color: var(--text-secondary);
   font-size: 0.85rem;
 }
