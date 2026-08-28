@@ -443,6 +443,107 @@
             }
         }
 
+        .live-example-panel {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 220px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            --live-color: #808080;
+        }
+
+        .live-example-panel.left {
+            left: 24px;
+        }
+
+        .live-example-panel.right {
+            right: 24px;
+        }
+
+        .live-example-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+        }
+
+        .live-example-btn {
+            background: var(--live-color);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: default;
+            transition: background 0.1s linear;
+        }
+
+        .live-example-card {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            transition: border-color 0.1s linear, box-shadow 0.1s linear;
+        }
+
+        .live-example-card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--live-color);
+            margin-bottom: 4px;
+            transition: color 0.1s linear;
+        }
+
+        .live-example-card-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .live-example-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            align-self: flex-start;
+            font-size: 12px;
+            padding: 5px 10px;
+            border-radius: 14px;
+            background: color-mix(in srgb, var(--live-color) 18%, transparent);
+            border: 1px solid color-mix(in srgb, var(--live-color) 40%, transparent);
+            color: var(--text-primary);
+            transition: background 0.1s linear, border-color 0.1s linear;
+        }
+
+        .live-example-badge-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--live-color);
+            transition: background 0.1s linear;
+        }
+
+        .live-example-text {
+            font-size: 12px;
+            color: var(--text-primary);
+        }
+
+        .live-example-text a {
+            color: var(--live-color);
+            transition: color 0.1s linear;
+        }
+
+        @media (max-width: 1400px) {
+            .live-example-panel {
+                display: none;
+            }
+        }
+
         .devnav {
             display: flex;
             gap: 20px;
@@ -490,6 +591,34 @@
         <a href="/shelf-colors.html">shelf. style</a>
         <a href="/color-comparison.html" class="active">color comparison</a>
     </nav>
+
+    <div class="live-example-panel left" id="livePanel1">
+        <div class="live-example-label">color 1 preview</div>
+        <button class="live-example-btn">Primary Button</button>
+        <div class="live-example-card">
+            <div class="live-example-card-title">Example Card</div>
+            <div class="live-example-card-text">Body text next to the accent color.</div>
+        </div>
+        <div class="live-example-badge">
+            <span class="live-example-badge-dot"></span>
+            status
+        </div>
+        <div class="live-example-text">Text with an <a href="#" onclick="return false;">inline link</a>.</div>
+    </div>
+
+    <div class="live-example-panel right" id="livePanel2">
+        <div class="live-example-label">color 2 preview</div>
+        <button class="live-example-btn">Primary Button</button>
+        <div class="live-example-card">
+            <div class="live-example-card-title">Example Card</div>
+            <div class="live-example-card-text">Body text next to the accent color.</div>
+        </div>
+        <div class="live-example-badge">
+            <span class="live-example-badge-dot"></span>
+            status
+        </div>
+        <div class="live-example-text">Text with an <a href="#" onclick="return false;">inline link</a>.</div>
+    </div>
 
     <div class="header">
         <h1>Color Comparison</h1>
@@ -750,6 +879,13 @@
                 const valVal = document.getElementById(`val${colorNum}Val`);
                 if (valVal && valVal.tagName === 'SPAN') valVal.textContent = `${v}%`;
             } catch(e) {}
+
+            updateLiveExample(colorNum, hex);
+        }
+
+        function updateLiveExample(colorNum, hex) {
+            const panel = document.getElementById(`livePanel${colorNum}`);
+            if (panel) panel.style.setProperty('--live-color', hex);
         }
 
         function renderHistory(colorNum) {
@@ -1038,6 +1174,8 @@
         // Initialize colors
         document.getElementById('swatch1').style.backgroundColor = '#231d1a';
         document.getElementById('swatch2').style.backgroundColor = '#d4537e';
+        updateLiveExample('1', '#231d1a');
+        updateLiveExample('2', '#d4537e');
         renderHistory('1');
         renderHistory('2');
 
