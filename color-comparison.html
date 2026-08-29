@@ -349,16 +349,51 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
+        .palette-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            background: none;
+            border: none;
+            padding: 0;
+            margin-bottom: 0.25rem;
+            cursor: pointer;
+            color: inherit;
+            font-family: inherit;
+            text-align: left;
+        }
+
         .palette-container h2 {
             font-size: 18px;
             font-weight: 600;
-            margin-bottom: 0.25rem;
+        }
+
+        .palette-chevron {
+            width: 20px;
+            height: 20px;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+            transition: transform 0.2s ease;
+        }
+
+        .palette-toggle[aria-expanded="false"] .palette-chevron {
+            transform: rotate(-90deg);
+        }
+
+        #paletteBody {
+            overflow: hidden;
+        }
+
+        .palette-toggle[aria-expanded="false"] + #paletteBody {
+            display: none;
         }
 
         .palette-container .palette-subtitle {
             font-size: 13px;
             color: var(--text-secondary);
             margin-bottom: 1.25rem;
+            margin-top: 0.25rem;
         }
 
         .palette-head-row, .palette-row {
@@ -630,14 +665,19 @@
     </div>
 
     <div class="palette-container">
-        <h2>Site Palette — Dark vs Light</h2>
-        <p class="palette-subtitle">Live values read from styles.css — always matches the current site.</p>
-        <div class="palette-head-row">
-            <span></span>
-            <span>Dark Mode</span>
-            <span>Light Mode</span>
+        <button class="palette-toggle" id="paletteToggle" aria-expanded="true" aria-controls="paletteBody">
+            <h2>Site Palette — Dark vs Light</h2>
+            <svg class="palette-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div id="paletteBody">
+            <p class="palette-subtitle">Live values read from styles.css — always matches the current site.</p>
+            <div class="palette-head-row">
+                <span></span>
+                <span>Dark Mode</span>
+                <span>Light Mode</span>
+            </div>
+            <div id="paletteGrid"></div>
         </div>
-        <div id="paletteGrid"></div>
     </div>
 
     <div class="container">
@@ -1037,6 +1077,19 @@
             themeToggle.textContent = isDark ? '☀︎' : '⏾';
         });
 
+        // Palette table collapse/expand
+        const paletteToggle = document.getElementById('paletteToggle');
+        const PALETTE_COLLAPSE_KEY = 'madluna-colorcomp-palette-collapsed';
+
+        if (localStorage.getItem(PALETTE_COLLAPSE_KEY) === 'true') {
+            paletteToggle.setAttribute('aria-expanded', 'false');
+        }
+
+        paletteToggle.addEventListener('click', () => {
+            const isExpanded = paletteToggle.getAttribute('aria-expanded') === 'true';
+            paletteToggle.setAttribute('aria-expanded', String(!isExpanded));
+            localStorage.setItem(PALETTE_COLLAPSE_KEY, String(isExpanded));
+        });
 
         // Sliders for both colors
         function setupSlider(colorNum, sliderType) {
