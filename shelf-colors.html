@@ -22,8 +22,8 @@
       --bg-primary: #E6E5E5;
       --bg-secondary: #CECCCB;
       --bg-card: #E8E7E7;
-      --text-primary: #ebe7e0;
-      --text-secondary: #a39c8f;
+      --text-primary: #1a1815;
+      --text-secondary: #4a453d;
       --accent: #4d806f;
       --border: #3a3530;
     }
@@ -132,6 +132,24 @@
 
     .theme-toggle-btn:hover {
       border-color: var(--accent);
+    }
+
+    .theme-toggle-btn svg {
+      width: 18px;
+      height: 18px;
+      display: block;
+    }
+
+    .theme-toggle-btn .icon-moon {
+      display: none;
+    }
+
+    body[data-theme="light"] .theme-toggle-btn .icon-sun {
+      display: none;
+    }
+
+    body[data-theme="light"] .theme-toggle-btn .icon-moon {
+      display: block;
     }
 
     .side-nav {
@@ -366,7 +384,10 @@
           <li><a href="/shelf-colors.html" class="active">shelf. style</a></li>
           <li><a href="/color-comparison.html">color comparison</a></li>
         </ul>
-        <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle light/dark mode">☀︎</button>
+        <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle light/dark mode" title="Toggle light/dark mode">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><line x1="12" y1="2" x2="12" y2="4"></line><line x1="12" y1="20" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"></line><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="4" y2="12"></line><line x1="20" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"></line><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"></line></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
       </div>
     </div>
   </nav>
@@ -556,7 +577,6 @@
         }
       });
 
-      toggleBtn.textContent = theme === 'light' ? '⏾' : '☀︎';
       localStorage.setItem(THEME_KEY, theme);
     }
 

@@ -68,6 +68,29 @@
             background: var(--bg-secondary);
         }
 
+        .theme-toggle {
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .theme-toggle svg {
+            width: 18px;
+            height: 18px;
+            display: block;
+        }
+
+        .theme-toggle .icon-sun {
+            display: none;
+        }
+
+        html.dark-mode .theme-toggle .icon-sun {
+            display: block;
+        }
+
+        html.dark-mode .theme-toggle .icon-moon {
+            display: none;
+        }
+
         .container {
             max-width: 800px;
             margin: 0 auto;
@@ -660,7 +683,10 @@
         <div style="display: flex; align-items: center; gap: 12px;">
             <span class="undo-hint">ctrl+z to undo</span>
             <button class="add-color-btn" id="addColorBtn">+ add color</button>
-            <button class="theme-toggle" id="themeToggle">⏾</button>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark mode" title="Toggle light/dark mode">
+                <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><line x1="12" y1="2" x2="12" y2="4"></line><line x1="12" y1="20" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"></line><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="4" y2="12"></line><line x1="20" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"></line><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"></line></svg>
+                <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
         </div>
     </div>
 
@@ -1067,14 +1093,12 @@
         const savedTheme = localStorage.getItem('theme') || 'light';
         if (savedTheme === 'dark') {
             htmlEl.classList.add('dark-mode');
-            themeToggle.textContent = '☀︎';
         }
 
         themeToggle.addEventListener('click', () => {
             htmlEl.classList.toggle('dark-mode');
             const isDark = htmlEl.classList.contains('dark-mode');
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            themeToggle.textContent = isDark ? '☀︎' : '⏾';
         });
 
         // Palette table collapse/expand
@@ -1193,6 +1217,7 @@
             ['--accent-secondary', 'Accent Secondary'],
             ['--accent-secondary-hover', 'Accent Secondary Hover'],
             ['--accent-secondary-glow', 'Accent Secondary Glow'],
+            ['--border', 'Border Color'],
             ['--green', 'Success / Online'],
             ['--red', 'Error / Offline'],
             ['--status-checking', 'Checking / In Progress'],
