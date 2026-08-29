@@ -160,6 +160,53 @@
             gap: 1rem;
         }
 
+        .color-section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 12px;
+            cursor: pointer;
+            font-family: inherit;
+            text-align: left;
+        }
+
+        .color-section-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .color-section-title-text {
+            flex: 1;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .collapse-chevron {
+            width: 16px;
+            height: 16px;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+            transition: transform 0.2s ease;
+        }
+
+        .color-section-header[aria-expanded="false"] .collapse-chevron {
+            transform: rotate(-90deg);
+        }
+
+        .color-section-body {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
         .swatch {
             width: 100%;
             aspect-ratio: 1;
@@ -523,6 +570,8 @@
 
         .live-example-panel.right {
             right: 24px;
+            top: calc(38vh + 48px);
+            transform: none;
         }
 
         .live-example-label {
@@ -602,6 +651,47 @@
             }
         }
 
+        .jump-nav {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            width: 200px;
+            max-height: 38vh;
+            overflow-y: auto;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .jump-nav-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .jump-nav a {
+            display: block;
+            padding: 5px 0;
+            font-size: 13px;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .jump-nav a:hover {
+            color: var(--slider-thumb);
+            text-decoration: underline;
+        }
+
+        @media (max-width: 1400px) {
+            .jump-nav {
+                display: none;
+            }
+        }
+
         .devnav {
             display: flex;
             gap: 20px;
@@ -676,6 +766,11 @@
             status
         </div>
         <div class="live-example-text">Text with an <a href="#" onclick="return false;">inline link</a>.</div>
+    </div>
+
+    <div class="jump-nav" id="jumpNavPanel">
+        <div class="jump-nav-title">jump to</div>
+        <div id="jumpNav"></div>
     </div>
 
     <div class="header">
@@ -781,7 +876,11 @@
             try {
                 document.getElementById(`swatch${colorNum}`).style.backgroundColor = hex;
             } catch(e) {}
-            
+
+            try {
+                document.getElementById(`dot${colorNum}`).style.backgroundColor = hex;
+            } catch(e) {}
+
             try {
                 const hexEl = document.getElementById(`hex${colorNum}`);
                 if (hexEl && hexEl.tagName !== 'INPUT') {
@@ -990,37 +1089,53 @@
                     </div>`;
             }).join('');
 
+            const safeTitle = title || `Color ${n} Controls`;
             return `
-                <div class="swatch" id="swatch${n}"></div>
-                <div class="info">
-                    <div class="info-row">
-                        <span class="info-label">Hex</span>
-                        <span class="info-value" id="hex${n}">#000000</span>
+                <button type="button" class="color-section-header" id="header${n}" aria-expanded="true" aria-controls="body${n}">
+                    <span class="color-section-dot" id="dot${n}"></span>
+                    <span class="color-section-title-text">${safeTitle}</span>
+                    <svg class="collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div class="color-section-body" id="body${n}">
+                    <div class="swatch" id="swatch${n}"></div>
+                    <div class="info">
+                        <div class="info-row">
+                            <span class="info-label">Hex</span>
+                            <span class="info-value" id="hex${n}">#000000</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">RGB</span>
+                            <span class="info-value" id="rgb${n}">rgb(0, 0, 0)</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">HSV</span>
+                            <span class="info-value" id="hsv${n}">H: 0° S: 0% V: 0%</span>
+                        </div>
                     </div>
-                    <div class="info-row">
-                        <span class="info-label">RGB</span>
-                        <span class="info-value" id="rgb${n}">rgb(0, 0, 0)</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">HSV</span>
-                        <span class="info-value" id="hsv${n}">H: 0° S: 0% V: 0%</span>
-                    </div>
-                </div>
 
-                <div class="divider"></div>
+                    <div class="divider"></div>
 
-                <div class="control-section">
-                    <div class="control-section-title with-remove">
-                        <span>${title || `Color ${n} Controls`}</span>
-                        <button class="remove-color-btn" data-color="${n}" title="remove color">&times;</button>
+                    <div class="control-section">
+                        <div class="control-section-title with-remove">
+                            <span>Controls</span>
+                            <button class="remove-color-btn" data-color="${n}" title="remove color">&times;</button>
+                        </div>
+                        ${sliders}
                     </div>
-                    ${sliders}
-                </div>
 
-                <div class="history-section">
-                    <div class="control-section-title">History</div>
-                    <div class="history-row" id="history${n}"></div>
+                    <div class="history-section">
+                        <div class="control-section-title">History</div>
+                        <div class="history-row" id="history${n}"></div>
+                    </div>
                 </div>`;
+        }
+
+        function toggleColorSection(n) {
+            const header = document.getElementById(`header${n}`);
+            const body = document.getElementById(`body${n}`);
+            const isExpanded = header.getAttribute('aria-expanded') === 'true';
+            header.setAttribute('aria-expanded', String(!isExpanded));
+            body.style.display = isExpanded ? 'none' : '';
         }
 
         function wireColorEvents(n) {
@@ -1030,6 +1145,7 @@
             document.getElementById(`val${n}Lock`).addEventListener('click', () => toggleLock(n, 'val'));
             makeHexEditable(n);
             ['hue', 'sat', 'val'].forEach(type => makeValueEditable(n, type));
+            document.getElementById(`header${n}`).addEventListener('click', () => toggleColorSection(n));
         }
 
         function updateRemoveButtonsState() {
@@ -1293,6 +1409,7 @@
                 const section = document.createElement('div');
                 section.className = 'color-section';
                 section.dataset.color = n;
+                if (i % 2 === 0) section.id = `jump-${i / 2}`;
                 section.innerHTML = colorSectionHTML(n, slot.title);
                 comparison.appendChild(section);
 
@@ -1317,6 +1434,13 @@
             const label2 = document.getElementById('livePanel2Label');
             if (label1 && slots[0]) label1.textContent = `${slots[0].title} preview`;
             if (label2 && slots[1]) label2.textContent = `${slots[1].title} preview`;
+
+            const jumpNav = document.getElementById('jumpNav');
+            if (jumpNav) {
+                jumpNav.innerHTML = PALETTE_VARS.map(([, label], idx) =>
+                    `<a href="#jump-${idx}">${label}</a>`
+                ).join('');
+            }
         }
 
         async function bootstrap() {
