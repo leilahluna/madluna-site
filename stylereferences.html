@@ -570,29 +570,38 @@
       <h2 class="section-title">Status Colors</h2>
       <div class="color-grid">
         <div class="color-swatch">
-          <div class="color-sample" style="background: #56DE1B;"></div>
+          <div class="color-sample" data-var="--green" style="background: var(--green);"></div>
           <div class="color-info">
             <div class="color-name">Success / Online</div>
             <div class="color-usage">Status badges, success messages</div>
-            <div class="color-hex">#56DE1B</div>
+            <div class="color-hex" data-var="--green"></div>
           </div>
         </div>
 
         <div class="color-swatch">
-          <div class="color-sample" style="background: #de211b;"></div>
+          <div class="color-sample" data-var="--red" style="background: var(--red);"></div>
           <div class="color-info">
             <div class="color-name">Error / Offline</div>
             <div class="color-usage">Error messages, offline status</div>
-            <div class="color-hex">#de211b</div>
+            <div class="color-hex" data-var="--red"></div>
           </div>
         </div>
 
         <div class="color-swatch">
-          <div class="color-sample" style="background: #9A801B;"></div>
+          <div class="color-sample" data-var="--status-checking" style="background: var(--status-checking);"></div>
           <div class="color-info">
             <div class="color-name">Checking / In Progress</div>
             <div class="color-usage">Checking status badge — fixed, doesn't track --accent</div>
-            <div class="color-hex">#9A801B</div>
+            <div class="color-hex" data-var="--status-checking"></div>
+          </div>
+        </div>
+
+        <div class="color-swatch">
+          <div class="color-sample" data-var="--status-unknown" style="background: var(--status-unknown);"></div>
+          <div class="color-info">
+            <div class="color-name">Unable to Check</div>
+            <div class="color-usage">Grey pulsing badge when a status check fails</div>
+            <div class="color-hex" data-var="--status-unknown"></div>
           </div>
         </div>
       </div>
