@@ -1215,7 +1215,29 @@
             htmlEl.classList.toggle('dark-mode');
             const isDark = htmlEl.classList.contains('dark-mode');
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            applyToolTheme();
         });
+
+        // Re-skin this tool's own chrome (page bg, card bg, text, borders,
+        // slider thumb) with the real site's live colors, so the tool visually
+        // matches madluna.ca in both light and dark mode instead of using
+        // generic neutral tones. Mapped onto this page's own layout, where its
+        // "primary" var is the card surface and "secondary" is the page bg.
+        let siteVars = null;
+
+        function applyToolTheme() {
+            if (!siteVars) return;
+            const isDark = htmlEl.classList.contains('dark-mode');
+            const vars = isDark ? siteVars.dark : siteVars.light;
+            const root = document.documentElement.style;
+            root.setProperty('--bg-secondary', vars['--bg-primary']);
+            root.setProperty('--bg-primary', vars['--bg-card']);
+            root.setProperty('--text-primary', vars['--text-primary']);
+            root.setProperty('--text-secondary', vars['--text-secondary']);
+            root.setProperty('--border-color', vars['--border']);
+            root.setProperty('--slider-track', vars['--border']);
+            root.setProperty('--slider-thumb', vars['--accent']);
+        }
 
         // Palette table collapse/expand
         const paletteToggle = document.getElementById('paletteToggle');
@@ -1446,6 +1468,8 @@
         async function bootstrap() {
             try {
                 const { dark, light } = await fetchSiteVars();
+                siteVars = { dark, light };
+                applyToolTheme();
                 renderPaletteTable(dark, light);
                 initializeSliderColors(dark, light);
             } catch (err) {
