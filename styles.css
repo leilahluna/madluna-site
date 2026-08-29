@@ -27,14 +27,14 @@
 
 /* Light mode — values defined via stylereferences.html toggle */
 :root[data-theme="light"] {
-  --bg-primary: #c7c7c7;
-  --bg-secondary: #A2A2A2;
-  --bg-card: #a3a3a3;
+  --bg-primary: #b3b3b3;
+  --bg-secondary: #bdbdbd;
+  --bg-card: #949494;
   --text-primary: #010001;
   --text-secondary: #120C11;
   --accent: #80697c;
-  --accent-glow: #5D4C5A;
-  --accent-hover: #988595;
+  --accent-glow: #a3869e;
+  --accent-hover: #665a64;
   --border: #3D313B;
   --logo-color: #9ca3af;
 }
