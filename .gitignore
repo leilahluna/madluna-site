@@ -4,3 +4,5 @@ node_modules/
 .env
 *.log
 ddns-update.sh
+.DS_Store
+._*
