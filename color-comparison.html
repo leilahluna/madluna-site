@@ -593,7 +593,7 @@
     </nav>
 
     <div class="live-example-panel left" id="livePanel1">
-        <div class="live-example-label">color 1 preview</div>
+        <div class="live-example-label" id="livePanel1Label">color 1 preview</div>
         <button class="live-example-btn">Primary Button</button>
         <div class="live-example-card">
             <div class="live-example-card-title">Example Card</div>
@@ -607,7 +607,7 @@
     </div>
 
     <div class="live-example-panel right" id="livePanel2">
-        <div class="live-example-label">color 2 preview</div>
+        <div class="live-example-label" id="livePanel2Label">color 2 preview</div>
         <button class="live-example-btn">Primary Button</button>
         <div class="live-example-card">
             <div class="live-example-card-title">Example Card</div>
@@ -641,146 +641,12 @@
     </div>
 
     <div class="container">
-        <div class="comparison" id="comparison">
-            <div class="color-section" data-color="1">
-                <div class="swatch" id="swatch1"></div>
-                <div class="info">
-                    <div class="info-row">
-                        <span class="info-label">Hex</span>
-                        <span class="info-value" id="hex1">#231d1a</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">RGB</span>
-                        <span class="info-value" id="rgb1">rgb(35, 29, 26)</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">HSV</span>
-                        <span class="info-value" id="hsv1">H: 15° S: 26% V: 14%</span>
-                    </div>
-                </div>
-
-                <div class="divider"></div>
-
-                <div class="control-section">
-                    <div class="control-section-title with-remove">
-                        <span>Color 1 Controls</span>
-                        <button class="remove-color-btn" data-color="1" title="remove color" disabled>&times;</button>
-                    </div>
-                    
-                    <div class="control-group">
-                        <div class="slider-label">
-                            <span>Hue</span>
-                            <div class="slider-controls">
-                                <span class="slider-value" id="hue1Val">15°</span>
-                                <button class="lock-btn" id="hue1Lock" data-color="1" data-slider="hue"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg></button>
-                            </div>
-                        </div>
-                        <input type="range" id="hue1Slider" min="0" max="360" value="15" step="1">
-                    </div>
-
-                    <div class="control-group">
-                        <div class="slider-label">
-                            <span>Saturation</span>
-                            <div class="slider-controls">
-                                <span class="slider-value" id="sat1Val">26%</span>
-                                <button class="lock-btn" id="sat1Lock" data-color="1" data-slider="sat"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg></button>
-                            </div>
-                        </div>
-                        <input type="range" id="sat1Slider" min="0" max="100" value="26" step="1">
-                    </div>
-
-                    <div class="control-group">
-                        <div class="slider-label">
-                            <span>Value</span>
-                            <div class="slider-controls">
-                                <span class="slider-value" id="val1Val">14%</span>
-                                <button class="lock-btn" id="val1Lock" data-color="1" data-slider="val"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg></button>
-                            </div>
-                        </div>
-                        <input type="range" id="val1Slider" min="0" max="100" value="14" step="1">
-                    </div>
-                </div>
-
-                <div class="history-section">
-                    <div class="control-section-title">History</div>
-                    <div class="history-row" id="history1"></div>
-                </div>
-            </div>
-
-            <div class="color-section" data-color="2">
-                <div class="swatch" id="swatch2"></div>
-                <div class="info">
-                    <div class="info-row">
-                        <span class="info-label">Hex</span>
-                        <span class="info-value" id="hex2">#d4537e</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">RGB</span>
-                        <span class="info-value" id="rgb2">rgb(212, 83, 126)</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">HSV</span>
-                        <span class="info-value" id="hsv2">H: 342° S: 61% V: 83%</span>
-                    </div>
-                </div>
-
-                <div class="divider"></div>
-
-                <div class="control-section">
-                    <div class="control-section-title with-remove">
-                        <span>Color 2 Controls</span>
-                        <button class="remove-color-btn" data-color="2" title="remove color" disabled>&times;</button>
-                    </div>
-                    
-                    <div class="control-group">
-                        <div class="slider-label">
-                            <span>Hue</span>
-                            <div class="slider-controls">
-                                <span class="slider-value" id="hue2Val">342°</span>
-                                <button class="lock-btn" id="hue2Lock" data-color="2" data-slider="hue"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg></button>
-                            </div>
-                        </div>
-                        <input type="range" id="hue2Slider" min="0" max="360" value="342" step="1">
-                    </div>
-
-                    <div class="control-group">
-                        <div class="slider-label">
-                            <span>Saturation</span>
-                            <div class="slider-controls">
-                                <span class="slider-value" id="sat2Val">61%</span>
-                                <button class="lock-btn" id="sat2Lock" data-color="2" data-slider="sat"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg></button>
-                            </div>
-                        </div>
-                        <input type="range" id="sat2Slider" min="0" max="100" value="61" step="1">
-                    </div>
-
-                    <div class="control-group">
-                        <div class="slider-label">
-                            <span>Value</span>
-                            <div class="slider-controls">
-                                <span class="slider-value" id="val2Val">83%</span>
-                                <button class="lock-btn" id="val2Lock" data-color="2" data-slider="val"><svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg></button>
-                            </div>
-                        </div>
-                        <input type="range" id="val2Slider" min="0" max="100" value="83" step="1">
-                    </div>
-                </div>
-
-                <div class="history-section">
-                    <div class="control-section-title">History</div>
-                    <div class="history-row" id="history2"></div>
-                </div>
-            </div>
-        </div>
+        <div class="comparison" id="comparison"></div>
     </div>
 
     <script>
-        const locks = {
-            '1': { hue: false, sat: false, val: false },
-            '2': { hue: false, sat: false, val: false }
-        };
-
-        const history = { '1': [], '2': [] };
+        const locks = {};
+        const history = {};
         const undoStack = [];
 
         function hexToRgb(hex) {
@@ -1036,11 +902,11 @@
         }
 
         // Dynamic color add/remove
-        const activeColors = ['1', '2'];
-        let nextColorNum = 3;
+        const activeColors = [];
+        let nextColorNum = 1;
         const DEFAULT_PALETTE = ['#4d806f', '#d4537e', '#5b7fd4', '#d4a853', '#8a5bd4', '#53d4a0'];
 
-        function colorSectionHTML(n) {
+        function colorSectionHTML(n, title) {
             const sliders = ['hue', 'sat', 'val'].map(type => {
                 const label = type === 'hue' ? 'Hue' : type === 'sat' ? 'Saturation' : 'Value';
                 const max = type === 'hue' ? 360 : 100;
@@ -1079,7 +945,7 @@
 
                 <div class="control-section">
                     <div class="control-section-title with-remove">
-                        <span>Color ${n} Controls</span>
+                        <span>${title || `Color ${n} Controls`}</span>
                         <button class="remove-color-btn" data-color="${n}" title="remove color">&times;</button>
                     </div>
                     ${sliders}
@@ -1171,13 +1037,6 @@
             themeToggle.textContent = isDark ? '☀︎' : '⏾';
         });
 
-        // Initialize colors
-        document.getElementById('swatch1').style.backgroundColor = '#231d1a';
-        document.getElementById('swatch2').style.backgroundColor = '#d4537e';
-        updateLiveExample('1', '#231d1a');
-        updateLiveExample('2', '#d4537e');
-        renderHistory('1');
-        renderHistory('2');
 
         // Sliders for both colors
         function setupSlider(colorNum, sliderType) {
@@ -1269,10 +1128,6 @@
             });
         }
 
-        // Wire up sliders, locks, and editable fields for the initial two colors
-        activeColors.forEach(wireColorEvents);
-        updateRemoveButtonsState();
-
         // Site Palette table — reads the live values straight out of styles.css
         // so it can never drift from the real site colors.
         const PALETTE_VARS = [
@@ -1322,26 +1177,75 @@
                 </div>`;
         }
 
-        async function renderSitePalette() {
+        function renderPaletteTable(dark, light) {
             const grid = document.getElementById('paletteGrid');
+            grid.innerHTML = PALETTE_VARS.map(([varName, label]) => {
+                const darkHex = dark[varName] || '#000000';
+                const lightHex = light[varName] || darkHex;
+                return `
+                    <div class="palette-row">
+                        <div class="palette-label">${label}</div>
+                        ${paletteCellHTML(darkHex)}
+                        ${paletteCellHTML(lightHex)}
+                    </div>`;
+            }).join('');
+        }
+
+        // Populate the slider-based comparison tool with all 18 site colors
+        // (dark + light for each of the 9 named colors) instead of 2 arbitrary
+        // defaults, so every real site color starts out available to compare.
+        function initializeSliderColors(dark, light) {
+            const slots = [];
+            PALETTE_VARS.forEach(([varName, label]) => {
+                const darkHex = dark[varName] || '#000000';
+                const lightHex = light[varName] || darkHex;
+                slots.push({ hex: darkHex, title: `${label} (Dark)` });
+                slots.push({ hex: lightHex, title: `${label} (Light)` });
+            });
+
+            const comparison = document.getElementById('comparison');
+            slots.forEach((slot, i) => {
+                const n = String(i + 1);
+                const section = document.createElement('div');
+                section.className = 'color-section';
+                section.dataset.color = n;
+                section.innerHTML = colorSectionHTML(n, slot.title);
+                comparison.appendChild(section);
+
+                locks[n] = { hue: false, sat: false, val: false };
+                history[n] = [];
+                activeColors.push(n);
+
+                const rgb = hexToRgb(slot.hex);
+                const hsv = rgb ? rgbToHsv(rgb.r, rgb.g, rgb.b) : { h: 0, s: 0, v: 0 };
+                document.getElementById(`hue${n}Slider`).value = hsv.h;
+                document.getElementById(`sat${n}Slider`).value = hsv.s;
+                document.getElementById(`val${n}Slider`).value = hsv.v;
+                updateColor(n, hsv.h, hsv.s, hsv.v);
+                renderHistory(n);
+                wireColorEvents(n);
+            });
+
+            nextColorNum = slots.length + 1;
+            updateRemoveButtonsState();
+
+            const label1 = document.getElementById('livePanel1Label');
+            const label2 = document.getElementById('livePanel2Label');
+            if (label1 && slots[0]) label1.textContent = `${slots[0].title} preview`;
+            if (label2 && slots[1]) label2.textContent = `${slots[1].title} preview`;
+        }
+
+        async function bootstrap() {
             try {
                 const { dark, light } = await fetchSiteVars();
-                grid.innerHTML = PALETTE_VARS.map(([varName, label]) => {
-                    const darkHex = dark[varName] || '#000000';
-                    const lightHex = light[varName] || darkHex;
-                    return `
-                        <div class="palette-row">
-                            <div class="palette-label">${label}</div>
-                            ${paletteCellHTML(darkHex)}
-                            ${paletteCellHTML(lightHex)}
-                        </div>`;
-                }).join('');
+                renderPaletteTable(dark, light);
+                initializeSliderColors(dark, light);
             } catch (err) {
-                grid.innerHTML = '<p class="palette-subtitle">Unable to load styles.css.</p>';
+                document.getElementById('paletteGrid').innerHTML = '<p class="palette-subtitle">Unable to load styles.css.</p>';
             }
         }
 
-        renderSitePalette();
+        bootstrap();
     </script>
 
 </body>
