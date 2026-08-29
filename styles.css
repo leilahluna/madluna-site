@@ -35,9 +35,9 @@
   --accent-glow: #a3869e;
   --accent-hover: #665a64;
   --border: #c7c7c7;
-  --green: #48bd17;
-  --red: #bd1c17;
-  --status-checking: #836d17;
+  --green: #4dff00;
+  --red: #ff0800;
+  --status-checking: #ffcc00;
   --status-unknown: #808080;
 }
 
