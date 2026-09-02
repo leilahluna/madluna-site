@@ -195,6 +195,14 @@ nav .nav-links a.active {
   margin: 0 auto;
 }
 
+.hero .sub-tagline {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 300;
+  max-width: 440px;
+  margin: 10px auto 0;
+}
+
 /* ===== Section Styles ===== */
 
 .section {
