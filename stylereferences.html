@@ -393,7 +393,7 @@
         <ul class="nav-links">
           <li><a href="/dev1025202542069.html">dev links</a></li>
           <li><a href="/stylereferences.html" class="active">main site style</a></li>
-          <li><a href="/shelf-colors.html">shelf. style</a></li>
+          <li><a href="/shelfstyleref.html">shelf. style</a></li>
           <li><a href="/color-comparison.html">color comparison</a></li>
         </ul>
         <button type="button" id="theme-toggle" class="theme-toggle-btn theme-toggle" aria-label="Toggle light/dark mode" title="Toggle light/dark mode">
@@ -407,6 +407,7 @@
   <div class="side-nav" role="navigation" aria-label="Section jump links">
     <h4>jump to</h4>
     <div class="side-nav-links">
+      <a href="#fonts">fonts</a>
       <a href="#text-casing">text casing</a>
       <a href="#background-colors">background colors</a>
       <a href="#accent-colors">accent colors</a>
@@ -425,6 +426,43 @@
       <h1 style="font-family: 'Playfair Display', serif; font-size: 2.5rem;">Color Reference</h1>
       <p style="color: var(--text-secondary); font-size: 1.05rem;">Complete color palette used throughout the Madluna site.</p>
     </section>
+
+    <!-- Fonts -->
+    <div class="section" id="fonts">
+      <h2 class="section-title">Fonts</h2>
+      <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 16px;">Two typefaces, both loaded from Google Fonts in <code style="font-family: 'Courier New', monospace;">styles.css</code>. Same pair as shelf.</p>
+
+      <h3 class="subsection-title">Body Font &mdash; Plus Jakarta Sans</h3>
+      <div class="text-sample">
+        <p style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.4rem; margin: 0 0 4px 0;">the quick brown fox jumps over the lazy dog</p>
+        <p style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.95rem; color: var(--text-secondary); margin: 0 0 12px 0;">set on <code style="font-family: 'Courier New', monospace;">body</code> &mdash; used for all body copy, taglines, card text, nav links, buttons and status badges.</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 20px; font-family: 'Plus Jakarta Sans', sans-serif;">
+          <span style="font-weight: 300;">300 light</span>
+          <span style="font-weight: 400;">400 regular</span>
+          <span style="font-weight: 500;">500 medium</span>
+          <span style="font-weight: 600;">600 semibold</span>
+          <span style="font-weight: 700;">700 bold</span>
+        </div>
+      </div>
+      <div class="color-hex">font-family: 'Plus Jakarta Sans', sans-serif;</div>
+
+      <h3 class="subsection-title">Header Font &mdash; Playfair Display</h3>
+      <div class="text-sample">
+        <p style="font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700; margin: 0 0 4px 0;">the quick brown fox jumps over the lazy dog</p>
+        <p style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.95rem; color: var(--text-secondary); margin: 0 0 12px 0;">used for the madluna logo (600, 2px letter-spacing), hero h1 (700, 3px letter-spacing) and section titles (1.8rem).</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 20px; font-family: 'Playfair Display', serif;">
+          <span style="font-weight: 400;">400 regular</span>
+          <span style="font-weight: 700;">700 bold</span>
+          <span style="font-weight: 700; font-style: italic;">700 bold italic</span>
+        </div>
+      </div>
+      <div class="color-hex">font-family: 'Playfair Display', serif;</div>
+
+      <h3 class="subsection-title">Import</h3>
+      <div class="text-sample">
+        <code style="font-family: 'Courier New', monospace; font-size: 0.8rem; color: var(--text-secondary); word-break: break-all;">@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&amp;family=Plus+Jakarta+Sans:wght@300;400;500;600;700&amp;display=swap');</code>
+      </div>
+    </div>
 
     <!-- Text Casing Rule -->
     <div class="section" id="text-casing">
