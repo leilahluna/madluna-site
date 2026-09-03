@@ -1,6 +1,19 @@
 /* ===== Madluna Global Styles ===== */
 /* Moon-themed dark design */
 
+/*
+  Third-party assets used on this site (full credits at /credits/):
+
+  Feather Icons (sun / moon toggle glyphs)
+    Copyright (c) 2013-2017 Cole Bemis
+    MIT License - https://github.com/feathericons/feather/blob/master/LICENSE
+
+  Playfair Display - Copyright (c) Claus Eggers Sorensen
+  Plus Jakarta Sans - Copyright (c) Tokotype
+    Both SIL Open Font License 1.1 - https://openfontlicense.org
+    Served via Google Fonts.
+*/
+
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
 
 :root {
@@ -434,7 +447,90 @@ footer {
   font-size: 0.85rem;
 }
 
-/* ===== Responsive ===== */
+/* ===== Footer links ===== */
+
+footer .footer-links {
+  margin-top: 6px;
+  font-size: 0.8rem;
+}
+
+footer .footer-links a {
+  color: var(--text-secondary);
+}
+
+footer .footer-links a:hover {
+  color: var(--accent);
+}
+
+footer .footer-links .sep {
+  margin: 0 8px;
+  opacity: 0.5;
+}
+
+/* ===== Prose (privacy, credits) ===== */
+
+.prose h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 32px 0 10px;
+}
+
+.prose p,
+.prose li {
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  margin-bottom: 10px;
+}
+
+.prose ul {
+  padding-left: 20px;
+  margin-bottom: 10px;
+}
+
+.prose a {
+  text-decoration: underline;
+}
+
+.prose .updated {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.prose code {
+  font-family: 'Courier New', monospace;
+  font-size: 0.85em;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+
+/* ===== Legal / disclaimer notes ===== */
+/* declared after .prose p so it wins the equal-specificity cascade there */
+
+p.legal-note {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  line-height: 1.7;
+  margin-top: 32px;
+  margin-bottom: 0;
+  padding-top: 16px;
+  border-top: 2px solid var(--border);
+  opacity: 0.85;
+}
+
+p.legal-note a {
+  color: var(--text-secondary);
+  text-decoration: underline;
+}
+
+p.legal-note a:hover {
+  color: var(--accent);
+}
+
+/* ===== Responsive =====
 
 @media (max-width: 600px) {
   .hero h1 {
