@@ -1,0 +1,22 @@
+{
+  "name": "madluna",
+  "short_name": "madluna",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#4d3138",
+  "theme_color": "#4d3138",
+  "icons": [
+    {
+      "src": "/media/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/media/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
