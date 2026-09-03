@@ -7,7 +7,7 @@
   <title>Color Reference - Madluna</title>
   <link rel="stylesheet" href="/styles.css?v=3">
   <style>
-    /* Palette values are read live from styles.css's real :root / :root[data-theme="light"] variables — see hydrateFromCSSVars() below. No hardcoded colors here. */
+    /* Palette values are read live from styles.css's real :root / :root[data-theme="light"] variables. See hydrateFromCSSVars() below. No hardcoded colors here. */
 
     body {
       background-color: var(--bg-primary);
@@ -433,10 +433,10 @@
       <h2 class="section-title">Fonts</h2>
       <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 16px;">Two typefaces, both loaded from Google Fonts in <code style="font-family: 'Courier New', monospace;">styles.css</code>. Same pair as shelf.</p>
 
-      <h3 class="subsection-title">Body Font &mdash; Plus Jakarta Sans</h3>
+      <h3 class="subsection-title">Body Font: Plus Jakarta Sans</h3>
       <div class="text-sample">
         <p style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.4rem; margin: 0 0 4px 0;">the quick brown fox jumps over the lazy dog</p>
-        <p style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.95rem; color: var(--text-secondary); margin: 0 0 12px 0;">set on <code style="font-family: 'Courier New', monospace;">body</code> &mdash; used for all body copy, taglines, card text, nav links, buttons and status badges.</p>
+        <p style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.95rem; color: var(--text-secondary); margin: 0 0 12px 0;">set on <code style="font-family: 'Courier New', monospace;">body</code>, used for all body copy, taglines, card text, nav links, buttons and status badges.</p>
         <div style="display: flex; flex-wrap: wrap; gap: 20px; font-family: 'Plus Jakarta Sans', sans-serif;">
           <span style="font-weight: 300;">300 light</span>
           <span style="font-weight: 400;">400 regular</span>
@@ -447,7 +447,7 @@
       </div>
       <div class="color-hex">font-family: 'Plus Jakarta Sans', sans-serif;</div>
 
-      <h3 class="subsection-title">Header Font &mdash; Playfair Display</h3>
+      <h3 class="subsection-title">Header Font: Playfair Display</h3>
       <div class="text-sample">
         <p style="font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700; margin: 0 0 4px 0;">the quick brown fox jumps over the lazy dog</p>
         <p style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.95rem; color: var(--text-secondary); margin: 0 0 12px 0;">used for the madluna logo (600, 2px letter-spacing), hero h1 (700, 3px letter-spacing) and section titles (1.8rem).</p>
@@ -470,7 +470,7 @@
       <h2 class="section-title">Text Casing</h2>
       <div class="text-sample" style="border: 1px solid var(--border);">
         <p style="color: var(--text-primary); margin: 0 0 8px 0;">site text is strictly lowercase by default.</p>
-        <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">exception: proper nouns and brand/product names keep their real capitalization — e.g. Plex, Overseerr, Minecraft.</p>
+        <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">exception: proper nouns and brand/product names keep their real capitalization, e.g. Plex, Overseerr, Minecraft.</p>
       </div>
     </div>
 
@@ -601,8 +601,8 @@
 
       <h3 class="subsection-title">Hyperlinks (card)</h3>
       <div class="card" style="cursor: default;">
-        <h3>Header with a <a href="#" onclick="return false;">hyperlinked text</a> — inherits primary text color at rest</h3>
-        <p>Body text with a <a href="#" onclick="return false;">hyperlinked text</a> — inherits secondary text color at rest. Hover either link to see the shared hover color live.</p>
+        <h3>Header with a <a href="#" onclick="return false;">hyperlinked text</a>, inheriting primary text color at rest</h3>
+        <p>Body text with a <a href="#" onclick="return false;">hyperlinked text</a>, inheriting secondary text color at rest. Hover either link to see the shared hover color live.</p>
       </div>
       <div class="color-hex" data-var="--card-link"></div>
     </div>
@@ -633,7 +633,7 @@
           <div class="color-sample" data-var="--status-checking" style="background: var(--status-checking);"></div>
           <div class="color-info">
             <div class="color-name">Checking / In Progress</div>
-            <div class="color-usage">Checking status badge — fixed, doesn't track --accent</div>
+            <div class="color-usage">Checking status badge: fixed, doesn't track --accent</div>
             <div class="color-hex" data-var="--status-checking"></div>
           </div>
         </div>
@@ -663,7 +663,7 @@
           </g>
         </svg>
       </div>
-      <div class="color-usage" style="margin-top: 8px;">Uses accent color, same as the nav text logo — not an independent value.</div>
+      <div class="color-usage" style="margin-top: 8px;">Uses accent color, same as the nav text logo, not an independent value.</div>
       <div class="color-hex" data-var="--accent"></div>
     </div>
 
@@ -704,7 +704,7 @@
       <h2 class="section-title">Card Component Example</h2>
 
       <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 12px;">
-        this is a <a href="#">hyperlinked text</a> above the card — normal links use accent-hover on hover.
+        this is a <a href="#">hyperlinked text</a> above the card. normal links use accent-hover on hover.
       </p>
 
       <div class="card">
@@ -714,12 +714,12 @@
           <span class="arrow">→</span>
         </a>
         <p style="margin-top: 12px; font-size: 0.9rem;">
-          this is a <a href="#">hyperlinked text</a> inside the card — secondary text color at rest, dedicated card-link color on hover.
+          this is a <a href="#">hyperlinked text</a> inside the card: secondary text color at rest, dedicated card-link color on hover.
         </p>
       </div>
 
       <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 12px;">
-        this is a <a href="#">hyperlinked text</a> below the card — back to normal accent-hover behavior.
+        this is a <a href="#">hyperlinked text</a> below the card. back to normal accent-hover behavior.
       </p>
     </div>
 
@@ -789,7 +789,7 @@
 
   <footer>
     <div class="container">
-      <p>&copy; 2026 madluna &mdash; <a href="/stylereferences.html">style references</a></p>
+      <p>&copy; 2026 madluna &middot; <a href="/stylereferences.html">style references</a></p>
     </div>
   </footer>
 

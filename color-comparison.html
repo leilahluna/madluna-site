@@ -795,11 +795,11 @@
 
     <div class="palette-container">
         <button class="palette-toggle" id="paletteToggle" aria-expanded="true" aria-controls="paletteBody">
-            <h2>Site Palette — Dark vs Light</h2>
+            <h2>Site Palette: Dark vs Light</h2>
             <svg class="palette-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
         <div id="paletteBody">
-            <p class="palette-subtitle">Live values read from styles.css — always matches the current site.</p>
+            <p class="palette-subtitle">Live values read from styles.css, always matching the current site.</p>
             <div class="palette-head-row">
                 <span></span>
                 <span>Dark Mode</span>
@@ -1351,7 +1351,7 @@
             });
         }
 
-        // Site Palette table — reads the live values straight out of styles.css
+        // Site Palette table: reads the live values straight out of styles.css
         // so it can never drift from the real site colors.
         const PALETTE_VARS = [
             ['--bg-primary', 'Primary Background'],
