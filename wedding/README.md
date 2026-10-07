@@ -28,7 +28,7 @@ All commands run in the **VS Code terminal**, from this `wedding` folder.
    ```
    This fills in a hard-to-guess slug for each household (like `the-smiths-k7f2`) and makes an empty `photos/<slug>/` folder for each one. Don't change a slug after its sticker is printed.
 
-3. **Add the photos.** Use Google Photos face grouping to find each household's photos, download them, and drop the originals into their `photos/<slug>/` folder. JPG, PNG, HEIC and WebP all work. Pages show photos in the order they were taken.
+3. **Add the photos.** Use Google Photos face grouping to find each household's photos, download them, and drop the originals into their `photos/<slug>/` folder. JPG, PNG, HEIC, WebP and GIF all work, and GIFs (like the photobooth ones) stay animated. Pages show photos in the order they were taken.
 
 4. **Build the pages.**
    ```

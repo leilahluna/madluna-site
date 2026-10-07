@@ -23,7 +23,7 @@ import sys
 import unicodedata
 from pathlib import Path
 
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ImageSequence
 
 try:
     import pillow_heif
@@ -38,6 +38,7 @@ SITE = 'https://madluna.ca'
 BATCH_SIZE = 20          # photos per "save" button; tune after testing on our phones
 THUMB_EDGE = 800         # longest side of grid thumbnails, in pixels
 THUMB_QUALITY = 78
+GIF_THUMB_EDGE = 480     # animated thumbnails keep every frame, so they're kept smaller
 FILE_PREFIX = 'merrick-leilah-wedding'   # what saved photos are called, e.g. merrick-leilah-wedding-001.jpg
 HEADLINE = 'Hi, {name}!'
 DEFAULT_MESSAGE = (
@@ -48,7 +49,7 @@ DEFAULT_MESSAGE = (
 SIGNOFF = 'Love, Merrick & Leilah'
 STICKER_LINE = 'Scan for your photos from our day'
 
-IMAGE_EXTS = {'.jpg', '.jpeg', '.png', '.heic', '.heif', '.webp'}
+IMAGE_EXTS = {'.jpg', '.jpeg', '.png', '.heic', '.heif', '.webp', '.gif'}
 SLUG_RE = re.compile(r'^[a-z0-9]+(?:-[a-z0-9]+)*$')
 SLUG_CHARS = 'abcdefghjkmnpqrstuvwxyz23456789'   # no 0/o, 1/l/i lookalikes
 
@@ -181,7 +182,28 @@ def same_file(src, dst):
     return a.st_size == b.st_size and int(a.st_mtime) == int(b.st_mtime)
 
 
+def make_gif_thumb(src, dst):
+    """Smaller copy of an animated GIF (e.g. from the photobooth) that still animates."""
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    with Image.open(src) as im:
+        if getattr(im, 'n_frames', 1) == 1 and max(im.size) <= GIF_THUMB_EDGE:
+            shutil.copyfile(src, dst)
+            return
+        frames, durations = [], []
+        for frame in ImageSequence.Iterator(im):
+            f = frame.convert('RGB')
+            f.thumbnail((GIF_THUMB_EDGE, GIF_THUMB_EDGE), Image.LANCZOS)
+            frames.append(f)
+            durations.append(frame.info.get('duration', im.info.get('duration', 100)))
+        frames[0].save(dst, 'GIF', save_all=True, append_images=frames[1:], duration=durations,
+                       loop=im.info.get('loop', 0), optimize=True, disposal=2)
+    if dst.stat().st_size > src.stat().st_size:   # shrinking made it bigger: just use the original
+        shutil.copyfile(src, dst)
+
+
 def make_thumb(src, dst):
+    if src.suffix.lower() == '.gif':
+        return make_gif_thumb(src, dst)
     with Image.open(src) as im:
         im = ImageOps.exif_transpose(im)
         if im.mode not in ('RGB', 'L'):
@@ -208,7 +230,7 @@ def build_household(row, photos, out_dir, template):
         # thumbnail name comes from the source, so reordering photos reuses old thumbnails
         st = src.stat()
         key = hashlib.sha1(f'{src.name}|{st.st_size}|{int(st.st_mtime)}|{THUMB_EDGE}'.encode()).hexdigest()[:12]
-        thumb = out_dir / 'thumbs' / f'{key}.jpg'
+        thumb = out_dir / 'thumbs' / f'{key}{".gif" if ext == ".gif" else ".jpg"}'
         if not thumb.exists():
             make_thumb(src, thumb)
         owned.add(thumb)
