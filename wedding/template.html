@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>Photos from Our Day · Merrick &amp; Leilah</title>
+  <link rel="icon" href="/media/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/media/apple-touch-icon.png">
+  <meta name="theme-color" content="#4d3138">
+  <script>
+    try { document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'dark'); } catch (e) {}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap">
+  <style>
+    :root {
+      --bg-primary: #4d3138;
+      --bg-secondary: #422a31;
+      --bg-card: #6b5055;
+      --text-primary: #e9e7e9;
+      --text-secondary: #D3D2D3;
+      --accent: #806021;
+      --accent-hover: #997E50;
+      --on-accent: #f3eee4;
+      --border: #382600;
+      --radius: 12px;
+    }
+    :root[data-theme="light"] {
+      --bg-primary: #F8F8F8;
+      --bg-secondary: #D8D8D8;
+      --bg-card: #B8B8B8;
+      --text-primary: #474747;
+      --text-secondary: #666666;
+      --accent: #99701d;
+      --accent-hover: #665a64;
+      --on-accent: #ffffff;
+      --border: #999999;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-text-size-adjust: 100%;
+    }
+    a { color: var(--accent); }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 0 16px; }
+
+    header.wrap { text-align: center; padding-top: 40px; padding-bottom: 8px; }
+    .logo { width: 72px; height: auto; display: block; margin: 0 auto 20px; }
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: clamp(1.9rem, 7vw, 2.8rem);
+      line-height: 1.2;
+      letter-spacing: 1px;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+    }
+    .message {
+      max-width: 520px;
+      margin: 0 auto;
+      color: var(--text-secondary);
+      font-weight: 300;
+      white-space: pre-line;
+    }
+    .signoff {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 1.15rem;
+      color: var(--text-secondary);
+      margin-top: 14px;
+    }
+
+    .save {
+      background: var(--bg-secondary);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 16px;
+      margin: 28px auto 24px;
+      max-width: 520px;
+      text-align: center;
+    }
+    .save h2 { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
+    .save .hint { font-size: 0.85rem; color: var(--text-secondary); font-weight: 300; margin-bottom: 14px; }
+    .batches { display: flex; flex-direction: column; gap: 10px; }
+    .btn {
+      appearance: none;
+      border: 0;
+      border-radius: 10px;
+      background: var(--accent);
+      color: var(--on-accent);
+      font: inherit;
+      font-weight: 600;
+      font-size: 1rem;
+      padding: 14px 18px;
+      width: 100%;
+      cursor: pointer;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .btn:hover { box-shadow: 0 0 24px rgba(128, 123, 77, 0.6); }
+    .btn[disabled] { opacity: 0.75; cursor: progress; }
+    .btn.ready { background: var(--accent-hover); }
+    .btn.done { background: transparent; color: var(--text-primary); box-shadow: inset 0 0 0 2px var(--accent); }
+    .alt { margin-top: 14px; font-size: 0.85rem; color: var(--text-secondary); }
+    .linkish {
+      appearance: none; background: none; border: 0; padding: 0;
+      font: inherit; color: var(--text-primary); text-decoration: underline; cursor: pointer;
+    }
+    .status { font-size: 0.8rem; color: var(--text-secondary); margin-top: 8px; min-height: 1.2em; }
+
+    .count { text-align: center; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+    @media (min-width: 640px) { .grid { grid-template-columns: repeat(3, 1fr); gap: 10px; } }
+    @media (min-width: 900px) { .grid { grid-template-columns: repeat(4, 1fr); } }
+    .grid button {
+      display: block; width: 100%; aspect-ratio: 1; padding: 0; border: 0; background: var(--bg-card);
+      border-radius: 8px; overflow: hidden; cursor: zoom-in;
+    }
+    .grid.single { grid-template-columns: minmax(0, 420px); justify-content: center; }
+    .grid img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+    footer.wrap { text-align: center; padding-top: 28px; padding-bottom: 40px; font-size: 0.8rem; color: var(--text-secondary); }
+
+    /* ===== lightbox ===== */
+    dialog.lb {
+      width: 100vw; height: 100vh; height: 100dvh; max-width: none; max-height: none;
+      margin: 0; padding: 0; border: 0; background: #000; color: #eee;
+    }
+    dialog.lb::backdrop { background: #000; }
+    .lb-inner { position: absolute; inset: 0; display: flex; flex-direction: column; }
+    .lb-stage { flex: 1; position: relative; min-height: 0; }
+    .lb-stage img {
+      position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
+      -webkit-touch-callout: default; user-select: auto;
+    }
+    .lb-bar {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+      background: #000;
+    }
+    .lb-bar .btn { width: auto; padding: 10px 16px; font-size: 0.95rem; }
+    .lb-icon {
+      appearance: none; border: 0; background: rgba(255,255,255,0.12); color: #fff;
+      width: 44px; height: 44px; border-radius: 50%; font-size: 1.3rem; line-height: 1; cursor: pointer;
+      flex: none;
+    }
+    .lb-close { position: absolute; top: calc(10px + env(safe-area-inset-top)); right: 10px; z-index: 2; }
+    .lb-tip { font-size: 0.75rem; color: #aaa; text-align: center; flex: 1; }
+    .lb-pos { position: absolute; top: calc(18px + env(safe-area-inset-top)); left: 14px; z-index: 2; font-size: 0.85rem; color: #ccc; }
+  </style>
+</head>
+<body>
+  <header class="wrap">
+    <svg class="logo" viewBox="0 0 1772.22 1438.3" xmlns="http://www.w3.org/2000/svg" fill="var(--accent)" aria-hidden="true">
+      <path d="M520.07,238.65l283.2,340.8c25.78,31.02,51.43,61.35,76.98,90.96l169.62-204.17-47.73-164.75,13.24-21.8,117.04,159.29.35,5.45c-60.84,71.55-116.8,138.07-167.88,199.55l-87.43,105.23c-28.1,33.82-56.54,68.9-85.34,105.23l-16.37-16.35,29.95-67.08c4.18-8.94,3.71-17.04-1.39-24.32-9.06-11.45-19.28-24.17-30.65-38.15-11.38-13.97-24.04-29.34-37.97-46.11l-282.51-339.96c-11.84-14.25-22.58-27.03-32.22-38.36-9.64-11.31-18.41-21.44-26.3-30.39-6.27-6.98-13-8.38-20.2-4.19l-56.77,35.64-15.68-17.19c30.88-34.93,60.14-69.03,87.77-102.29,27.86-33.54,56.19-68.75,84.99-105.65l16.37,16.35-30.3,67.49c-4.18,8.39-3.6,16.36,1.74,23.89,7.9,10.07,19.57,24.53,35.01,43.39,15.44,18.87,22.94,28.02,22.47,27.46Z"/>
+      <path d="M284.52,123.45c17.34,20.85,34.68,41.7,52.02,62.55,12.11-14.2,23.95-28.26,35.52-42.18,24.45-29.42,49.24-60.1,74.37-92.01L402.89,3.48l-115.83.07v-.07c-1.62.03-3.23.05-4.84.07-22.79.37-45.27.55-67.39.55C162.17,4.1,90.56,2.75,0,0l2.12,44.07,130.57,39.99c16.14,5.45,24.57,17.08,25.27,34.84,1.4,45.12,2.12,101.86,2.12,170.17v831.42c0,80.65-.72,148.66-2.12,203.99-.7,15.73-10.17,26.33-28.42,31.79L0,1394.21l4.21,44.1c90.56-2.06,163.21-3.08,217.98-3.08s126.02,1.02,209.55,3.08l-2.1-44.1-117.95-35.86c-17.56-4.79-26.69-16.75-27.36-35.89-1.42-53.99-2.12-121.3-2.12-201.95V232.69l2.31-109.25Z"/>
+      <path d="M1643.75,1356.28c-18.96-5.45-28.78-16.06-29.48-31.79-1.4-55.34-2.1-123.34-2.1-203.99V289.08c0-68.31.7-125.05,2.1-170.17.7-17.77,9.13-29.39,25.29-34.84l132.67-39.99-4.21-44.07c-87.77,2.75-157.62,4.1-209.55,4.1-44.58,0-93.56-.94-146.97-2.86-7.97-.3-23.88-.9-32.04-1.24h-6.47l-279.64,339.92,60.1,81.3,216.45-261.71,39.34-45.57-2.39,118.75v887.8c0,80.65-.72,147.97-2.12,201.95-.7,19.14-9.47,31.1-26.33,35.89l-121.08,35.86,4.21,44.1c80.71-2.06,162.49-3.08,245.34-3.08s172.68,1.02,265.36,3.08l-2.1-44.1-126.38-37.93Z"/>
+    </svg>
+    <h1>{{HEADLINE}}</h1>
+    <p class="message">{{MESSAGE}}</p>
+    <p class="signoff">{{SIGNOFF}}</p>
+  </header>
+
+  <main class="wrap">
+    <section class="save" id="save">
+      <h2 id="save-title">Save your photos</h2>
+      <p class="hint" id="save-hint"></p>
+      <div class="batches" id="batches"></div>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+      <p class="alt" id="alt"></p>
+    </section>
+
+    <p class="count" id="count"></p>
+    <div class="grid" id="grid"></div>
+  </main>
+
+  <footer class="wrap">Made with love by Merrick &amp; Leilah ☆ Madluna</footer>
+
+  <dialog class="lb" id="lb" aria-label="Photo viewer">
+    <div class="lb-inner">
+      <span class="lb-pos" id="lb-pos"></span>
+      <button class="lb-icon lb-close" id="lb-close" type="button" aria-label="Close">&times;</button>
+      <div class="lb-stage" id="lb-stage"><img id="lb-img" alt=""></div>
+      <div class="lb-bar">
+        <button class="lb-icon" id="lb-prev" type="button" aria-label="Previous photo">&lsaquo;</button>
+        <span class="lb-tip" id="lb-tip"></span>
+        <button class="btn" id="lb-save" type="button">save</button>
+        <button class="lb-icon" id="lb-next" type="button" aria-label="Next photo">&rsaquo;</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+    var PHOTOS = {{PHOTOS_JSON}};
+    var BATCH_SIZE = {{BATCH_SIZE}};
+    var ZIP_NAME = {{ZIP_NAME_JSON}};
+  </script>
+  <script>
+  (function () {
+    'use strict';
+
+    var TYPES = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', heic: 'image/heic', heif: 'image/heif', webp: 'image/webp' };
+    var ua = navigator.userAgent;
+    var isIOS = /iP(hone|ad|od)/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+    var isMobile = isIOS || /Android/i.test(ua);
+
+    var canShareFiles = (function () {
+      try {
+        var f = new File([new Blob(['x'], { type: 'image/jpeg' })], 'test.jpg', { type: 'image/jpeg' });
+        return !!(navigator.canShare && navigator.share && navigator.canShare({ files: [f] }));
+      } catch (e) { return false; }
+    })();
+
+    var $ = function (id) { return document.getElementById(id); };
+    var statusEl = $('status');
+    function setStatus(t) { statusEl.textContent = t || ''; }
+    function plural(n) { return n + (n === 1 ? ' photo' : ' photos'); }
+
+    // ===== originals, cached as File objects so a second tap is instant =====
+    var fileCache = {};
+    function getFile(i) {
+      if (fileCache[i]) return fileCache[i];
+      var p = PHOTOS[i];
+      var ext = p.name.split('.').pop().toLowerCase();
+      fileCache[i] = fetch(p.full).then(function (r) {
+        if (!r.ok) throw new Error('http ' + r.status);
+        return r.blob();
+      }).then(function (b) {
+        return new File([b], p.name, { type: TYPES[ext] || b.type || 'image/jpeg' });
+      }).catch(function (e) { delete fileCache[i]; throw e; });
+      return fileCache[i];
+    }
+    function getFiles(idx, onProgress) {
+      var done = 0, out = new Array(idx.length), next = 0;
+      function worker() {
+        if (next >= idx.length) return Promise.resolve();
+        var k = next++;
+        return getFile(idx[k]).then(function (f) {
+          out[k] = f; done++; if (onProgress) onProgress(done, idx.length);
+          return worker();
+        });
+      }
+      var pool = [];
+      for (var w = 0; w < Math.min(4, idx.length); w++) pool.push(worker());
+      return Promise.all(pool).then(function () { return out; });
+    }
+
+    function downloadFile(file) {
+      var url = URL.createObjectURL(file);
+      var a = document.createElement('a');
+      a.href = url; a.download = file.name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+    }
+    function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+    // ===== header copy =====
+    var n = PHOTOS.length;
+    $('count').textContent = n === 1 ? 'Tap the photo to see it bigger' : plural(n) + ' · Tap any photo to see it bigger';
+    if (canShareFiles) {
+      $('save-hint').textContent = isIOS
+        ? 'Tap a button, then tap it again and choose “Save ' + (n > 1 ? 'Images' : 'Image') + '” to put them straight into Photos.'
+        : (isMobile
+          ? 'Tap a button, then tap it again and pick Google Photos or your gallery.'
+          : 'Tap a button, then tap it again to share or save them.');
+    } else {
+      $('save-hint').textContent = 'These are the full-size originals. They download one by one, so your browser might ask permission first.';
+    }
+
+    // ===== batch buttons =====
+    var batches = [];
+    for (var s = 0; s < n; s += BATCH_SIZE) {
+      var idx = [];
+      for (var j = s; j < Math.min(s + BATCH_SIZE, n); j++) idx.push(j);
+      batches.push(idx);
+    }
+
+    function batchLabel(idx) {
+      var verb = canShareFiles ? 'Save' : 'Download';
+      if (batches.length === 1) return verb + (n === 1 ? ' this photo' : ' all ' + n + ' photos');
+      return verb + ' photos ' + (idx[0] + 1) + '–' + (idx[idx.length - 1] + 1);
+    }
+
+    batches.forEach(function (idx) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn';
+      btn.textContent = batchLabel(idx);
+      var files = null, busy = false;
+
+      btn.addEventListener('click', function () {
+        if (busy) return;
+        if (files && canShareFiles) {
+          // second tap: this tap is the fresh user gesture the share sheet needs
+          navigator.share({ files: files }).then(function () {
+            btn.className = 'btn done';
+            btn.textContent = '✓ ' + batchLabel(idx).replace(/^Save/, 'Saved');
+            setStatus('');
+          }).catch(function (e) {
+            if (e && e.name === 'AbortError') return;
+            setStatus('That didn’t work, sorry. Tap again to retry, or save photos one at a time below.');
+          });
+          return;
+        }
+        busy = true;
+        btn.disabled = true;
+        btn.textContent = 'Getting photos ready… 0/' + idx.length;
+        getFiles(idx, function (d, t) { btn.textContent = 'Getting photos ready… ' + d + '/' + t; })
+          .then(function (fs) {
+            files = fs;
+            if (canShareFiles) {
+              btn.className = 'btn ready';
+              btn.textContent = 'Ready! Tap to save ' + plural(fs.length);
+              return;
+            }
+            var chain = Promise.resolve();
+            fs.forEach(function (f) { chain = chain.then(function () { downloadFile(f); return wait(400); }); });
+            return chain.then(function () {
+              btn.className = 'btn done';
+              btn.textContent = '✓ Downloaded ' + plural(fs.length);
+            });
+          })
+          .catch(function () {
+            btn.textContent = batchLabel(idx);
+            setStatus('Some photos didn’t load. Check your connection and tap again.');
+          })
+          .then(function () { busy = false; btn.disabled = false; });
+      });
+      $('batches').appendChild(btn);
+    });
+
+    // ===== zip (mostly for computers) =====
+    var alt = $('alt');
+    var zipBtn = document.createElement('button');
+    zipBtn.type = 'button';
+    zipBtn.className = 'linkish';
+    zipBtn.textContent = (isMobile ? 'Download' : 'download') + ' everything as a ZIP';
+    alt.appendChild(document.createTextNode(isMobile ? 'On a computer? ' : 'Or '));
+    alt.appendChild(zipBtn);
+
+    function loadFflate() {
+      if (window.fflate) return Promise.resolve(window.fflate);
+      return new Promise(function (res, rej) {
+        var sc = document.createElement('script');
+        sc.src = 'https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js';
+        sc.onload = function () { res(window.fflate); };
+        sc.onerror = rej;
+        document.head.appendChild(sc);
+      });
+    }
+    var zipping = false;
+    zipBtn.addEventListener('click', function () {
+      if (zipping) return;
+      zipping = true;
+      setStatus('Preparing ZIP…');
+      var all = PHOTOS.map(function (_, i) { return i; });
+      Promise.all([loadFflate(), getFiles(all, function (d, t) { setStatus('Preparing ZIP… ' + d + '/' + t); })])
+        .then(function (r) {
+          var ff = r[0], fs = r[1];
+          return Promise.all(fs.map(function (f) { return f.arrayBuffer(); })).then(function (bufs) {
+            var entries = {};
+            fs.forEach(function (f, i) { entries[f.name] = [new Uint8Array(bufs[i]), { level: 0 }]; });
+            var zipped = ff.zipSync(entries);
+            downloadFile(new File([zipped], ZIP_NAME, { type: 'application/zip' }));
+            setStatus('');
+          });
+        })
+        .catch(function () { setStatus('The ZIP didn’t work, sorry. Try the buttons above instead.'); })
+        .then(function () { zipping = false; });
+    });
+
+    // ===== grid =====
+    var grid = $('grid');
+    if (n === 1) grid.className += ' single';
+    PHOTOS.forEach(function (p, i) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('aria-label', 'open photo ' + (i + 1));
+      var img = document.createElement('img');
+      img.src = p.thumb; img.width = p.w; img.height = p.h; img.alt = '';
+      img.loading = i < 6 ? 'eager' : 'lazy';
+      img.decoding = 'async';
+      b.appendChild(img);
+      b.addEventListener('click', function () { openLb(i); });
+      grid.appendChild(b);
+    });
+
+    // ===== lightbox =====
+    var lb = $('lb'), lbImg = $('lb-img'), lbSave = $('lb-save'), cur = 0;
+    $('lb-tip').textContent = isIOS ? 'Or press and hold the photo' : '';
+
+    function show(i) {
+      cur = (i + n) % n;
+      var p = PHOTOS[cur];
+      $('lb-pos').textContent = (cur + 1) + ' / ' + n;
+      lbImg.src = p.thumb;
+      var full = new Image();
+      full.onload = function () { if (cur === PHOTOS.indexOf(p)) lbImg.src = p.full; };
+      full.src = p.full;
+      lbSave.textContent = canShareFiles ? 'Save' : 'Download';
+      lbSave.disabled = false;
+      // warm the file so the save tap can share right away
+      if (canShareFiles) getFile(cur).catch(function () {});
+      $('lb-prev').style.visibility = $('lb-next').style.visibility = n > 1 ? 'visible' : 'hidden';
+    }
+    function openLb(i) {
+      show(i);
+      if (lb.showModal) lb.showModal(); else lb.setAttribute('open', '');
+    }
+    function closeLb() { if (lb.close) lb.close(); else lb.removeAttribute('open'); }
+
+    $('lb-close').addEventListener('click', closeLb);
+    $('lb-prev').addEventListener('click', function () { show(cur - 1); });
+    $('lb-next').addEventListener('click', function () { show(cur + 1); });
+    lb.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowLeft') show(cur - 1);
+      if (e.key === 'ArrowRight') show(cur + 1);
+    });
+
+    var tx = null, ty = null;
+    $('lb-stage').addEventListener('touchstart', function (e) {
+      if (e.touches.length !== 1) { tx = null; return; }
+      tx = e.touches[0].clientX; ty = e.touches[0].clientY;
+    }, { passive: true });
+    $('lb-stage').addEventListener('touchend', function (e) {
+      if (tx === null) return;
+      var dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) show(cur + (dx < 0 ? 1 : -1));
+      tx = null;
+    });
+
+    lbSave.addEventListener('click', function () {
+      var i = cur;
+      var pending = getFile(i);
+      lbSave.disabled = true;
+      lbSave.textContent = 'One sec…';
+      pending.then(function (f) {
+        lbSave.disabled = false;
+        if (!canShareFiles) { downloadFile(f); lbSave.textContent = '✓ Downloaded'; return; }
+        return navigator.share({ files: [f] }).then(function () {
+          lbSave.textContent = '✓ Saved';
+        }).catch(function (e) {
+          // the photo was still loading, so the browser may want a fresh tap
+          lbSave.textContent = (e && e.name === 'NotAllowedError') ? 'Tap again to save' : 'Save';
+        });
+      }).catch(function () {
+        lbSave.disabled = false;
+        lbSave.textContent = 'Try again';
+      });
+    });
+  })();
+  </script>
+</body>
+</html>

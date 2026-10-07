@@ -6,3 +6,10 @@ node_modules/
 ddns-update.sh
 .DS_Store
 ._*
+
+# wedding photo pages: photos, guest list and built output stay private (never on GitHub)
+wedding/photos/
+wedding/households.csv
+wedding/dist/
+wedding/qr-stickers.pdf
+wedding/.wrangler/
