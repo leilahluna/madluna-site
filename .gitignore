@@ -13,3 +13,6 @@ wedding/households.csv
 wedding/dist/
 wedding/qr-stickers.pdf
 wedding/.wrangler/
+wedding/uploads/
+wedding/generated/
+wedding/.secrets.json

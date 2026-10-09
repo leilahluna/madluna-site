@@ -2,10 +2,11 @@
 """
 Wedding guest photo pages + QR sticker sheet for madluna.ca/w/<slug>/.
 
-  python build.py slugs     fill in missing slugs in households.csv and make photo folders
+  python build.py slugs     fill in missing slugs and passwords in households.csv and make photo folders
   python build.py build     build the guest pages into dist/ (thumbnails + originals)
-  python build.py labels    make qr-stickers.pdf, a printable sheet of QR stickers
+  python build.py labels    make qr-stickers.pdf, a printable sheet of QR stickers with passwords
   python build.py deploy    upload dist/ to Cloudflare so the pages are live (add --dry-run to only check)
+  python build.py uploads   download photos guests sent us into uploads/ (add --clear to free Cloudflare storage)
 
 See README.md for the full workflow.
 """
@@ -21,6 +22,8 @@ import shutil
 import subprocess
 import sys
 import unicodedata
+import urllib.parse
+import urllib.request
 from pathlib import Path
 
 from PIL import Image, ImageOps, ImageSequence
@@ -48,6 +51,24 @@ DEFAULT_MESSAGE = (
 )
 SIGNOFF = 'Love, Merrick & Leilah'
 STICKER_LINE = 'Scan for your photos from our day'
+MAX_UPLOAD_MB = 95       # biggest single file a guest can send (Cloudflare's free plan stops at 100 MB)
+UPLOAD_BUCKET = 'madluna-wedding-uploads'   # must match r2_buckets in wrangler.jsonc
+
+# passwords are one of these words plus 3 digits, e.g. "maple 482": easy to read off a card and type
+PASSWORD_WORDS = """
+acorn amber apple aspen autumn bagel bamboo banjo basil beach berry birch biscuit bloom blossom
+breeze brook bubble butter button cabin cactus candle canoe canyon cedar cherry cider cinnamon clover
+cobalt cocoa comet coral cosmos cotton cozy crane cricket crystal daisy dandelion dawn dazzle dolphin
+dream ember falcon fern fiddle firefly flamingo forest fossil fox garden ginger glacier glow gumdrop
+harbor harvest hazel heather hello honey horizon island ivory jasmine jelly jolly juniper kettle kiwi
+koala lagoon lantern lark lemon lilac lily linen lotus lucky lullaby magnolia mango maple marble
+meadow melody mint misty mitten moonbeam mossy muffin nectar nutmeg oasis ocean olive orbit orchid
+otter paddle pancake panda papaya parade peach pebble pepper petal piano pickle pine pistachio plum
+poppy pretzel puffin pumpkin quartz quill rainbow raven ribbon river robin rocket rosy ruby saffron
+sage sailor sapphire seashell sequoia shadow silver sky snowflake sparrow spruce starlight sugar
+summit sunny sunset swan tango teacup thistle thunder tiger toffee topaz tulip tundra turtle twinkle
+valley velvet violet waffle walnut willow winter wren yellow zephyr zinnia
+""".split()
 
 IMAGE_EXTS = {'.jpg', '.jpeg', '.png', '.heic', '.heif', '.webp', '.gif'}
 SLUG_RE = re.compile(r'^[a-z0-9]+(?:-[a-z0-9]+)*$')
@@ -61,6 +82,9 @@ def paths(data_dir):
         'photos': d / 'photos',
         'dist': d / 'dist',
         'pdf': d / 'qr-stickers.pdf',
+        'secrets': d / '.secrets.json',
+        'generated': d / 'generated' / 'config.js',
+        'uploads': d / 'uploads',
     }
 
 
@@ -78,7 +102,7 @@ def read_households(csv_path):
         r.pop(None, None)   # stray cells past the last column
         for k in list(r):
             r[k] = (r[k] or '').strip()
-        for k in ('slug', 'name', 'message'):
+        for k in ('slug', 'name', 'message', 'password'):
             r.setdefault(k, '')
     rows = [r for r in rows if r['name'] or r['slug']]
     seen = set()
@@ -110,16 +134,28 @@ def make_slug(name, taken):
             return slug
 
 
+def make_password():
+    return f'{secrets.choice(PASSWORD_WORDS)} {secrets.randbelow(900) + 100}'
+
+
+def normalize_password(pw):
+    # must match normalize() in worker.js: "Maple 482", "maple-482" and "maple482" are the same
+    return re.sub(r'[^a-z0-9]', '', pw.lower())
+
+
 def cmd_slugs(p, args):
     rows = read_households(p['csv'])
     taken = {r['slug'] for r in rows if r['slug']}
-    added = 0
+    added = pw_added = 0
     for r in rows:
         if not r['slug']:
             r['slug'] = make_slug(r['name'], taken)
             taken.add(r['slug'])
             added += 1
-    if added:
+        if not normalize_password(r['password']):
+            r['password'] = make_password()
+            pw_added += 1
+    if added or pw_added:
         write_households(p['csv'], rows)
     made = 0
     for r in rows:
@@ -127,9 +163,10 @@ def cmd_slugs(p, args):
         if not folder.exists():
             folder.mkdir(parents=True)
             made += 1
-    print(f'{added} new slug(s) written to {p["csv"].name}, {made} new photo folder(s) in photos/.')
+    print(f'{added} new slug(s) and {pw_added} new password(s) written to {p["csv"].name}, '
+          f'{made} new photo folder(s) in photos/.')
     for r in rows:
-        print(f'  {r["slug"]:<32} {r["name"]}')
+        print(f'  {r["slug"]:<32} {r["password"]:<16} {r["name"]}')
 
 
 # ===== building pages =====
@@ -245,6 +282,7 @@ def build_household(row, photos, out_dir, template):
             .replace('{{MESSAGE}}', html.escape(message.replace('\\n', '\n')))
             .replace('{{SIGNOFF}}', html.escape(SIGNOFF))
             .replace('{{BATCH_SIZE}}', str(BATCH_SIZE))
+            .replace('{{MAX_UPLOAD_MB}}', str(MAX_UPLOAD_MB))
             .replace('{{ZIP_NAME_JSON}}', json.dumps(f'{FILE_PREFIX}-photos.zip'))
             .replace('{{PHOTOS_JSON}}', json.dumps(items, separators=(',', ':')).replace('</', '<\\/')))
     index = out_dir / 'index.html'
@@ -262,23 +300,42 @@ font:16px/1.6 system-ui,sans-serif;text-align:center;padding:16px}a{color:#c9a96
 <p>Try scanning the code on your card again, or <a href="/contact/">let us know</a> and we'll sort it out.</p></div></body></html>
 """
 
-HEADERS = """/*
-  X-Robots-Tag: noindex, nofollow, noimageindex
-  Referrer-Policy: no-referrer
-  X-Content-Type-Options: nosniff
+def load_secrets(path):
+    """Random keys for the Worker, made once and kept in .secrets.json (never on GitHub).
 
-/w/:slug/thumbs/*
-  Cache-Control: public, max-age=31536000, immutable
+    secret signs the "already entered the password" cookie and salts the password hashes;
+    admin_token lets "python build.py uploads" fetch what guests sent.
+    """
+    if path.exists():
+        return json.loads(path.read_text(encoding='utf-8'))
+    s = {'secret': secrets.token_hex(32), 'admin_token': secrets.token_urlsafe(32)}
+    path.write_text(json.dumps(s, indent=2), encoding='utf-8')
+    return s
 
-/w/:slug/full/*
-  Cache-Control: public, max-age=86400
-"""
+
+def write_worker_config(p, published):
+    """generated/config.js: bundled into the Worker at deploy, so it stays private."""
+    s = load_secrets(p['secrets'])
+    households = {}
+    for r in published:
+        pw = normalize_password(r['password'])
+        digest = hashlib.sha256(f'{s["secret"]}:{r["slug"]}:{pw}'.encode()).hexdigest()
+        households[r['slug']] = {'name': r['name'], 'hash': digest}
+    config = {
+        'secret': s['secret'],
+        'adminToken': s['admin_token'],
+        'loginHtml': (HERE / 'login.html').read_text(encoding='utf-8'),
+        'households': households,
+    }
+    p['generated'].parent.mkdir(parents=True, exist_ok=True)
+    p['generated'].write_text('// made by build.py, do not edit\nexport default ' + json.dumps(config, indent=1) + ';\n',
+                              encoding='utf-8', newline='\n')
 
 
 def cmd_build(p, args):
     rows = read_households(p['csv'])
-    if any(not r['slug'] for r in rows):
-        sys.exit('some households have no slug yet. run "python build.py slugs" first.')
+    if any(not r['slug'] or not normalize_password(r['password']) for r in rows):
+        sys.exit('some households have no slug or password yet. run "python build.py slugs" first.')
     if pillow_heif is None:
         print('note: pillow-heif is not installed, so .heic photos will fail. run: python -m pip install pillow-heif')
 
@@ -286,7 +343,7 @@ def cmd_build(p, args):
     out_w = p['dist'] / 'w'
     out_w.mkdir(parents=True, exist_ok=True)
     keep = set()
-    published, empty = 0, []
+    published, empty = [], []
 
     for r in rows:
         photos = list_photos(p['photos'] / r['slug'])
@@ -295,11 +352,11 @@ def cmd_build(p, args):
             continue
         print(f'  {r["slug"]:<32} {len(photos):>4} photo{"" if len(photos) == 1 else "s"}   {r["name"]}')
         keep |= build_household(r, photos, out_w / r['slug'], template)
-        published += 1
+        published.append(r)
 
     (out_w / '404.html').write_text(NOT_FOUND, encoding='utf-8', newline='\n')
-    (p['dist'] / '_headers').write_text(HEADERS, encoding='utf-8', newline='\n')
-    keep |= {out_w / '404.html', p['dist'] / '_headers'}
+    keep.add(out_w / '404.html')
+    write_worker_config(p, published)
 
     # remove anything left over from households or photos that were taken out
     removed = 0
@@ -310,7 +367,7 @@ def cmd_build(p, args):
         elif f.is_dir() and not any(f.iterdir()):
             f.rmdir()
 
-    print(f'\nbuilt {published} page(s) in {p["dist"]}' + (f', removed {removed} old file(s)' if removed else ''))
+    print(f'\nbuilt {len(published)} page(s) in {p["dist"]}' + (f', removed {removed} old file(s)' if removed else ''))
     if empty:
         print(f'{len(empty)} household(s) have no photos yet, so they get no page (their QR code would show "not found"):')
         for r in empty:
@@ -353,7 +410,36 @@ def fit_font(c, text, font, size, max_w):
     return size
 
 
-def draw_label(c, sheet, x, y, url, name, show_name, outline):
+def sticker_lines(name, password, show_name, show_pw, split_tagline=False):
+    """(text, font, size, gray) for each line under or beside the code."""
+    if split_tagline:
+        words = STICKER_LINE.split()
+        mid = len(words) // 2 + 1
+        lines = [(' '.join(words[:mid]), 'Times-Italic', 9, 0.15), (' '.join(words[mid:]), 'Times-Italic', 9, 0.15)]
+    else:
+        lines = [(STICKER_LINE, 'Times-Italic', 9, 0.15)]
+    if show_pw:
+        lines.append((f'Password: {password}', 'Helvetica-Bold', 9, 0.05))
+    if show_name:
+        lines.append((name, 'Helvetica', 6.5, 0.45))
+    return lines
+
+
+def block_height(lines):
+    return sum(size * 1.25 for _, _, size, _ in lines)
+
+
+def draw_lines(c, lines, x, top, max_w, centred):
+    y = top
+    for text, font, size, gray in lines:
+        size = fit_font(c, text, font, size, max_w)
+        y -= size * 1.25
+        c.setFont(font, size)
+        c.setFillGray(gray)
+        (c.drawCentredString if centred else c.drawString)(x, y + size * 0.2, text)
+
+
+def draw_label(c, sheet, x, y, url, r, show_name, show_pw, outline):
     from reportlab.lib.units import inch
     w, h = sheet['w'] * inch, sheet['h'] * inch
     if outline:
@@ -363,45 +449,27 @@ def draw_label(c, sheet, x, y, url, name, show_name, outline):
             c.circle(x + w / 2, y + h / 2, w / 2)
         else:
             c.roundRect(x, y, w, h, 6)
-    c.setFillGray(0.15)
-    tagline_font, name_font = 'Times-Italic', 'Helvetica'
 
-    if sheet['layout'] in ('stack', 'round'):
-        pad = 0.12 * inch if sheet['layout'] == 'stack' else 0.3 * inch
-        text_h = (0.34 if show_name else 0.2) * inch
-        qr = min(w - 2 * pad, h - 2 * pad - text_h) if sheet['layout'] == 'stack' else 1.2 * inch
-        qx = x + (w - qr) / 2
-        qy = y + h - pad - qr if sheet['layout'] == 'stack' else y + h - 0.2 * inch - qr
-        draw_qr(c, url, qx, qy, qr)
-        max_w = w - 2 * pad if sheet['layout'] == 'stack' else 1.5 * inch
-        size = fit_font(c, STICKER_LINE, tagline_font, 9, max_w)
-        ty = qy - 0.02 * inch - size
-        c.setFont(tagline_font, size)
-        c.drawCentredString(x + w / 2, ty, STICKER_LINE)
-        if show_name:
-            nsize = fit_font(c, name, name_font, 6.5, max_w * (0.8 if sheet['layout'] == 'round' else 1))
-            c.setFont(name_font, nsize)
-            c.setFillGray(0.45)
-            c.drawCentredString(x + w / 2, ty - nsize - 3, name)
+    if sheet['layout'] == 'stack':
+        pad = 0.12 * inch
+        lines = sticker_lines(r['name'], r['password'], show_name, show_pw)
+        qr = min(w - 2 * pad, h - 2 * pad - block_height(lines) - 2)
+        qy = y + h - pad - qr
+        draw_qr(c, url, x + (w - qr) / 2, qy, qr)
+        draw_lines(c, lines, x + w / 2, qy - 2, w - 2 * pad, centred=True)
+    elif sheet['layout'] == 'round':
+        lines = sticker_lines(r['name'], r['password'], show_name, show_pw)
+        qr = 1.05 * inch
+        qy = y + h - 0.16 * inch - qr
+        draw_qr(c, url, x + (w - qr) / 2, qy, qr)
+        draw_lines(c, lines, x + w / 2, qy - 2, 1.4 * inch, centred=True)
     else:  # side: code on the left, words on the right
         pad = 0.06 * inch
         qr = h - 2 * pad
         draw_qr(c, url, x + pad, y + pad, qr)
         tx = x + pad + qr + 0.06 * inch
-        max_w = x + w - 0.1 * inch - tx
-        words = STICKER_LINE.split()
-        mid = len(words) // 2 + 1
-        lines = [' '.join(words[:mid]), ' '.join(words[mid:])]
-        size = min(fit_font(c, ln, tagline_font, 10, max_w) for ln in lines)
-        c.setFont(tagline_font, size)
-        ty = y + h / 2 + size * 0.2 + (4 if show_name else 0)
-        c.drawString(tx, ty, lines[0])
-        c.drawString(tx, ty - size * 1.15, lines[1])
-        if show_name:
-            nsize = fit_font(c, name, name_font, 6.5, max_w)
-            c.setFont(name_font, nsize)
-            c.setFillGray(0.45)
-            c.drawString(tx, ty - size * 1.15 - nsize - 4, name)
+        lines = sticker_lines(r['name'], r['password'], show_name, show_pw, split_tagline=True)
+        draw_lines(c, lines, tx, y + h / 2 + block_height(lines) / 2, x + w - 0.1 * inch - tx, centred=False)
 
 
 def cmd_labels(p, args):
@@ -411,8 +479,8 @@ def cmd_labels(p, args):
 
     sheet = SHEETS[args.sheet]
     rows = read_households(p['csv'])
-    if any(not r['slug'] for r in rows):
-        sys.exit('some households have no slug yet. run "python build.py slugs" first.')
+    if any(not r['slug'] or not normalize_password(r['password']) for r in rows):
+        sys.exit('some households have no slug or password yet. run "python build.py slugs" first.')
     if args.only:
         rows = [r for r in rows if r['slug'] in args.only]
     rows = [r for r in rows for _ in range(args.copies)]
@@ -431,7 +499,7 @@ def cmd_labels(p, args):
         col, row = k % sheet['cols'], k // sheet['cols']
         x = (sheet['left'] + col * sheet['hpitch']) * inch
         y = page_h - (sheet['top'] + row * sheet['vpitch'] + sheet['h']) * inch
-        draw_label(c, sheet, x, y, f'{SITE}/w/{r["slug"]}', r['name'], not args.no_names, args.outline)
+        draw_label(c, sheet, x, y, f'{SITE}/w/{r["slug"]}', r, not args.no_names, not args.no_passwords, args.outline)
     c.save()
 
     pages = (args.skip + len(rows) + per_page - 1) // per_page
@@ -443,21 +511,77 @@ def cmd_labels(p, args):
         print(f'heads up: {len(missing)} of these have no photos yet, so their code would show "not found".')
 
 
+def wrangler(*args, capture=False):
+    # npx can't start inside a network-drive folder (\\server\share), so run it from the home
+    # folder; paths in wrangler.jsonc (./dist, worker.js) are resolved next to the config file.
+    cmd = ['npx.cmd' if os.name == 'nt' else 'npx', '--yes', 'wrangler@4', *args]
+    return subprocess.run(cmd, cwd=Path.home(), capture_output=capture, text=capture)
+
+
 def cmd_deploy(p, args):
     if not (p['dist'] / 'w').is_dir():
         sys.exit('nothing built yet. run "python build.py build" first.')
     if p['dist'].resolve() != (HERE / 'dist').resolve():
         sys.exit('deploy only works with the default --data folder (wrangler.jsonc points at ./dist).')
-    # npx can't start inside a network-drive folder (\\server\share), so run it from the home
-    # folder and point it at our config; the config's ./dist is resolved next to the config file.
-    cmd = ['npx.cmd' if os.name == 'nt' else 'npx', '--yes', 'wrangler@4', 'deploy', '--config', str(HERE / 'wrangler.jsonc')]
+    if not p['generated'].exists():
+        sys.exit('nothing built yet. run "python build.py build" first.')
+    if not args.dry_run:
+        out = wrangler('r2', 'bucket', 'create', UPLOAD_BUCKET, capture=True)
+        if out.returncode != 0 and 'already exists' not in (out.stdout + out.stderr).lower():
+            print(out.stdout + out.stderr)
+            sys.exit('could not set up upload storage. if it mentions R2 or a payment method, turn on R2 in the '
+                     'Cloudflare dashboard (R2 Object Storage) first. if it says "Not logged in", run: npx wrangler login')
+    cmd = ['deploy', '--config', str(HERE / 'wrangler.jsonc')]
     if args.dry_run:
         cmd.append('--dry-run')
-    result = subprocess.run(cmd, cwd=Path.home())
+    result = wrangler(*cmd)
     if result.returncode != 0:
         sys.exit('deploy failed. if it says "Not logged in", run: npx wrangler login')
     if not args.dry_run:
         print(f'\nlive. each household is at {SITE}/w/<slug>')
+
+
+def admin_request(base, token, path, method='GET'):
+    req = urllib.request.Request(base.rstrip('/') + '/w/_admin' + path, method=method,
+                                 headers={'Authorization': f'Bearer {token}', 'User-Agent': 'madluna-build'})
+    return urllib.request.urlopen(req, timeout=120)
+
+
+def cmd_uploads(p, args):
+    """Downloads what guests sent into uploads/<slug>/. With --clear, removes each one from
+    Cloudflare once its copy here is saved and the size matches, so storage stays near zero."""
+    if not p['secrets'].exists():
+        sys.exit('no .secrets.json here, so there is nothing deployed from this folder yet.')
+    token = load_secrets(p['secrets'])['admin_token']
+    base = args.base or SITE
+    with admin_request(base, token, '/uploads') as res:
+        items = json.load(res)
+    if not items:
+        print('no guest uploads waiting.')
+        return
+    got = skipped = cleared = 0
+    for it in items:
+        _, slug, fname = it['key'].split('/', 2)
+        dest = p['uploads'] / slug / fname
+        if dest.exists() and dest.stat().st_size == it['size']:
+            skipped += 1
+        else:
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            part = dest.with_name(dest.name + '.part')
+            with admin_request(base, token, '/file?key=' + urllib.parse.quote(it['key'])) as res, open(part, 'wb') as f:
+                shutil.copyfileobj(res, f)
+            if part.stat().st_size != it['size']:
+                part.unlink()
+                print(f'  ! {it["key"]} did not download completely; try again later')
+                continue
+            part.replace(dest)
+            got += 1
+            print(f'  {slug:<32} {fname}')
+        if args.clear:
+            admin_request(base, token, '/file?key=' + urllib.parse.quote(it['key']), method='DELETE').close()
+            cleared += 1
+    print(f'\n{got} new, {skipped} already here, in {p["uploads"]}' +
+          (f'. cleared {cleared} from Cloudflare.' if args.clear else '. add --clear to remove them from Cloudflare.'))
 
 
 def main():
@@ -470,15 +594,20 @@ def main():
     lp.add_argument('--sheet', choices=sorted(SHEETS), default='22806', help='label sheet type (default 22806)')
     lp.add_argument('--outline', action='store_true', help='draw label outlines, for test prints on plain paper')
     lp.add_argument('--no-names', action='store_true', help="leave the household's name off each sticker")
+    lp.add_argument('--no-passwords', action='store_true', help='leave passwords off (if writing them on the cards by hand)')
     lp.add_argument('--only', nargs='+', metavar='SLUG', help='only these households (e.g. to reprint one)')
     lp.add_argument('--skip', type=int, default=0, help='skip this many labels at the start (for a part-used sheet)')
     lp.add_argument('--copies', type=int, default=1, help='stickers per household')
     dp = sub.add_parser('deploy', help='upload the built pages to Cloudflare')
     dp.add_argument('--dry-run', action='store_true', help='check everything but upload nothing')
+    up = sub.add_parser('uploads', help='download photos guests sent us')
+    up.add_argument('--clear', action='store_true', help='remove each one from Cloudflare once it is saved here')
+    up.add_argument('--base', help=argparse.SUPPRESS)   # for testing against a local server
     args = ap.parse_args()
 
     p = paths(args.data)
-    {'slugs': cmd_slugs, 'build': cmd_build, 'labels': cmd_labels, 'deploy': cmd_deploy}[args.cmd](p, args)
+    {'slugs': cmd_slugs, 'build': cmd_build, 'labels': cmd_labels, 'deploy': cmd_deploy,
+     'uploads': cmd_uploads}[args.cmd](p, args)
 
 
 if __name__ == '__main__':

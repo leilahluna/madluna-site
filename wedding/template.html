@@ -125,6 +125,12 @@
     .grid.single { grid-template-columns: minmax(0, 420px); justify-content: center; }
     .grid img { display: block; width: 100%; height: 100%; object-fit: cover; }
 
+    .upload { margin-top: 32px; }
+    .upload .btn { display: block; }
+    .upload input[type=file] { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+    .upload .btn.busy { opacity: 0.75; cursor: progress; }
+    .upload .done-msg { color: var(--text-primary); font-weight: 600; }
+
     footer.wrap { text-align: center; padding-top: 28px; padding-bottom: 40px; font-size: 0.8rem; color: var(--text-secondary); }
 
     /* ===== lightbox ===== */
@@ -178,6 +184,14 @@
 
     <p class="count" id="count"></p>
     <div class="grid" id="grid"></div>
+
+    <section class="save upload" id="upload">
+      <h2>Share your photos with us</h2>
+      <p class="hint">Took any photos or videos at the wedding? We'd love to see them. Only Merrick &amp; Leilah can see what you send.</p>
+      <label class="btn" for="up-input" id="up-label">Choose photos or videos</label>
+      <input type="file" id="up-input" accept="image/*,video/*" multiple>
+      <p class="status" id="up-status" role="status" aria-live="polite"></p>
+    </section>
   </main>
 
   <footer class="wrap">Made with love by Merrick &amp; Leilah ☆ Madluna</footer>
@@ -199,13 +213,15 @@
   <script>
     var PHOTOS = {{PHOTOS_JSON}};
     var BATCH_SIZE = {{BATCH_SIZE}};
+    var MAX_UPLOAD_MB = {{MAX_UPLOAD_MB}};
     var ZIP_NAME = {{ZIP_NAME_JSON}};
   </script>
   <script>
   (function () {
     'use strict';
 
-    var TYPES = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', heic: 'image/heic', heif: 'image/heif', webp: 'image/webp', gif: 'image/gif' };
+    var TYPES = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', heic: 'image/heic', heif: 'image/heif', webp: 'image/webp', gif: 'image/gif',
+                  mov: 'video/quicktime', mp4: 'video/mp4', m4v: 'video/x-m4v', '3gp': 'video/3gpp', webm: 'video/webm' };
     var ua = navigator.userAgent;
     var isIOS = /iP(hone|ad|od)/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
     var isMobile = isIOS || /Android/i.test(ua);
@@ -433,6 +449,54 @@
       var dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
       if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) show(cur + (dx < 0 ? 1 : -1));
       tx = null;
+    });
+
+    // ===== guest uploads: one file at a time to /w/<slug>/upload =====
+    var upInput = $('up-input'), upLabel = $('up-label'), upStatus = $('up-status');
+    var uploading = false;
+    upLabel.addEventListener('click', function (e) { if (uploading) e.preventDefault(); });
+    upInput.addEventListener('change', function () {
+      var files = Array.prototype.slice.call(upInput.files || []);
+      if (!files.length || uploading) return;
+      uploading = true;
+      upLabel.className = 'btn busy';
+      var sent = 0, tooBig = 0, notMedia = 0, failed = 0, i = 0;
+      function finish() {
+        uploading = false;
+        upInput.value = '';
+        upLabel.className = 'btn';
+        upLabel.textContent = 'Send more';
+        var msg = sent ? 'Thank you! We got ' + (sent === files.length ? (sent === 1 ? 'it.' : 'all ' + sent + '.') : sent + ' of ' + files.length + '.') : '';
+        if (tooBig) msg += ' ' + tooBig + (tooBig === 1 ? ' file was' : ' files were') + ' over ' + MAX_UPLOAD_MB + ' MB, so ' + (tooBig === 1 ? 'it wasn’t' : 'they weren’t') + ' sent.';
+        if (notMedia) msg += ' ' + notMedia + (notMedia === 1 ? ' file wasn’t a photo or video' : ' files weren’t photos or videos') + ', so ' + (notMedia === 1 ? 'it wasn’t' : 'they weren’t') + ' sent.';
+        if (failed) msg += ' ' + failed + ' didn’t go through. Check your connection and try those again.';
+        upStatus.innerHTML = '';
+        var p = document.createElement('span');
+        p.className = sent && !failed ? 'done-msg' : '';
+        p.textContent = msg.trim();
+        upStatus.appendChild(p);
+      }
+      function next() {
+        if (i >= files.length) return finish();
+        var f = files[i++];
+        if (f.size > MAX_UPLOAD_MB * 1024 * 1024) { tooBig++; return next(); }
+        var ext = (f.name.split('.').pop() || '').toLowerCase();
+        var type = f.type || TYPES[ext] || '';
+        if (!/^(image|video)\//.test(type)) { notMedia++; return next(); }
+        upLabel.textContent = 'Sending ' + i + ' of ' + files.length + '…';
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', 'upload');
+        xhr.setRequestHeader('Content-Type', type);
+        xhr.setRequestHeader('X-File-Name', encodeURIComponent(f.name));
+        xhr.upload.onprogress = function (e) {
+          if (e.lengthComputable) upLabel.textContent = 'Sending ' + i + ' of ' + files.length + '… ' + Math.round(e.loaded / e.total * 100) + '%';
+        };
+        xhr.onload = function () { if (xhr.status === 200) sent++; else failed++; next(); };
+        xhr.onerror = function () { failed++; next(); };
+        xhr.send(f);
+      }
+      upStatus.textContent = '';
+      next();
     });
 
     lbSave.addEventListener('click', function () {
