@@ -129,22 +129,22 @@
     .featured { margin: 8px 0 28px; }
     .section-title { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.5rem; text-align: center; color: var(--text-secondary); }
     .credit { text-align: center; font-size: 0.85rem; color: var(--text-secondary); font-weight: 300; margin: 2px 0 14px; }
-    .feat-grid { display: grid; grid-template-columns: 1fr; gap: 12px; align-items: center; }
-    @media (min-width: 760px) { .feat-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; } }
-    .feat-grid button { display: block; width: 100%; padding: 0; border: 0; background: var(--bg-card); border-radius: 10px; overflow: hidden; cursor: zoom-in; }
-    .feat-grid img { display: block; width: 100%; height: auto; }
-    .feat-grid .wide { grid-column: 1 / -1; }
+    /* Pinterest-style: photos keep their own shape and stack in columns (laid out by masonry() below) */
+    .mcols { display: flex; align-items: flex-start; gap: var(--gap); }
+    .mcol { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: var(--gap); }
+    .mcols + .mwide, .mwide + .mcols, .mwide + .mwide { margin-top: var(--gap); }
+    .feat-grid, .grid { --gap: 8px; }
+    @media (min-width: 640px) { .grid { --gap: 10px; } }
+    @media (min-width: 760px) { .feat-grid { --gap: 16px; } }
+    .feat-grid button, .grid button {
+      display: block; width: 100%; padding: 0; border: 0; background: var(--bg-card);
+      border-radius: 10px; overflow: hidden; cursor: zoom-in;
+    }
+    .grid button { border-radius: 8px; }
+    .feat-grid img, .grid img { display: block; width: 100%; height: auto; }
+    .grid.single { max-width: 420px; margin: 0 auto; }
     .more-title { margin-bottom: 4px; }
     .count { text-align: center; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; }
-    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
-    @media (min-width: 640px) { .grid { grid-template-columns: repeat(3, 1fr); gap: 10px; } }
-    @media (min-width: 900px) { .grid { grid-template-columns: repeat(4, 1fr); } }
-    .grid button {
-      display: block; width: 100%; aspect-ratio: 1; padding: 0; border: 0; background: var(--bg-card);
-      border-radius: 8px; overflow: hidden; cursor: zoom-in;
-    }
-    .grid.single { grid-template-columns: minmax(0, 420px); justify-content: center; }
-    .grid img { display: block; width: 100%; height: 100%; object-fit: cover; }
 
     .upload { margin-top: 0; }
     .upload .btn { display: block; }
@@ -473,7 +473,6 @@
       img.decoding = 'async';
       b.appendChild(img);
       b.addEventListener('click', function () { openLb(shown.indexOf(i)); });
-      (p.featured ? featGrid : grid).appendChild(b);
       if (p.featured) nFeat++;
       return b;
     });
@@ -481,6 +480,71 @@
       $('featured').hidden = false;
       $('more-title').hidden = nFeat === n;
     }
+
+    // Masonry: each photo goes into whichever column is shortest so far, so the page fills in like
+    // puzzle pieces and still reads roughly left to right. A "full row" photo spans the width between them.
+    function columnsFor(container) {
+      var w = container.clientWidth || window.innerWidth;
+      if (container === featGrid) return w < 700 ? 1 : 2;
+      return w < 600 ? 2 : w < 880 ? 3 : 4;
+    }
+    function masonry(container, idx) {
+      var cols = Math.max(1, Math.min(columnsFor(container), idx.length));
+      container.innerHTML = '';
+      container.dataset.cols = cols;
+      var block = null, heights = [], lastCol = -1, lastIdx = -1;
+      function wideRow(cell) {
+        var w = document.createElement('div');
+        w.className = 'mwide';
+        w.appendChild(cell);
+        container.appendChild(w);
+      }
+      // In the big-photo section, if the last photo of a stretch hangs below the other column by more than
+      // half its height, give it the full row instead so there's no empty hole next to it.
+      function closeBlock() {
+        if (block && container === featGrid && cols === 2 && lastIdx >= 0) {
+          var other = heights[1 - lastCol], r = PHOTOS[lastIdx].h / PHOTOS[lastIdx].w;
+          if (r < 1 && heights[lastCol] - other > r * 0.5 && block.children[lastCol].lastChild === cells[lastIdx]) wideRow(cells[lastIdx]);
+        }
+        block = null; lastIdx = -1;
+      }
+      idx.forEach(function (i) {
+        var p = PHOTOS[i], cell = cells[i];
+        if (p.wide && cols > 1) {
+          closeBlock();
+          wideRow(cell);
+          return;
+        }
+        if (!block) {
+          block = document.createElement('div');
+          block.className = 'mcols';
+          heights = [];
+          for (var c = 0; c < cols; c++) {
+            var col = document.createElement('div');
+            col.className = 'mcol';
+            block.appendChild(col);
+            heights.push(0);
+          }
+          container.appendChild(block);
+        }
+        var k = heights.indexOf(Math.min.apply(null, heights));
+        block.children[k].appendChild(cell);
+        heights[k] += p.h / p.w + 0.04;   // photo height for a column 1 wide, plus a little for the gap
+        lastCol = k; lastIdx = i;
+      });
+      closeBlock();
+    }
+    function layoutAll() {
+      masonry(featGrid, shown.filter(function (i) { return PHOTOS[i].featured; }));
+      masonry(grid, shown.filter(function (i) { return !PHOTOS[i].featured; }));
+    }
+    var resizeTimer;
+    window.addEventListener('resize', function () {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function () {
+        if (+featGrid.dataset.cols !== Math.min(columnsFor(featGrid), nFeat || 1) || +grid.dataset.cols !== Math.min(columnsFor(grid), Math.max(1, n - nFeat))) layoutAll();
+      }, 150);
+    });
 
     var KINDS = [['photo', 'Photos', 'photo', 'photos'], ['gif', 'GIFs', 'GIF', 'GIFs'], ['video', 'Videos', 'video', 'videos']];
     function countOf(kind, list) { return list.filter(function (i) { return PHOTOS[i].kind === kind; }).length; }
@@ -494,9 +558,9 @@
     }
     function selectTab(kind) {
       shown = PHOTOS.map(function (_, i) { return i; }).filter(function (i) { return kind === 'all' || PHOTOS[i].kind === kind; });
-      cells.forEach(function (c, i) { c.hidden = shown.indexOf(i) < 0; });
-      grid.className = 'grid' + (shown.length === 1 ? ' single' : '');
       var rest = shown.filter(function (i) { return !PHOTOS[i].featured; });
+      grid.className = 'grid' + (rest.length === 1 ? ' single' : '');
+      layoutAll();
       $('count').textContent = rest.length ? describe(rest) : '';
       $('count').hidden = !rest.length;
       Array.prototype.forEach.call($('tabs').children, function (t) { t.setAttribute('aria-selected', t.dataset.kind === kind ? 'true' : 'false'); });
