@@ -62,7 +62,8 @@ STICKER_LINE = 'Scan for your photos from our day'
 FEATURED_ARTISTS = []    # e.g. ["Verita's Eye"]
 FEATURED_TITLE = 'Professional shots'
 FEATURED_CREDIT = "Photos by Verita's Eye"
-SHOW_TABS = False        # All / Photos / GIFs / Videos sorting above the photos
+SHOW_TABS = False
+DEFAULT_MOMENT = 'Reception'   # time of day for any photo not covered by moments.csv or set on the admin page        # All / Photos / GIFs / Videos sorting above the photos
 FULL_MAX_MB = 24         # Cloudflare won't serve files over 25 MiB; bigger photos get re-saved (same size in pixels)
 MAX_UPLOAD_MB = 4096     # biggest single file a guest can send; must match MAX_FILE in worker.js (big ones go in pieces)
 UPLOAD_BUCKET = 'madluna-wedding-uploads'   # must match r2_buckets in wrangler.jsonc
@@ -236,11 +237,7 @@ def list_photos(folder):
 
 # moments.csv: when each part of the day started. Only used to sort photos into moments;
 # times never appear on the site. Starter rows are guesses to be fixed by hand.
-STARTER_MOMENTS = [
-    ('2025-10-25 00:00', 'Getting ready'),
-    ('2025-10-25 16:00', 'Ceremony'),
-    ('2025-10-25 17:30', 'Reception'),
-]
+STARTER_MOMENTS = []     # e.g. ("2025-10-25 16:00", "Ceremony"); photos outside every range get DEFAULT_MOMENT
 
 
 def read_csv(path):
@@ -262,7 +259,7 @@ def write_csv(path, fields, rows):
 def load_moments(path):
     if not path.exists():
         write_csv(path, ['from', 'moment'], [{'from': a, 'moment': b} for a, b in STARTER_MOMENTS])
-        print(f'made {path.name} with starter moments; edit the times and names to match the day.')
+        print(f'made {path.name}; add rows (start time, moment) to label parts of the day by time.')
     out = []
     for r in read_csv(path):
         m = re.match(r'(\d{4})-(\d{1,2})-(\d{1,2})(?:\s+(\d{1,2}):(\d{2}))?', r.get('from', ''))
@@ -273,12 +270,12 @@ def load_moments(path):
 
 
 def moment_for(taken, moments):
-    """The moment whose start is the latest one at or before the photo's time."""
+    """The moment whose start is the latest one at or before the photo's time, else DEFAULT_MOMENT."""
     label = ''
     for start, name in moments:
         if taken and taken >= start:
             label = name
-    return label
+    return label or DEFAULT_MOMENT
 
 
 def info_key(src, photos_root):
