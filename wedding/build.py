@@ -60,7 +60,7 @@ STICKER_LINE = 'Scan for your photos from our day'
 # Add "wide" (e.g. "6 wide") to make a photo take a whole row on wide screens, like the big group photo.
 # Photos by these photographers (the Artist saved in each file) count as "yes" unless the column says otherwise.
 FEATURED_ARTISTS = []    # e.g. ["Verita's Eye"]
-FEATURED_TITLE = 'From our photographer'
+FEATURED_TITLE = 'Professional shots'
 FEATURED_CREDIT = "Photos by Verita's Eye"
 SHOW_TABS = False        # All / Photos / GIFs / Videos sorting above the photos
 FULL_MAX_MB = 24         # Cloudflare won't serve files over 25 MiB; bigger photos get re-saved (same size in pixels)
