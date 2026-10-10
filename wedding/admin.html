@@ -88,6 +88,8 @@
     .tile .wide-btn[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
     .arr-list:not(.big) .wide-btn { display: none; }
     .tile.wide { outline: 3px solid var(--accent); outline-offset: -3px; }
+    .arr-list.big .tile.wide { grid-column: span 2; }
+    .arr-list.big .tile.wide img { aspect-ratio: 8 / 3; }
     .sortable-ghost { opacity: 0.35; }
     .sortable-chosen { transform: scale(1.04); box-shadow: 0 6px 20px rgba(0,0,0,0.5); }
     .arr-bar {
@@ -377,6 +379,13 @@
         Array.prototype.forEach.call($(l[0]).children, function (t, k) { t.querySelector('.num').textContent = k + 1; });
       });
     }
+    // the switch says what it will do when off, and shows a check when on
+    function setWide(t, w, on) {
+      w = w || t.querySelector('.wide-btn');
+      w.setAttribute('aria-pressed', String(on));
+      w.textContent = on ? '✓ Full row' : 'Make full row';
+      t.classList.toggle('wide', on);
+    }
     function tile(p, isBig, isWide) {
       var t = el('div', 'tile' + (isWide ? ' wide' : ''));
       t.dataset.id = p.id;
@@ -391,14 +400,12 @@
         if (selecting) { t.classList.toggle('selected'); updateBulk(); }
         else openTags(p);
       });
-      var w = el('button', 'wide-btn', 'Full row');
+      var w = el('button', 'wide-btn');
       w.type = 'button';
-      w.setAttribute('aria-pressed', String(!!isWide));
+      setWide(t, w, !!isWide);
       w.addEventListener('click', function (e) {
         e.stopPropagation();
-        var on = w.getAttribute('aria-pressed') !== 'true';
-        w.setAttribute('aria-pressed', String(on));
-        t.classList.toggle('wide', on);
+        setWide(t, w, w.getAttribute('aria-pressed') !== 'true');
         setDirty(true);
       });
       t.appendChild(w);
@@ -438,7 +445,7 @@
                 onSort: function () { renumber(); setDirty(true); },
                 onAdd: function (e) {
                   // dragged into the grid: no longer big, so drop "full row"
-                  if (e.to.id !== 'arr-big') { e.item.classList.remove('wide'); e.item.querySelector('.wide-btn').setAttribute('aria-pressed', 'false'); }
+                  if (e.to.id !== 'arr-big') setWide(e.item, null, false);
                 }
               }));
             });
@@ -516,7 +523,7 @@
       var t = editingTile();
       if (!t) return;
       var hiding = t.parentNode.id !== 'arr-hidden';
-      t.classList.remove('wide'); t.querySelector('.wide-btn').setAttribute('aria-pressed', 'false');
+      setWide(t, null, false);
       if (hiding) $('arr-hidden').appendChild(t); else $('arr-grid').appendChild(t);
       renumber(); setDirty(true);
       $('tag-dlg').close();
