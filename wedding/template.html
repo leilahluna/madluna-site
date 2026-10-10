@@ -196,7 +196,7 @@
 
     <section class="save upload" id="upload">
       <h2>Share your photos with us</h2>
-      <p class="hint">Took any photos or videos at the wedding? We'd love to see them. Only Merrick &amp; Leilah can see what you send.</p>
+      <p class="hint">Took any photos or videos at the wedding? We'd love to see them, especially videos of the dances! Long videos are fine. Only Merrick &amp; Leilah can see what you send.</p>
       <label class="btn" for="up-input" id="up-label">Choose photos or videos</label>
       <input type="file" id="up-input" accept="image/*,video/*" multiple>
       <p class="status" id="up-status" role="status" aria-live="polite"></p>
@@ -499,9 +499,51 @@
       tx = null;
     });
 
-    // ===== guest uploads: one file at a time to /w/<slug>/upload =====
+    // ===== guest uploads: one file at a time. Small ones in one request to /w/<slug>/upload;
+    // big ones (videos) in 5 MB pieces (the smallest R2 allows), each retried several times: some connections
+    // garble large uploads, and a small piece is quick to resend.
     var upInput = $('up-input'), upLabel = $('up-label'), upStatus = $('up-status');
     var uploading = false;
+    var PIECE = 5 * 1024 * 1024;
+
+    // one request with upload progress; resolves with the response text, rejects on failure
+    function send(method, url, body, headers, onProgress) {
+      return new Promise(function (resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        xhr.open(method, url);
+        Object.keys(headers || {}).forEach(function (h) { xhr.setRequestHeader(h, headers[h]); });
+        if (onProgress) xhr.upload.onprogress = function (e) { if (e.lengthComputable) onProgress(e.loaded); };
+        xhr.onload = function () { xhr.status === 200 ? resolve(xhr.responseText) : reject(new Error('http ' + xhr.status)); };
+        xhr.onerror = function () { reject(new Error('network')); };
+        xhr.send(body);
+      });
+    }
+    function retry(fn, tries) {
+      return fn().catch(function (e) {
+        if (tries <= 1 || /http 4/.test(e.message)) throw e;
+        return wait(1500).then(function () { return retry(fn, tries - 1); });
+      });
+    }
+    function sendInPieces(f, type, onProgress) {
+      var json = { 'Content-Type': 'application/json' };
+      return send('POST', 'upload/start', JSON.stringify({ name: f.name, type: type, size: f.size }), json).then(function (txt) {
+        var up = JSON.parse(txt), parts = [], count = Math.ceil(f.size / PIECE), k = 0;
+        var q = 'upload/part?key=' + encodeURIComponent(up.key) + '&uploadId=' + encodeURIComponent(up.uploadId) + '&n=';
+        function nextPiece() {
+          if (k >= count) {
+            return send('POST', 'upload/complete', JSON.stringify({ key: up.key, uploadId: up.uploadId, parts: parts }), json);
+          }
+          var n = ++k, from = (n - 1) * PIECE, chunk = f.slice(from, Math.min(from + PIECE, f.size));
+          return retry(function () {
+            return send('PUT', q + n, chunk, { 'Content-Type': 'application/octet-stream' }, function (loaded) { onProgress(from + loaded); });
+          }, 8).then(function (txt) { parts.push(JSON.parse(txt)); return nextPiece(); });
+        }
+        return nextPiece().catch(function (e) {
+          send('POST', 'upload/abort', JSON.stringify({ key: up.key, uploadId: up.uploadId }), json).catch(function () {});
+          throw e;
+        });
+      });
+    }
     upLabel.addEventListener('click', function (e) { if (uploading) e.preventDefault(); });
     upInput.addEventListener('change', function () {
       var files = Array.prototype.slice.call(upInput.files || []);
@@ -515,7 +557,7 @@
         upLabel.className = 'btn';
         upLabel.textContent = 'Send more';
         var msg = sent ? 'Thank you! We got ' + (sent === files.length ? (sent === 1 ? 'it.' : 'all ' + sent + '.') : sent + ' of ' + files.length + '.') : '';
-        if (tooBig) msg += ' ' + tooBig + (tooBig === 1 ? ' file was' : ' files were') + ' over ' + MAX_UPLOAD_MB + ' MB, so ' + (tooBig === 1 ? 'it wasn’t' : 'they weren’t') + ' sent.';
+        if (tooBig) msg += ' ' + tooBig + (tooBig === 1 ? ' file was' : ' files were') + ' over ' + (MAX_UPLOAD_MB >= 1024 ? MAX_UPLOAD_MB / 1024 + ' GB' : MAX_UPLOAD_MB + ' MB') + ', so ' + (tooBig === 1 ? 'it wasn’t' : 'they weren’t') + ' sent.';
         if (notMedia) msg += ' ' + notMedia + (notMedia === 1 ? ' file wasn’t a photo or video' : ' files weren’t photos or videos') + ', so ' + (notMedia === 1 ? 'it wasn’t' : 'they weren’t') + ' sent.';
         if (failed) msg += ' ' + failed + ' didn’t go through. Check your connection and try those again.';
         upStatus.innerHTML = '';
@@ -532,18 +574,15 @@
         var type = f.type || TYPES[ext] || '';
         if (!/^(image|video)\//.test(type)) { notMedia++; return next(); }
         upLabel.textContent = 'Sending ' + i + ' of ' + files.length + '…';
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', 'upload');
-        xhr.setRequestHeader('Content-Type', type);
-        xhr.setRequestHeader('X-File-Name', encodeURIComponent(f.name));
-        xhr.upload.onprogress = function (e) {
-          if (e.lengthComputable) upLabel.textContent = 'Sending ' + i + ' of ' + files.length + '… ' + Math.round(e.loaded / e.total * 100) + '%';
+        var progress = function (loaded) {
+          upLabel.textContent = 'Sending ' + i + ' of ' + files.length + '… ' + Math.min(99, Math.round(loaded / f.size * 100)) + '%';
         };
-        xhr.onload = function () { if (xhr.status === 200) sent++; else failed++; next(); };
-        xhr.onerror = function () { failed++; next(); };
-        xhr.send(f);
+        var job = f.size <= PIECE
+          ? retry(function () { return send('POST', 'upload', f, { 'Content-Type': type, 'X-File-Name': encodeURIComponent(f.name) }, progress); }, 3)
+          : sendInPieces(f, type, progress);
+        job.then(function () { sent++; }, function () { failed++; }).then(next);
       }
-      upStatus.textContent = '';
+      upStatus.textContent = 'Keep this page open until it finishes. Big videos can take a few minutes.';
       next();
     });
 

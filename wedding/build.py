@@ -56,7 +56,7 @@ NOTE = ("If you don't spot yourself in a photo immediately, check in the backgro
         "We used Google Photos to detect faces, so if the person detected isn't you, we apologize!")   # under the message on every page; '' for none
 STICKER_LINE = 'Scan for your photos from our day'
 FULL_MAX_MB = 24         # Cloudflare won't serve files over 25 MiB; bigger photos get re-saved (same size in pixels)
-MAX_UPLOAD_MB = 95       # biggest single file a guest can send (Cloudflare's free plan stops at 100 MB)
+MAX_UPLOAD_MB = 4096     # biggest single file a guest can send; must match MAX_FILE in worker.js (big ones go in pieces)
 UPLOAD_BUCKET = 'madluna-wedding-uploads'   # must match r2_buckets in wrangler.jsonc
 
 # passwords are one of these words plus 3 digits, e.g. "maple 482": easy to read off a card and type

@@ -1,12 +1,14 @@
 // Runs in front of every madluna.ca/w/* request.
 //  - /w/<slug>/...      needs that household's password (from their card) before any page or photo is sent
-//  - /w/<slug>/upload   lets a logged-in guest send us a photo or video; it lands in the private R2 bucket
+//  - /w/<slug>/upload   lets a logged-in guest send us a photo or video; it lands in the private R2 bucket.
+//                       Big files (dance videos!) come in 5 MB pieces via /upload/start, /part, /complete.
 //  - /w/_admin/...      lists and fetches guest uploads for "python build.py uploads" (needs the admin token)
 // generated/config.js is written by "python build.py build" and never goes to GitHub.
 import config from './generated/config.js';
 
 const enc = new TextEncoder();
 const MAX_UPLOAD = 95 * 1024 * 1024;   // Cloudflare's free plan accepts requests up to 100 MB
+const MAX_FILE = 4 * 1024 * 1024 * 1024;   // biggest single file, sent in pieces (a long 4K video fits)
 const YEAR = 60 * 60 * 24 * 365;
 const COMMON = {
 	'X-Robots-Tag': 'noindex, nofollow, noimageindex',
@@ -83,24 +85,70 @@ async function login(req, slug, house, token) {
 	});
 }
 
+function mediaType(raw) {
+	const type = String(raw || '').split(';')[0].trim().toLowerCase();
+	return /^(image|video)\//.test(type) ? type : '';
+}
+function newKey(slug, rawName) {
+	const name = String(rawName || 'upload').replace(/[^\w.\- ]+/g, '_').slice(-80) || 'upload';
+	const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+	return { name, key: `inbox/${slug}/${stamp}-${crypto.randomUUID().slice(0, 8)}-${name}` };
+}
+
+// small files: one request
 async function upload(req, env, slug, house) {
 	const len = Number(req.headers.get('Content-Length') || 0);
-	const type = (req.headers.get('Content-Type') || '').split(';')[0].trim().toLowerCase();
+	const type = mediaType(req.headers.get('Content-Type'));
 	if (!len || !req.body) return json({ error: 'empty' }, 400);
 	if (len > MAX_UPLOAD) return json({ error: 'too big' }, 413);
-	if (!/^(image|video)\//.test(type)) return json({ error: 'only photos and videos' }, 415);
-	let name = 'upload';
+	if (!type) return json({ error: 'only photos and videos' }, 415);
+	let raw = 'upload';
 	try {
-		name = decodeURIComponent(req.headers.get('X-File-Name') || 'upload');
+		raw = decodeURIComponent(req.headers.get('X-File-Name') || 'upload');
 	} catch {}
-	name = name.replace(/[^\w.\- ]+/g, '_').slice(-80) || 'upload';
-	const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-	const key = `inbox/${slug}/${stamp}-${crypto.randomUUID().slice(0, 8)}-${name}`;
-	await env.UPLOADS.put(key, req.body.pipeThrough(new FixedLengthStream(len)), {
+	const { name, key } = newKey(slug, raw);
+	// hand the request body straight to R2: piping it through JS would burn the free plan's CPU time on big files
+	await env.UPLOADS.put(key, req.body, {
 		httpMetadata: { contentType: type },
 		customMetadata: { household: house.name, original: name },
 	});
 	return json({ ok: true });
+}
+
+// big files: start, then numbered pieces, then complete. R2 joins the pieces back into the original file.
+async function uploadInPieces(req, env, url, slug, house, step) {
+	if (step === 'start') {
+		const info = await req.json().catch(() => ({}));
+		const type = mediaType(info.type);
+		if (!type) return json({ error: 'only photos and videos' }, 415);
+		if (!(info.size > 0) || info.size > MAX_FILE) return json({ error: 'too big' }, 413);
+		const { name, key } = newKey(slug, info.name);
+		const mp = await env.UPLOADS.createMultipartUpload(key, {
+			httpMetadata: { contentType: type },
+			customMetadata: { household: house.name, original: name },
+		});
+		return json({ key: mp.key, uploadId: mp.uploadId });
+	}
+	// every later step names an upload that must belong to this household
+	const q = step === 'part' ? Object.fromEntries(url.searchParams) : await req.json().catch(() => ({}));
+	if (!String(q.key || '').startsWith(`inbox/${slug}/`) || !q.uploadId) return json({ error: 'bad upload' }, 400);
+	const mp = env.UPLOADS.resumeMultipartUpload(q.key, q.uploadId);
+	if (step === 'part') {
+		const n = Number(q.n);
+		const len = Number(req.headers.get('Content-Length') || 0);
+		if (!(n >= 1 && n <= 10000) || !len || len > MAX_UPLOAD || !req.body) return json({ error: 'bad piece' }, 400);
+		const part = await mp.uploadPart(n, req.body);
+		return json({ partNumber: part.partNumber, etag: part.etag });
+	}
+	if (step === 'complete') {
+		await mp.complete(q.parts || []);
+		return json({ ok: true });
+	}
+	if (step === 'abort') {
+		await mp.abort().catch(() => {});
+		return json({ ok: true });
+	}
+	return json({ error: 'unknown step' }, 404);
 }
 
 async function admin(req, env, url, rest) {
@@ -152,6 +200,8 @@ export default {
 		}
 
 		if (rest === '/upload' && req.method === 'POST') return upload(req, env, slug, house);
+		const piece = rest.match(/^\/upload\/(start|part|complete|abort)$/);
+		if (piece && (req.method === 'POST' || req.method === 'PUT')) return uploadInPieces(req, env, url, slug, house, piece[1]);
 		if (req.method !== 'GET' && req.method !== 'HEAD') return new Response('Method not allowed', { status: 405, headers: COMMON });
 		const res = await env.ASSETS.fetch(req);
 		const media = rest.startsWith('/thumbs/') || rest.startsWith('/view/') || rest.startsWith('/full/');
