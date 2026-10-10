@@ -557,7 +557,9 @@ def wrangler(*args, capture=False):
     # npx can't start inside a network-drive folder (\\server\share), so run it from the home
     # folder; paths in wrangler.jsonc (./dist, worker.js) are resolved next to the config file.
     cmd = ['npx.cmd' if os.name == 'nt' else 'npx', '--yes', 'wrangler@4', *args]
-    return subprocess.run(cmd, cwd=Path.home(), capture_output=capture, text=capture)
+    # wrangler prints emoji, so read its output as UTF-8 rather than Windows' default code page
+    return subprocess.run(cmd, cwd=Path.home(), capture_output=capture,
+                          encoding='utf-8' if capture else None, errors='replace' if capture else None)
 
 
 def cmd_deploy(p, args):
