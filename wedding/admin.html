@@ -98,6 +98,37 @@
     .arr-bar { padding-top: 8px; padding-bottom: calc(8px + env(safe-area-inset-bottom)); gap: 6px; }
     .arr-bar .status { margin: 0; flex: 1 1 100%; font-size: 0.78rem; min-height: 0; }
     .dirty-dot::after { content: ' •'; color: var(--warn); }
+
+    /* ===== tags ===== */
+    .tile .tagl {
+      position: absolute; top: 4px; right: 4px; max-width: calc(100% - 40px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      background: rgba(0,0,0,0.7); color: #fff; font-size: 0.68rem; font-weight: 600; padding: 1px 7px; border-radius: 999px;
+    }
+    .tile .tagl:empty { display: none; }
+    .tile.selected { outline: 4px solid var(--good); outline-offset: -4px; }
+    .tile.selected::after { content: '✓'; position: absolute; inset: auto 6px 6px auto; background: var(--good); color: #000; font-weight: 700; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; }
+    .tile .bigb { display: none; position: absolute; bottom: 4px; left: 4px; background: var(--accent); color: var(--on-accent); font-size: 0.68rem; font-weight: 600; padding: 1px 7px; border-radius: 999px; }
+    #arr-groups .tile.is-big .bigb { display: block; }
+    #arr-groups .wide-btn { display: none; }
+    .bulk { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 10px; padding: 10px; border-radius: 10px; background: var(--bg-secondary); border: 2px solid var(--good); }
+    .bulk[hidden] { display: none; }
+    .bulk input, .tag-add input { font: inherit; padding: 8px 10px; border-radius: 8px; border: 2px solid var(--border); background: var(--bg-primary); color: var(--text-primary); min-width: 0; flex: 1 1 140px; }
+    .group { border: 2px solid var(--border); border-radius: 12px; background: var(--bg-secondary); margin-top: 12px; }
+    .group-head { display: flex; align-items: center; gap: 10px; padding: 10px 12px; font-weight: 600; cursor: grab; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+    .group-head .ghandle { font-size: 1.2rem; color: var(--text-secondary); }
+    .group-head .gcount { font-weight: 400; color: var(--text-secondary); font-size: 0.85rem; }
+    .group .arr-list { border: 0; border-top: 2px dashed var(--border); border-radius: 0 0 12px 12px; min-height: 80px; }
+    dialog.tagdlg { margin: auto; width: min(440px, calc(100vw - 24px)); border: 2px solid var(--border); border-radius: 14px; background: var(--bg-card); color: var(--text-primary); padding: 0; }
+    dialog.tagdlg::backdrop { background: rgba(0,0,0,0.6); }
+    .tagdlg img { display: block; width: 100%; max-height: 42vh; object-fit: contain; background: #000; }
+    .tagdlg .body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; min-height: 30px; }
+    .chips .empty-note { font-size: 0.85rem; color: var(--text-secondary); }
+    .chip-tag { display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; border: 2px solid var(--border); background: var(--bg-secondary); color: var(--text-primary); font: inherit; font-size: 0.85rem; padding: 3px 4px 3px 10px; cursor: pointer; }
+    .chip-tag.main { border-color: var(--accent); background: var(--accent); color: var(--on-accent); }
+    .chip-tag .x { border: 0; background: none; color: inherit; font-size: 1rem; cursor: pointer; padding: 0 6px; }
+    .tag-add { display: flex; gap: 8px; }
+    .tagdlg .hint { font-size: 0.78rem; color: var(--text-secondary); }
   </style>
 </head>
 <body>
@@ -128,8 +159,20 @@
   <section class="wrap" id="view-arrange" hidden>
     <div class="controls">
       <select id="arr-house" aria-label="Household to arrange"></select>
+      <button class="chip" id="mode-photos" type="button" aria-pressed="true">Photos</button>
+      <button class="chip" id="mode-tags" type="button" aria-pressed="false">By tag</button>
+      <button class="btn" id="arr-select" type="button">Select photos</button>
     </div>
-    <p class="arr-help">Drag photos to put them in order. Drag a photo up into <b>Big photos</b> to show it large at the top of the page, or down into <b>Grid</b> to make it normal. <b>Full row</b> makes a big photo take the whole width. On a phone, press and hold a photo for a moment, then move it.</p>
+    <div class="bulk" id="bulk" hidden>
+      <span id="bulk-count">0 selected</span>
+      <input id="bulk-tag" list="tag-list" placeholder="Tag for the selected photos" autocomplete="off">
+      <button class="btn primary" id="bulk-add" type="button">Add tag</button>
+      <button class="btn" id="bulk-done" type="button">Done</button>
+    </div>
+    <datalist id="tag-list"></datalist>
+    <p class="arr-help" id="help-photos">Drag photos to put them in order. Drag a photo up into <b>Big photos</b> to show it large at the top of the page, or down into <b>Grid</b> to make it normal. <b>Full row</b> makes a big photo take the whole width. Tap a photo to tag it, or use <b>Select photos</b> to tag several at once. On a phone, press and hold a photo for a moment, then move it.</p>
+    <p class="arr-help" id="help-tags" hidden>Each block is one tag (a photo goes with its first tag). Drag a block by its <b>≡</b> bar to move all of its photos at once, or drag photos inside a block. Switch back to <b>Photos</b> to see the result, then <b>Save</b>.</p>
+    <div id="arr-sections">
     <div class="arr-section">
       <h2>Big photos</h2>
       <p class="sub">Shown large at the top, in this order.</p>
@@ -140,6 +183,8 @@
       <p class="sub">"More from the day", in this order.</p>
       <div class="arr-list" id="arr-grid"></div>
     </div>
+    </div>
+    <div id="arr-groups" hidden></div>
     <div class="arr-bar">
       <button class="btn primary" id="arr-save" type="button">Save</button>
       <button class="btn" id="arr-undo" type="button">Undo changes</button>
@@ -147,6 +192,19 @@
       <p class="status" id="arr-status" role="status" aria-live="polite"></p>
     </div>
   </section>
+
+  <dialog class="tagdlg" id="tag-dlg" aria-label="Tags for this photo">
+    <img id="tag-img" alt="">
+    <div class="body">
+      <div class="chips" id="tag-chips"></div>
+      <p class="hint">Tap a tag to make it the main one (the group this photo moves with). Tags are only for you; guests don't see them.</p>
+      <div class="tag-add">
+        <input id="tag-input" list="tag-list" placeholder="Add a tag, e.g. Stairs" autocomplete="off">
+        <button class="btn primary" id="tag-add" type="button">Add</button>
+      </div>
+      <button class="btn" id="tag-close" type="button">Done</button>
+    </div>
+  </dialog>
 
   <script>
   (function () {
@@ -318,6 +376,13 @@
       img.src = 'asset/' + arr.slug + '/' + p.thumb; img.alt = ''; img.loading = 'lazy'; img.draggable = false;
       t.appendChild(img);
       t.appendChild(el('span', 'num'));
+      t.appendChild(el('span', 'tagl', firstTag(p.id)));
+      t.appendChild(el('span', 'bigb', 'Big'));
+      if (isBig) t.classList.add('is-big');
+      t.addEventListener('click', function () {
+        if (selecting) { t.classList.toggle('selected'); updateBulk(); }
+        else openTags(p);
+      });
       var w = el('button', 'wide-btn', 'Full row');
       w.type = 'button';
       w.setAttribute('aria-pressed', String(!!isWide));
@@ -373,11 +438,178 @@
     }
     function ids(list) { return Array.prototype.map.call($(list).children, function (t) { return t.dataset.id; }); }
 
+    // ===== tags =====
+    var tagData = { photos: {}, tags: [] }, selecting = false, mode = 'photos', groupSortables = [];
+    function firstTag(id) { return (tagData.photos[id] || [])[0] || ''; }
+    function loadTags() {
+      return fetch('api/tags', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) { tagData = d; refreshTags(); });
+    }
+    function refreshTags() {
+      Array.prototype.forEach.call(document.querySelectorAll('#view-arrange .tile'), function (t) { t.querySelector('.tagl').textContent = firstTag(t.dataset.id); });
+      var dl = $('tag-list'); dl.innerHTML = '';
+      tagData.tags.forEach(function (tg) { var o = document.createElement('option'); o.value = tg; dl.appendChild(o); });
+    }
+    function saveTags(set) {
+      return post('api/tags', { set: set }).then(function (d) { tagData = d; refreshTags(); if (mode === 'tags') renderGroups(); })
+        .catch(function () { $('arr-status').textContent = 'Couldn’t save that tag. Check your connection and try again.'; });
+    }
+
+    // one photo's tags
+    var editing = null;
+    function renderChips() {
+      var list = tagData.photos[editing.id] || [], box = $('tag-chips');
+      box.innerHTML = '';
+      if (!list.length) box.appendChild(el('span', 'empty-note', 'No tags yet.'));
+      list.forEach(function (tg, k) {
+        var c = el('span', 'chip-tag' + (k === 0 ? ' main' : ''));
+        c.appendChild(document.createTextNode(tg));
+        c.title = k === 0 ? 'Main tag' : 'Make this the main tag';
+        c.addEventListener('click', function () {
+          if (k === 0) return;
+          var l = list.slice(); l.splice(k, 1); l.unshift(tg);
+          saveTags(single(l)).then(renderChips);
+        });
+        var x = el('button', 'x', '×');
+        x.type = 'button'; x.setAttribute('aria-label', 'Remove ' + tg);
+        x.addEventListener('click', function (e) {
+          e.stopPropagation();
+          saveTags(single(list.filter(function (o) { return o !== tg; }))).then(renderChips);
+        });
+        c.appendChild(x);
+        box.appendChild(c);
+      });
+    }
+    function single(list) { var s = {}; s[editing.id] = list; return s; }
+    function openTags(p) {
+      editing = p;
+      $('tag-img').src = 'asset/' + arr.slug + '/' + p.thumb;
+      $('tag-input').value = '';
+      renderChips();
+      $('tag-dlg').showModal();
+    }
+    function addTag() {
+      var tg = $('tag-input').value.trim();
+      if (!tg) return;
+      var list = (tagData.photos[editing.id] || []).filter(function (o) { return o.toLowerCase() !== tg.toLowerCase(); });
+      list.push(tg);
+      $('tag-input').value = '';
+      saveTags(single(list)).then(renderChips);
+    }
+    $('tag-add').addEventListener('click', addTag);
+    $('tag-input').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); addTag(); } });
+    $('tag-close').addEventListener('click', function () { $('tag-dlg').close(); });
+
+    // several photos at once
+    function selectedIds() { return Array.prototype.map.call(document.querySelectorAll('#view-arrange .tile.selected'), function (t) { return t.dataset.id; }); }
+    function updateBulk() { var n = selectedIds().length; $('bulk-count').textContent = n + (n === 1 ? ' photo' : ' photos') + ' selected'; }
+    function setSelecting(on) {
+      selecting = on;
+      $('bulk').hidden = !on;
+      $('arr-select').textContent = on ? 'Stop selecting' : 'Select photos';
+      if (!on) Array.prototype.forEach.call(document.querySelectorAll('#view-arrange .tile.selected'), function (t) { t.classList.remove('selected'); });
+      updateBulk();
+    }
+    $('arr-select').addEventListener('click', function () { setSelecting(!selecting); });
+    $('bulk-done').addEventListener('click', function () { setSelecting(false); });
+    function bulkAdd() {
+      var tg = $('bulk-tag').value.trim(), sel = selectedIds();
+      if (!tg || !sel.length) return;
+      var set = {};
+      sel.forEach(function (id) {
+        var l = (tagData.photos[id] || []).filter(function (o) { return o.toLowerCase() !== tg.toLowerCase(); });
+        l.push(tg); set[id] = l;
+      });
+      saveTags(set).then(function () {
+        $('arr-status').textContent = 'Tagged ' + sel.length + (sel.length === 1 ? ' photo' : ' photos') + ' “' + tg + '”.';
+        $('bulk-tag').value = '';
+        setSelecting(false);
+      });
+    }
+    $('bulk-add').addEventListener('click', bulkAdd);
+    $('bulk-tag').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); bulkAdd(); } });
+
+    // ===== "By tag": one block per first tag; drag blocks to move whole groups =====
+    function currentOrder() {
+      var big = {};
+      Array.prototype.forEach.call($('arr-big').children, function (t) { big[t.dataset.id] = t.classList.contains('wide') ? 'wide' : 'big'; });
+      return { order: ids('arr-big').concat(ids('arr-grid')), big: big };
+    }
+    var groupState = null;
+    function renderGroups() {
+      var st = groupState, byId = {}, groups = [], index = {};
+      arr.photos.forEach(function (p) { byId[p.id] = p; });
+      st.order.forEach(function (id) {
+        var g = firstTag(id);
+        if (!(g in index)) { index[g] = groups.length; groups.push({ tag: g, ids: [] }); }
+        groups[index[g]].ids.push(id);
+      });
+      // untagged photos last
+      groups.sort(function (a, b) { return (a.tag === '') - (b.tag === ''); });
+      groupSortables.forEach(function (s) { s.destroy(); }); groupSortables = [];
+      var box = $('arr-groups'); box.innerHTML = '';
+      groups.forEach(function (g, k) {
+        var wrap = el('div', 'group'); wrap.dataset.tag = g.tag;
+        var head = el('div', 'group-head');
+        head.appendChild(el('span', 'ghandle', '≡'));
+        head.appendChild(el('span', null, g.tag || 'No tag'));
+        head.appendChild(el('span', 'gcount', g.ids.length + (g.ids.length === 1 ? ' photo' : ' photos')));
+        wrap.appendChild(head);
+        var list = el('div', 'arr-list');
+        g.ids.forEach(function (id) { list.appendChild(tile(byId[id], !!st.big[id], st.big[id] === 'wide')); });
+        wrap.appendChild(list);
+        box.appendChild(wrap);
+        groupSortables.push(Sortable.create(list, { group: 'g' + k, animation: 150, delay: 180, delayOnTouchOnly: true,
+          onSort: function () { renumberGroups(); groupState = readGroups(); setDirty(true); } }));
+      });
+      groupSortables.push(Sortable.create(box, { handle: '.group-head', animation: 150, delay: 120, delayOnTouchOnly: true,
+        onSort: function () { renumberGroups(); groupState = readGroups(); setDirty(true); } }));
+      renumberGroups();
+    }
+    function renumberGroups() {
+      var n = 0;
+      Array.prototype.forEach.call(document.querySelectorAll('#arr-groups .tile'), function (t) { t.querySelector('.num').textContent = ++n; });
+    }
+    function readGroups() {
+      var order = Array.prototype.map.call(document.querySelectorAll('#arr-groups .tile'), function (t) { return t.dataset.id; });
+      return { order: order, big: groupState.big };
+    }
+    function setMode(m) {
+      if (m === mode) return;
+      if (m === 'tags') {
+        groupState = currentOrder();
+        renderGroups();
+      } else {
+        // apply the group order to Big photos and the Grid, keeping which photos are big / full row
+        var st = readGroups(), byId = {};
+        arr.photos.forEach(function (p) { byId[p.id] = p; });
+        $('arr-big').innerHTML = ''; $('arr-grid').innerHTML = '';
+        st.order.forEach(function (id) {
+          if (st.big[id]) $('arr-big').appendChild(tile(byId[id], true, st.big[id] === 'wide'));
+          else $('arr-grid').appendChild(tile(byId[id], false, false));
+        });
+        groupSortables.forEach(function (s) { s.destroy(); }); groupSortables = [];
+        $('arr-groups').innerHTML = '';
+        renumber();
+      }
+      mode = m;
+      $('mode-photos').setAttribute('aria-pressed', String(m === 'photos'));
+      $('mode-tags').setAttribute('aria-pressed', String(m === 'tags'));
+      $('arr-sections').hidden = m !== 'photos';
+      $('arr-groups').hidden = m !== 'tags';
+      $('help-photos').hidden = m !== 'photos';
+      $('help-tags').hidden = m !== 'tags';
+    }
+    $('mode-photos').addEventListener('click', function () { setMode('photos'); });
+    $('mode-tags').addEventListener('click', function () { setMode('tags'); });
+
     $('arr-house').addEventListener('change', function () {
       if (arr.dirty && !confirm('You have unsaved changes for this household. Switch anyway and lose them?')) { this.value = arr.slug; return; }
+      setSelecting(false);
+      if (mode === 'tags') { setMode('photos'); }
       loadHouse(this.value);
     });
     $('arr-save').addEventListener('click', function () {
+      if (mode === 'tags') setMode('photos');
       var big = {};
       Array.prototype.forEach.call($('arr-big').children, function (t) { big[t.dataset.id] = t.classList.contains('wide') ? 'wide' : 'big'; });
       $('arr-save').disabled = true;
@@ -386,7 +618,7 @@
         .catch(function () { $('arr-status').textContent = 'Couldn’t save. Check your connection and try again.'; })
         .then(function () { $('arr-save').disabled = false; });
     });
-    $('arr-undo').addEventListener('click', function () { loadHouse(arr.slug); });
+    $('arr-undo').addEventListener('click', function () { if (mode === 'tags') setMode('photos'); loadHouse(arr.slug); });
     $('arr-reset').addEventListener('click', function () {
       if (!confirm('Go back to the default order for this household? Your saved order for it will be removed.')) return;
       post('api/arrange', { slug: arr.slug, reset: true }).then(function () { return loadHouse(arr.slug); })
@@ -403,6 +635,7 @@
       if (name === 'arrange' && !arr.slug) {
         fetch('api/items', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
           houses = d.households;
+          loadTags();
           var sel = $('arr-house'); sel.innerHTML = '';
           houses.forEach(function (h) { var o = el('option', null, h.name); o.value = h.slug; sel.appendChild(o); });
           if (houses.length) loadHouse(houses[0].slug);

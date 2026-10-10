@@ -278,6 +278,27 @@ async function adminPage(req, env, url, rest) {
 		const [photos, arrangement] = await Promise.all([builtPhotos(env, req, slug), readArrangement(env, slug)]);
 		return json({ photos, arrangement });
 	}
+	// tags: Merrick & Leilah's own labels for photos (by photo id, so a photo shared by households is tagged once).
+	// Private for now: only the admin page reads them.
+	if (rest === '/api/tags') {
+		const obj = await env.UPLOADS.get('tags.json');
+		const data = obj ? await obj.json().catch(() => ({})) : {};
+		const photos = data.photos || {};
+		if (req.method === 'POST') {
+			const { set = {} } = await req.json().catch(() => ({}));
+			for (const [id, list] of Object.entries(set)) {
+				if (!/^[0-9a-f]{12}$/.test(id) || !Array.isArray(list)) continue;
+				const clean = [...new Set(list.map((s) => String(s).trim().slice(0, 40)).filter(Boolean))];
+				if (clean.length) photos[id] = clean;
+				else delete photos[id];
+			}
+			// every tag in use, keeping the order they were first made in
+			const tags = [...new Set([...(data.tags || []), ...Object.values(photos).flat()])].filter((tg) => Object.values(photos).some((l) => l.includes(tg)));
+			await env.UPLOADS.put('tags.json', JSON.stringify({ photos, tags }), { httpMetadata: { contentType: 'application/json' } });
+			return json({ photos, tags });
+		}
+		return json({ photos, tags: data.tags || [] });
+	}
 	if (rest === '/api/arrange' && req.method === 'POST') {
 		const { slug = '', order = [], big = {}, reset = false } = await req.json().catch(() => ({}));
 		if (!config.households[slug]) return json({ error: 'no such household' }, 404);

@@ -74,6 +74,8 @@ Rebuild and deploy after editing either one.
 
 On **madluna.ca/w/admin**, the **Arrange photos** tab lets you pick a household and drag its photos into order: **Big photos** at the top (with an optional **Full row**), then the **Grid**. **Save** updates that household's page straight away, no rebuild needed. **Reset to default** goes back to the order from `photo-info.csv`. Photos added later show up at the end of the grid until you arrange them.
 
+**Tags** are your own labels for sorting (guests never see them). Tap a photo in **Arrange photos** to add or remove tags; the first tag is its main one. **Select photos** tags several at once. A tag applies to that photo on every page it's on. The **By tag** view shows one block per main tag: drag a block by its ≡ bar to move the whole group, switch back to **Photos**, then **Save**. Tags are stored with the site in `tags.json`.
+
 ## settings
 
 The top of `build.py` has the wording (headline, default message, sign-off, sticker line), `BATCH_SIZE` (photos per save button, 20 to start), `MAX_UPLOAD_MB` (biggest file a guest can send) and the thumbnail size. The password page is `login.html`. The page design is in `template.html`.
