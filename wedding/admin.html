@@ -116,6 +116,20 @@
     #arr-groups .wide-btn { display: none; }
     .bulk { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 10px; padding: 10px; border-radius: 10px; background: var(--bg-secondary); border: 2px solid var(--good); }
     .bulk[hidden] { display: none; }
+    /* household picker, view switch and the select/tag bar stay pinned while scrolling through photos */
+    .arr-top { position: sticky; top: 0; z-index: 6; background: var(--bg-primary); padding: 2px 0 10px; border-bottom: 2px solid var(--border); box-shadow: 0 6px 12px -8px rgba(0,0,0,0.5); }
+    .arr-top .controls { margin-top: 10px; }
+    /* iOS-style "select all" circle on each group */
+    .sel-all {
+      flex: none; width: 26px; height: 26px; border-radius: 50%; padding: 0; cursor: pointer; vertical-align: middle;
+      border: 2px solid var(--text-secondary); background: transparent; color: transparent;
+      display: inline-grid; place-items: center; font: 700 0.85rem/1 sans-serif; margin-left: 8px;
+    }
+    .sel-all::after { content: '✓'; }
+    .sel-all:hover { border-color: var(--text-primary); }
+    .sel-all[aria-pressed="true"] { background: var(--good); border-color: var(--good); color: #000; }
+    .arr-section h2 { display: flex; align-items: center; }
+    .group-head .sel-all { margin-left: auto; }
     .bulk input, .tag-add input { font: inherit; padding: 8px 10px; border-radius: 8px; border: 2px solid var(--border); background: var(--bg-primary); color: var(--text-primary); min-width: 0; flex: 1 1 140px; }
     .group { border: 2px solid var(--border); border-radius: 12px; background: var(--bg-secondary); margin-top: 12px; }
     .group-head { display: flex; align-items: center; gap: 10px; padding: 10px 12px; font-weight: 600; cursor: grab; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
@@ -162,6 +176,7 @@
   </section>
 
   <section class="wrap" id="view-arrange" hidden>
+    <div class="arr-top">
     <div class="controls">
       <select id="arr-house" aria-label="Household to arrange"></select>
       <button class="chip" id="mode-photos" type="button" aria-pressed="true">Photos</button>
@@ -176,23 +191,24 @@
       <button class="btn primary" id="bulk-moment-set" type="button">Set time of day</button>
       <button class="btn" id="bulk-done" type="button">Done</button>
     </div>
+    </div>
     <datalist id="tag-list"></datalist>
     <datalist id="moment-list"></datalist>
     <p class="arr-help" id="help-photos">Drag photos to put them in order. Drag a photo up into <b>Big photos</b> to show it large at the top of the page, or down into <b>Grid</b> to make it normal. <b>Full row</b> makes a big photo take the whole width. Tap a photo to tag it, or use <b>Select photos</b> to tag several at once. On a phone, press and hold a photo for a moment, then move it.</p>
     <p class="arr-help" id="help-tags" hidden>Each block is one tag (a photo goes with its first tag). Drag a block by its <b>≡</b> bar to move all of its photos at once, or drag photos inside a block. Switch back to <b>Photos</b> to see the result, then <b>Save</b>.</p>
     <div id="arr-sections">
     <div class="arr-section">
-      <h2>Big photos</h2>
+      <h2>Big photos <button class="sel-all" type="button" data-list="arr-big" aria-pressed="false" aria-label="Select all big photos" title="Select all"></button></h2>
       <p class="sub">Shown large at the top, in this order.</p>
       <div class="arr-list big" id="arr-big"></div>
     </div>
     <div class="arr-section">
-      <h2>Grid</h2>
+      <h2>Grid <button class="sel-all" type="button" data-list="arr-grid" aria-pressed="false" aria-label="Select all grid photos" title="Select all"></button></h2>
       <p class="sub">"More from the day", in this order.</p>
       <div class="arr-list" id="arr-grid"></div>
     </div>
     <div class="arr-section">
-      <h2>Hidden</h2>
+      <h2>Hidden <button class="sel-all" type="button" data-list="arr-hidden" aria-pressed="false" aria-label="Select all hidden photos" title="Select all"></button></h2>
       <p class="sub">Not shown on any page this photo is on. Nothing is deleted; drag a photo back up to show it again.</p>
       <div class="arr-list hidden-list" id="arr-hidden"></div>
     </div>
@@ -589,7 +605,34 @@
 
     // several photos at once
     function selectedIds() { return Array.prototype.map.call(document.querySelectorAll('#view-arrange .tile.selected'), function (t) { return t.dataset.id; }); }
-    function updateBulk() { var n = selectedIds().length; $('bulk-count').textContent = n + (n === 1 ? ' photo' : ' photos') + ' selected'; }
+    function updateBulk() {
+      var n = selectedIds().length;
+      $('bulk-count').textContent = n + (n === 1 ? ' photo' : ' photos') + ' selected';
+      updateSelAll();
+    }
+    // a group's circle is filled when every photo in it is selected
+    function listFor(btn) { return btn.dataset.list ? $(btn.dataset.list) : btn.closest('.group').querySelector('.arr-list'); }
+    function updateSelAll() {
+      Array.prototype.forEach.call(document.querySelectorAll('#view-arrange .sel-all'), function (btn) {
+        var tiles = listFor(btn).querySelectorAll('.tile');
+        var all = tiles.length > 0 && Array.prototype.every.call(tiles, function (t) { return t.classList.contains('selected'); });
+        btn.setAttribute('aria-pressed', String(all));
+      });
+    }
+    function toggleGroup(btn) {
+      var tiles = listFor(btn).querySelectorAll('.tile');
+      if (!tiles.length) return;
+      if (!selecting) setSelecting(true);
+      var all = Array.prototype.every.call(tiles, function (t) { return t.classList.contains('selected'); });
+      Array.prototype.forEach.call(tiles, function (t) { t.classList.toggle('selected', !all); });
+      updateBulk();
+    }
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest && e.target.closest('#view-arrange .sel-all');
+      if (!btn) return;
+      e.stopPropagation();
+      toggleGroup(btn);
+    }, true);
     function setSelecting(on) {
       selecting = on;
       $('bulk').hidden = !on;
@@ -641,6 +684,11 @@
         head.appendChild(el('span', 'ghandle', '≡'));
         head.appendChild(el('span', null, g.tag || 'No tag'));
         head.appendChild(el('span', 'gcount', g.ids.length + (g.ids.length === 1 ? ' photo' : ' photos')));
+        var sa = el('button', 'sel-all');
+        sa.type = 'button'; sa.title = 'Select all';
+        sa.setAttribute('aria-pressed', 'false');
+        sa.setAttribute('aria-label', 'Select all in ' + (g.tag || 'No tag'));
+        head.appendChild(sa);
         wrap.appendChild(head);
         var list = el('div', 'arr-list');
         g.ids.forEach(function (id) { list.appendChild(tile(byId[id], !!st.big[id], st.big[id] === 'wide')); });
@@ -649,9 +697,10 @@
         groupSortables.push(Sortable.create(list, { group: 'g' + k, animation: 150, delay: 180, delayOnTouchOnly: true,
           onSort: function () { renumberGroups(); groupState = readGroups(); setDirty(true); } }));
       });
-      groupSortables.push(Sortable.create(box, { handle: '.group-head', animation: 150, delay: 120, delayOnTouchOnly: true,
+      groupSortables.push(Sortable.create(box, { handle: '.group-head', filter: '.sel-all', preventOnFilter: false, animation: 150, delay: 120, delayOnTouchOnly: true,
         onSort: function () { renumberGroups(); groupState = readGroups(); setDirty(true); } }));
       renumberGroups();
+      updateSelAll();
     }
     function renumberGroups() {
       var n = 0;
