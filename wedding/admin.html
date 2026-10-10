@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="robots" content="noindex, nofollow">
   <meta name="referrer" content="no-referrer">
-  <title>Guest Uploads · Merrick &amp; Leilah</title>
+  <title>Admin · Merrick &amp; Leilah</title>
   <link rel="icon" href="/media/favicon.svg" type="image/svg+xml">
   <meta name="theme-color" content="#4d3138">
   <script>
@@ -59,11 +59,57 @@
     .actions .del { color: var(--danger); }
     .empty { text-align: center; color: var(--text-secondary); padding: 60px 16px; }
     .status { min-height: 1.3em; font-size: 0.85rem; color: var(--text-secondary); margin-top: 10px; }
+
+    /* ===== tabs ===== */
+    .tabs { display: flex; gap: 6px; margin-top: 14px; border-bottom: 2px solid var(--border); }
+    .tabs button {
+      font: inherit; font-weight: 600; background: none; border: 0; color: var(--text-secondary); cursor: pointer;
+      padding: 10px 14px; border-bottom: 3px solid transparent; margin-bottom: -2px;
+    }
+    .tabs button[aria-selected="true"] { color: var(--text-primary); border-bottom-color: var(--accent); }
+
+    /* ===== arrange ===== */
+    .arr-help { font-size: 0.88rem; color: var(--text-secondary); margin: 14px 0 6px; max-width: 640px; }
+    .arr-section h2 { font-size: 1rem; margin: 18px 0 2px; }
+    .arr-section .sub { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 8px; }
+    .arr-list {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px;
+      min-height: 120px; padding: 8px; border: 2px dashed var(--border); border-radius: 12px; background: var(--bg-secondary);
+    }
+    .arr-list.big { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); border-color: var(--accent); }
+    .tile { position: relative; border-radius: 8px; overflow: hidden; background: #000; cursor: grab; touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+    .tile img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; pointer-events: none; }
+    .arr-list.big .tile img { aspect-ratio: 4 / 3; }
+    .tile .num { position: absolute; top: 4px; left: 4px; background: rgba(0,0,0,0.7); color: #fff; font-size: 0.72rem; font-weight: 600; padding: 1px 7px; border-radius: 999px; }
+    .tile .wide-btn {
+      position: absolute; bottom: 4px; left: 4px; right: 4px; font: inherit; font-size: 0.72rem; font-weight: 600;
+      border: 0; border-radius: 6px; padding: 5px 4px; background: rgba(0,0,0,0.7); color: #fff; cursor: pointer;
+    }
+    .tile .wide-btn[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+    .arr-list:not(.big) .wide-btn { display: none; }
+    .tile.wide { outline: 3px solid var(--accent); outline-offset: -3px; }
+    .sortable-ghost { opacity: 0.35; }
+    .sortable-chosen { transform: scale(1.04); box-shadow: 0 6px 20px rgba(0,0,0,0.5); }
+    .arr-bar {
+      position: sticky; bottom: 0; z-index: 5; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+      padding: 12px 0 calc(12px + env(safe-area-inset-bottom)); background: var(--bg-primary); border-top: 2px solid var(--border); margin-top: 18px;
+    }
+    .arr-bar .btn { padding: 7px 12px; font-size: 0.85rem; }
+    .arr-bar { padding-top: 8px; padding-bottom: calc(8px + env(safe-area-inset-bottom)); gap: 6px; }
+    .arr-bar .status { margin: 0; flex: 1 1 100%; font-size: 0.78rem; min-height: 0; }
+    .dirty-dot::after { content: ' •'; color: var(--warn); }
   </style>
 </head>
 <body>
   <header class="wrap">
     <h1>Guest uploads</h1>
+    <nav class="tabs" role="tablist">
+      <button type="button" role="tab" id="tab-uploads" aria-selected="true">Uploads</button>
+      <button type="button" role="tab" id="tab-arrange" aria-selected="false">Arrange photos</button>
+    </nav>
+  </header>
+
+  <section class="wrap" id="view-uploads">
     <p class="summary" id="summary">Loading…</p>
     <div class="meter" title="Share of Cloudflare's free 10 GB"><span id="meter"></span></div>
     <div class="controls">
@@ -75,12 +121,32 @@
       <button class="btn" id="refresh" type="button">Refresh</button>
     </div>
     <p class="status" id="status" role="status" aria-live="polite"></p>
-  </header>
-
-  <main class="wrap">
     <div class="grid" id="grid"></div>
     <p class="empty" id="empty" hidden>Nothing here yet. Photos and videos guests send will show up here.</p>
-  </main>
+  </section>
+
+  <section class="wrap" id="view-arrange" hidden>
+    <div class="controls">
+      <select id="arr-house" aria-label="Household to arrange"></select>
+    </div>
+    <p class="arr-help">Drag photos to put them in order. Drag a photo up into <b>Big photos</b> to show it large at the top of the page, or down into <b>Grid</b> to make it normal. <b>Full row</b> makes a big photo take the whole width. On a phone, press and hold a photo for a moment, then move it.</p>
+    <div class="arr-section">
+      <h2>Big photos</h2>
+      <p class="sub">Shown large at the top, in this order.</p>
+      <div class="arr-list big" id="arr-big"></div>
+    </div>
+    <div class="arr-section">
+      <h2>Grid</h2>
+      <p class="sub">"More from the day", in this order.</p>
+      <div class="arr-list" id="arr-grid"></div>
+    </div>
+    <div class="arr-bar">
+      <button class="btn primary" id="arr-save" type="button">Save</button>
+      <button class="btn" id="arr-undo" type="button">Undo changes</button>
+      <button class="btn" id="arr-reset" type="button">Reset to default</button>
+      <p class="status" id="arr-status" role="status" aria-live="polite"></p>
+    </div>
+  </section>
 
   <script>
   (function () {
@@ -221,6 +287,130 @@
       load();
     });
     load();
+
+    // ===== Arrange photos: drag each household's photos into order, saved to arrange/<slug>.json =====
+    var arr = { slug: '', photos: [], dirty: false, sortables: [] };
+    var houses = [];
+
+    function loadSortable() {
+      if (window.Sortable) return Promise.resolve();
+      return new Promise(function (res, rej) {
+        var sc = document.createElement('script');
+        sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js';
+        sc.onload = res; sc.onerror = rej;
+        document.head.appendChild(sc);
+      });
+    }
+    function setDirty(d) {
+      arr.dirty = d;
+      $('arr-save').classList.toggle('dirty-dot', d);
+      if (d) $('arr-status').textContent = 'Unsaved changes';
+    }
+    function renumber() {
+      [['arr-big', 'Big'], ['arr-grid', '']].forEach(function (l) {
+        Array.prototype.forEach.call($(l[0]).children, function (t, k) { t.querySelector('.num').textContent = k + 1; });
+      });
+    }
+    function tile(p, isBig, isWide) {
+      var t = el('div', 'tile' + (isWide ? ' wide' : ''));
+      t.dataset.id = p.id;
+      var img = document.createElement('img');
+      img.src = 'asset/' + arr.slug + '/' + p.thumb; img.alt = ''; img.loading = 'lazy'; img.draggable = false;
+      t.appendChild(img);
+      t.appendChild(el('span', 'num'));
+      var w = el('button', 'wide-btn', 'Full row');
+      w.type = 'button';
+      w.setAttribute('aria-pressed', String(!!isWide));
+      w.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var on = w.getAttribute('aria-pressed') !== 'true';
+        w.setAttribute('aria-pressed', String(on));
+        t.classList.toggle('wide', on);
+        setDirty(true);
+      });
+      t.appendChild(w);
+      return t;
+    }
+    function renderArrange(data) {
+      arr.photos = data.photos;
+      var a = data.arrangement, byId = {}, order = [], bigOf = {};
+      data.photos.forEach(function (p) { byId[p.id] = p; });
+      if (a && a.order) {
+        // same rules as the guest page: saved order first, new photos at the end of the grid
+        a.order.forEach(function (id) { if (byId[id]) { order.push(byId[id]); bigOf[id] = (a.big || {})[id] || ''; delete byId[id]; } });
+        data.photos.forEach(function (p) { if (byId[p.id]) order.push(p); });
+      } else {
+        order = data.photos.slice();
+        data.photos.forEach(function (p) { bigOf[p.id] = p.featured ? (p.wide ? 'wide' : 'big') : ''; });
+      }
+      $('arr-big').innerHTML = ''; $('arr-grid').innerHTML = '';
+      order.filter(function (p) { return bigOf[p.id]; }).forEach(function (p) { $('arr-big').appendChild(tile(p, true, bigOf[p.id] === 'wide')); });
+      order.filter(function (p) { return !bigOf[p.id]; }).forEach(function (p) { $('arr-grid').appendChild(tile(p, false, false)); });
+      renumber();
+      setDirty(false);
+      $('arr-status').textContent = a ? 'Showing your saved order (last saved ' + when(a.saved) + ').' : 'Showing the default order. Nothing saved yet for this household.';
+    }
+    function loadHouse(slug) {
+      arr.slug = slug;
+      $('arr-status').textContent = 'Loading…';
+      return Promise.all([loadSortable(), fetch('api/photos?slug=' + encodeURIComponent(slug), { cache: 'no-store' }).then(function (r) { return r.json(); })])
+        .then(function (r) {
+          renderArrange(r[1]);
+          if (!arr.sortables.length) {
+            ['arr-big', 'arr-grid'].forEach(function (id) {
+              arr.sortables.push(Sortable.create($(id), {
+                group: 'photos', animation: 150, delay: 180, delayOnTouchOnly: true, filter: '.wide-btn', preventOnFilter: false,
+                onSort: function () { renumber(); setDirty(true); },
+                onAdd: function (e) {
+                  // dragged into the grid: no longer big, so drop "full row"
+                  if (e.to.id === 'arr-grid') { e.item.classList.remove('wide'); e.item.querySelector('.wide-btn').setAttribute('aria-pressed', 'false'); }
+                }
+              }));
+            });
+          }
+        })
+        .catch(function () { $('arr-status').textContent = 'Couldn’t load this household’s photos. Check your connection and try again.'; });
+    }
+    function ids(list) { return Array.prototype.map.call($(list).children, function (t) { return t.dataset.id; }); }
+
+    $('arr-house').addEventListener('change', function () {
+      if (arr.dirty && !confirm('You have unsaved changes for this household. Switch anyway and lose them?')) { this.value = arr.slug; return; }
+      loadHouse(this.value);
+    });
+    $('arr-save').addEventListener('click', function () {
+      var big = {};
+      Array.prototype.forEach.call($('arr-big').children, function (t) { big[t.dataset.id] = t.classList.contains('wide') ? 'wide' : 'big'; });
+      $('arr-save').disabled = true;
+      post('api/arrange', { slug: arr.slug, order: ids('arr-big').concat(ids('arr-grid')), big: big })
+        .then(function (r) { setDirty(false); $('arr-status').textContent = 'Saved! ' + ($('arr-house').selectedOptions[0] || {}).textContent + '’s page shows this order now.'; })
+        .catch(function () { $('arr-status').textContent = 'Couldn’t save. Check your connection and try again.'; })
+        .then(function () { $('arr-save').disabled = false; });
+    });
+    $('arr-undo').addEventListener('click', function () { loadHouse(arr.slug); });
+    $('arr-reset').addEventListener('click', function () {
+      if (!confirm('Go back to the default order for this household? Your saved order for it will be removed.')) return;
+      post('api/arrange', { slug: arr.slug, reset: true }).then(function () { return loadHouse(arr.slug); })
+        .then(function () { $('arr-status').textContent = 'Back to the default order.'; });
+    });
+    window.addEventListener('beforeunload', function (e) { if (arr.dirty) { e.preventDefault(); e.returnValue = ''; } });
+
+    function showTab(name) {
+      $('tab-uploads').setAttribute('aria-selected', String(name === 'uploads'));
+      $('tab-arrange').setAttribute('aria-selected', String(name === 'arrange'));
+      $('view-uploads').hidden = name !== 'uploads';
+      $('view-arrange').hidden = name !== 'arrange';
+      document.querySelector('h1').textContent = name === 'uploads' ? 'Guest uploads' : 'Arrange photos';
+      if (name === 'arrange' && !arr.slug) {
+        fetch('api/items', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
+          houses = d.households;
+          var sel = $('arr-house'); sel.innerHTML = '';
+          houses.forEach(function (h) { var o = el('option', null, h.name); o.value = h.slug; sel.appendChild(o); });
+          if (houses.length) loadHouse(houses[0].slug);
+        });
+      }
+    }
+    $('tab-uploads').addEventListener('click', function () { showTab('uploads'); });
+    $('tab-arrange').addEventListener('click', function () { showTab('arrange'); });
   })();
   </script>
 </body>

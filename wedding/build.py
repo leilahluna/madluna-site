@@ -470,7 +470,7 @@ def build_household(row, photos, out_dir, template, info=None, moments=(), photo
         meta = meta_of[src]
         taken = date_taken(src)
         people = [n.strip() for n in re.split(r'[;,]', meta.get('people', '')) if n.strip()]
-        items.append({'thumb': f'thumbs/{thumb.name}', 'view': view_url, 'full': f'full/{name}', 'name': name,
+        items.append({'id': key, 'thumb': f'thumbs/{thumb.name}', 'view': view_url, 'full': f'full/{name}', 'name': name,
                       'w': w, 'h': h, 'kind': kind,
                       'moment': meta.get('moment') or moment_for(taken, moments),
                       'date': taken[:10].replace(':', '-') if taken else '',

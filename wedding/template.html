@@ -169,7 +169,6 @@
     .lb-panel .lb-moment { font-family: 'Playfair Display', serif; font-size: 1.15rem; color: #fff; }
     .lb-panel .lb-date { color: #aaa; font-size: 0.82rem; }
     .lb-panel h3 { font-size: 0.72rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #999; margin-top: 10px; }
-    .lb-panel .lb-people { color: #eee; }
     @media (min-width: 900px) {
       .lb-main { flex-direction: row; }
       .lb-panel { width: 300px; flex: none; padding: 72px 24px 24px; border-left: 1px solid #222; overflow-y: auto; }
@@ -250,7 +249,6 @@
         <aside class="lb-panel" id="lb-panel" aria-label="About this photo">
           <p class="lb-moment" id="lb-moment"></p>
           <p class="lb-date" id="lb-date"></p>
-          <div id="lb-people-wrap"><h3>In this photo</h3><p class="lb-people" id="lb-people"></p></div>
         </aside>
       </div>
       <div class="lb-bar">
@@ -264,6 +262,22 @@
 
   <script>
     var PHOTOS = {{PHOTOS_JSON}};
+    var ARRANGE = null;
+    // An order saved on the admin page (filled in above by the site when there is one): its photos in that
+    // order, with "big" ones on top; photos added since then go at the end of the grid.
+    (function () {
+      if (!ARRANGE || !ARRANGE.order) return;
+      var byId = {}, big = ARRANGE.big || {}, out = [];
+      PHOTOS.forEach(function (p) { byId[p.id] = p; });
+      ARRANGE.order.forEach(function (id) {
+        var p = byId[id];
+        if (!p) return;
+        p.featured = !!big[id]; p.wide = big[id] === 'wide';
+        out.push(p); delete byId[id];
+      });
+      PHOTOS.forEach(function (p) { if (byId[p.id]) { p.featured = false; p.wide = false; out.push(p); } });
+      PHOTOS = out.filter(function (p) { return p.featured; }).concat(out.filter(function (p) { return !p.featured; }));
+    })();
     var BATCH_SIZE = {{BATCH_SIZE}};
     var SHOW_TABS = {{SHOW_TABS}};
     var MAX_UPLOAD_MB = {{MAX_UPLOAD_MB}};
@@ -529,14 +543,11 @@
         var d = p.date.split('-');
         date = new Date(+d[0], +d[1] - 1, +d[2]).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
       }
-      var people = (p.people || []).join(', ');
       $('lb-moment').textContent = p.moment || '';
       $('lb-moment').hidden = !p.moment;
       $('lb-date').textContent = date;
       $('lb-date').hidden = !date;
-      $('lb-people').textContent = people;
-      $('lb-people-wrap').hidden = !people;
-      $('lb-panel').hidden = !(p.moment || date || people);
+      $('lb-panel').hidden = !(p.moment || date);
     }
     function openLb(i) {
       show(i);

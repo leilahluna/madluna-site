@@ -2,7 +2,8 @@
 //  - /w/<slug>/...      needs that household's password (from their card) before any page or photo is sent
 //  - /w/<slug>/upload   lets a logged-in guest send us a photo or video; it lands in the private R2 bucket.
 //                       Big files (dance videos!) come in 5 MB pieces via /upload/start, /part, /complete.
-//  - /w/admin/          Merrick & Leilah's page for everything guests sent (its own password)
+//  - /w/admin/          Merrick & Leilah's page for everything guests sent (its own password), and for
+//                       arranging each household's photos; arrangements live in R2 at arrange/<slug>.json
 //  - /w/_admin/...      lists, fetches and marks guest uploads for "python build.py uploads" (needs the admin token)
 // generated/config.js is written by "python build.py build" and never goes to GitHub.
 import config from './generated/config.js';
@@ -233,6 +234,19 @@ async function serveUpload(env, req, key, download) {
 	return new Response(req.method === 'HEAD' ? null : obj.body, { status, headers });
 }
 
+// ===== photo arrangements (set on the admin page, applied when a guest opens their page) =====
+
+async function readArrangement(env, slug) {
+	const obj = await env.UPLOADS.get(`arrange/${slug}.json`);
+	return obj ? await obj.json().catch(() => null) : null;
+}
+// the photo list baked into a household's built page
+async function builtPhotos(env, req, slug) {
+	const res = await env.ASSETS.fetch(new Request(new URL(`/w/${slug}/`, req.url)));
+	const m = /var PHOTOS = (\[.*?\]);/s.exec(await res.text());
+	return m ? JSON.parse(m[1]) : [];
+}
+
 // Merrick & Leilah's admin page at /w/admin/
 async function adminPage(req, env, url, rest) {
 	const token = await hmacHex('auth:admin');
@@ -257,6 +271,31 @@ async function adminPage(req, env, url, rest) {
 		const now = new Date().toISOString();
 		await updateState(env, (s) => keys.forEach((k) => (s.seen[k] ??= now)));
 		return json({ ok: true });
+	}
+	if (rest === '/api/photos') {
+		const slug = url.searchParams.get('slug') || '';
+		if (!config.households[slug]) return json({ error: 'no such household' }, 404);
+		const [photos, arrangement] = await Promise.all([builtPhotos(env, req, slug), readArrangement(env, slug)]);
+		return json({ photos, arrangement });
+	}
+	if (rest === '/api/arrange' && req.method === 'POST') {
+		const { slug = '', order = [], big = {}, reset = false } = await req.json().catch(() => ({}));
+		if (!config.households[slug]) return json({ error: 'no such household' }, 404);
+		if (reset) {
+			await env.UPLOADS.delete(`arrange/${slug}.json`);
+			return json({ ok: true });
+		}
+		const ids = order.filter((id) => /^[0-9a-f]{12}$/.test(id));
+		const sizes = Object.fromEntries(Object.entries(big).filter(([id, v]) => ids.includes(id) && (v === 'big' || v === 'wide')));
+		const saved = { order: ids, big: sizes, saved: new Date().toISOString() };
+		await env.UPLOADS.put(`arrange/${slug}.json`, JSON.stringify(saved), { httpMetadata: { contentType: 'application/json' } });
+		return json({ ok: true, saved: saved.saved });
+	}
+	// thumbnails for the arrange view (guest pages need their own password, so the admin page borrows them here)
+	const asset = rest.match(/^\/asset\/([a-z0-9-]+)\/((?:thumbs|view)\/[\w.-]+)$/);
+	if (asset && config.households[asset[1]]) {
+		const res = await env.ASSETS.fetch(new Request(new URL(`/w/${asset[1]}/${asset[2]}`, req.url)));
+		return withHeaders(res, { 'Cache-Control': 'private, max-age=86400' });
 	}
 	if (rest === '/api/delete' && req.method === 'POST') {
 		const { key = '' } = await req.json().catch(() => ({}));
@@ -323,6 +362,14 @@ export default {
 		if (piece && (req.method === 'POST' || req.method === 'PUT')) return uploadInPieces(req, env, url, slug, house, piece[1]);
 		if (req.method !== 'GET' && req.method !== 'HEAD') return new Response('Method not allowed', { status: 405, headers: COMMON });
 		const res = await env.ASSETS.fetch(req);
+		if (rest === '/' && res.ok) {
+			// put Merrick & Leilah's saved arrangement (if any) into the page so it shows in their order
+			const arrangement = await readArrangement(env, slug);
+			if (arrangement) {
+				const page = (await res.text()).replace('var ARRANGE = null;', `var ARRANGE = ${JSON.stringify(arrangement).replace(/</g, '\\u003c')};`);
+				return new Response(page, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'private, no-cache', ...COMMON } });
+			}
+		}
 		const media = rest.startsWith('/thumbs/') || rest.startsWith('/view/') || rest.startsWith('/full/');
 		return withHeaders(res, { 'Cache-Control': media ? 'private, max-age=86400' : 'private, no-cache' });
 	},
