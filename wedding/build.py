@@ -52,6 +52,8 @@ DEFAULT_MESSAGE = (
     'or save them all straight to your phone.'
 )
 SIGNOFF = 'Love, Merrick & Leilah'
+NOTE = ("If you don't spot yourself in a photo immediately, check in the background. "
+        "We used Google Photos to detect faces, so if the person detected isn't you, we apologize!")   # under the message on every page; '' for none
 STICKER_LINE = 'Scan for your photos from our day'
 FULL_MAX_MB = 24         # Cloudflare won't serve files over 25 MiB; bigger photos get re-saved (same size in pixels)
 MAX_UPLOAD_MB = 95       # biggest single file a guest can send (Cloudflare's free plan stops at 100 MB)
@@ -323,6 +325,7 @@ def build_household(row, photos, out_dir, template):
     page = (template
             .replace('{{HEADLINE}}', html.escape(HEADLINE.format(name=row['name'])))
             .replace('{{MESSAGE}}', html.escape(message.replace('\\n', '\n')))
+            .replace('{{NOTE}}', html.escape(NOTE))
             .replace('{{SIGNOFF}}', html.escape(SIGNOFF))
             .replace('{{BATCH_SIZE}}', str(BATCH_SIZE))
             .replace('{{MAX_UPLOAD_MB}}', str(MAX_UPLOAD_MB))

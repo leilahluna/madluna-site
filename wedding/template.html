@@ -69,6 +69,8 @@
       font-weight: 300;
       white-space: pre-line;
     }
+    .message.note { margin-top: 10px; }
+    .message.note:empty { display: none; }
     .signoff {
       font-family: 'Playfair Display', serif;
       font-style: italic;
@@ -170,6 +172,7 @@
     </svg>
     <h1>{{HEADLINE}}</h1>
     <p class="message">{{MESSAGE}}</p>
+    <p class="message note">{{NOTE}}</p>
     <p class="signoff">{{SIGNOFF}}</p>
   </header>
 
