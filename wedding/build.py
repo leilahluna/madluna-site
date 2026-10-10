@@ -57,6 +57,7 @@ NOTE = ("If you don't spot yourself in a photo immediately, check in the backgro
 STICKER_LINE = 'Scan for your photos from our day'
 # Featured photos are shown big at the top of each page. photo-info.csv's "featured" column sets it per photo:
 # a number is its priority (1 shows first, then 2, ...), "yes" means after the numbered ones, "no" means never.
+# Priority 1 photos also take a whole row on wide screens (like the big group photo).
 # Photos by these photographers (the Artist saved in each file) count as "yes" unless the column says otherwise.
 FEATURED_ARTISTS = []    # e.g. ["Verita's Eye"]
 FEATURED_TITLE = 'From our photographer'
@@ -377,6 +378,20 @@ def feature_rank(src, info):
     return 1000 if photographer(src) in FEATURED_ARTISTS else None
 
 
+def detected_line(row):
+    """'Every photo listed below detected either Bella or Chloe (or both!).' from the household's people."""
+    first = [n.split()[0] for n in re.split(r'[;,]', row.get('people', '')) if n.strip()]
+    if not first:
+        return ''
+    if len(first) == 1:
+        who = first[0]
+    elif len(first) == 2:
+        who = f'either {first[0]} or {first[1]} (or both!)'
+    else:
+        who = f'at least one of {", ".join(first[:-1])} or {first[-1]}'
+    return f'Every photo listed below detected {who}.'
+
+
 def build_household(row, photos, out_dir, template, info=None, moments=()):
     """Writes one household's page. Returns the set of files it owns."""
     owned = set()
@@ -432,13 +447,14 @@ def build_household(row, photos, out_dir, template, info=None, moments=()):
                       'moment': meta.get('moment') or moment_for(taken, moments),
                       'date': taken[:10].replace(':', '-') if taken else '',
                       'people': people,
-                      'featured': featured[src]})
+                      'featured': featured[src],
+                      'wide': rank[src] == 1})
 
     message = row['message'] or DEFAULT_MESSAGE
     page = (template
             .replace('{{HEADLINE}}', html.escape(HEADLINE.format(name=row['name'])))
             .replace('{{MESSAGE}}', html.escape(message.replace('\\n', '\n')))
-            .replace('{{NOTE}}', html.escape(NOTE))
+            .replace('{{NOTE}}', html.escape(' '.join(x for x in (detected_line(row), NOTE) if x)))
             .replace('{{SIGNOFF}}', html.escape(SIGNOFF))
             .replace('{{BATCH_SIZE}}', str(BATCH_SIZE))
             .replace('{{FEATURED_TITLE}}', html.escape(FEATURED_TITLE))

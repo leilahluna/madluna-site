@@ -129,10 +129,11 @@
     .featured { margin: 8px 0 28px; }
     .section-title { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.5rem; text-align: center; color: var(--text-secondary); }
     .credit { text-align: center; font-size: 0.85rem; color: var(--text-secondary); font-weight: 300; margin: 2px 0 14px; }
-    .feat-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    .feat-grid { display: grid; grid-template-columns: 1fr; gap: 12px; align-items: center; }
     @media (min-width: 760px) { .feat-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; } }
     .feat-grid button { display: block; width: 100%; padding: 0; border: 0; background: var(--bg-card); border-radius: 10px; overflow: hidden; cursor: zoom-in; }
     .feat-grid img { display: block; width: 100%; height: auto; }
+    .feat-grid .wide { grid-column: 1 / -1; }
     .more-title { margin-bottom: 4px; }
     .count { text-align: center; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; }
     .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
@@ -449,6 +450,7 @@
     var cells = PHOTOS.map(function (p, i) {
       var b = document.createElement('button');
       b.type = 'button';
+      if (p.wide) b.className = 'wide';
       b.setAttribute('aria-label', 'open photo ' + (i + 1));
       var img = document.createElement('img');
       img.src = p.featured ? p.view : p.thumb; img.width = p.w; img.height = p.h; img.alt = '';
