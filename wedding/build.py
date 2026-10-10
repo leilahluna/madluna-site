@@ -319,7 +319,9 @@ def build_household(row, photos, out_dir, template):
             owned.add(view)
             view_url = f'view/{view.name}'
 
-        items.append({'thumb': f'thumbs/{thumb.name}', 'view': view_url, 'full': f'full/{name}', 'name': name, 'w': w, 'h': h})
+        kind = 'gif' if ext == '.gif' else 'photo'   # drives the All / Photos / GIFs / Videos tabs
+        items.append({'thumb': f'thumbs/{thumb.name}', 'view': view_url, 'full': f'full/{name}', 'name': name,
+                      'w': w, 'h': h, 'kind': kind})
 
     message = row['message'] or DEFAULT_MESSAGE
     page = (template

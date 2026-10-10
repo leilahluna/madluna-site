@@ -116,6 +116,15 @@
     }
     .status { font-size: 0.8rem; color: var(--text-secondary); margin-top: 8px; min-height: 1.2em; }
 
+    .tabs { display: flex; justify-content: center; gap: 6px; margin: 4px 0 14px; flex-wrap: wrap; }
+    .tabs[hidden] { display: none; }
+    .tab {
+      appearance: none; font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+      padding: 8px 16px; border-radius: 999px; border: 2px solid var(--border);
+      background: var(--bg-secondary); color: var(--text-secondary);
+    }
+    .tab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+    .grid button[hidden] { display: none; }
     .count { text-align: center; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; }
     .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
     @media (min-width: 640px) { .grid { grid-template-columns: repeat(3, 1fr); gap: 10px; } }
@@ -193,6 +202,7 @@
       <p class="status" id="up-status" role="status" aria-live="polite"></p>
     </section>
 
+    <div class="tabs" id="tabs" role="tablist" aria-label="Show" hidden></div>
     <p class="count" id="count"></p>
     <div class="grid" id="grid"></div>
 
@@ -282,7 +292,6 @@
 
     // ===== header copy =====
     var n = PHOTOS.length;
-    $('count').textContent = n === 1 ? 'Tap the photo to see it bigger' : plural(n) + ' · Tap any photo to see it bigger';
     if (canShareFiles) {
       $('save-hint').textContent = isIOS
         ? 'Tap a button, then tap it again and choose “Save ' + (n > 1 ? 'Images' : 'Image') + '” to put them straight into Photos.'
@@ -395,10 +404,10 @@
         .then(function () { zipping = false; });
     });
 
-    // ===== grid =====
+    // ===== grid + All / Photos / GIFs / Videos tabs =====
     var grid = $('grid');
-    if (n === 1) grid.className += ' single';
-    PHOTOS.forEach(function (p, i) {
+    var shown = PHOTOS.map(function (_, i) { return i; });   // indexes in the current tab, in order
+    var cells = PHOTOS.map(function (p, i) {
       var b = document.createElement('button');
       b.type = 'button';
       b.setAttribute('aria-label', 'open photo ' + (i + 1));
@@ -407,28 +416,62 @@
       img.loading = i < 6 ? 'eager' : 'lazy';
       img.decoding = 'async';
       b.appendChild(img);
-      b.addEventListener('click', function () { openLb(i); });
+      b.addEventListener('click', function () { openLb(shown.indexOf(i)); });
       grid.appendChild(b);
+      return b;
     });
+
+    var KINDS = [['photo', 'Photos', 'photo', 'photos'], ['gif', 'GIFs', 'GIF', 'GIFs'], ['video', 'Videos', 'video', 'videos']];
+    function countOf(kind, list) { return list.filter(function (i) { return PHOTOS[i].kind === kind; }).length; }
+    function describe(list) {
+      var parts = KINDS.map(function (k) {
+        var c = countOf(k[0], list);
+        return c ? c + ' ' + (c === 1 ? k[2] : k[3]) : '';
+      }).filter(Boolean);
+      var tap = list.length === 1 ? 'Tap it to see it bigger' : 'Tap any to see it bigger';
+      return parts.join(' · ') + ' · ' + tap;
+    }
+    function selectTab(kind) {
+      shown = PHOTOS.map(function (_, i) { return i; }).filter(function (i) { return kind === 'all' || PHOTOS[i].kind === kind; });
+      cells.forEach(function (c, i) { c.hidden = shown.indexOf(i) < 0; });
+      grid.className = 'grid' + (shown.length === 1 ? ' single' : '');
+      $('count').textContent = describe(shown);
+      Array.prototype.forEach.call($('tabs').children, function (t) { t.setAttribute('aria-selected', t.dataset.kind === kind ? 'true' : 'false'); });
+    }
+    var present = KINDS.filter(function (k) { return countOf(k[0], shown) > 0; });
+    if (present.length > 1) {   // only worth tabs when there's more than one kind
+      [['all', 'All']].concat(present).forEach(function (k) {
+        var t = document.createElement('button');
+        t.type = 'button'; t.className = 'tab'; t.dataset.kind = k[0];
+        t.setAttribute('role', 'tab');
+        t.textContent = k[1];
+        t.addEventListener('click', function () { selectTab(k[0]); });
+        $('tabs').appendChild(t);
+      });
+      $('tabs').hidden = false;
+    }
+    selectTab('all');
 
     // ===== lightbox =====
     var lb = $('lb'), lbImg = $('lb-img'), lbSave = $('lb-save'), cur = 0;
     $('lb-tip').textContent = 'Saves the full-size photo';
 
+    // cur is a position within the current tab (shown), not an index into PHOTOS
     function show(i) {
-      cur = (i + n) % n;
-      var p = PHOTOS[cur];
-      $('lb-pos').textContent = (cur + 1) + ' / ' + n;
+      var m = shown.length;
+      cur = (i + m) % m;
+      var p = PHOTOS[shown[cur]];
+      $('lb-pos').textContent = (cur + 1) + ' / ' + m;
       lbImg.src = p.thumb;
       // show a lighter mid-size copy; the full-size original only downloads when Save is tapped
       var big = new Image();
-      big.onload = function () { if (cur === PHOTOS.indexOf(p)) lbImg.src = p.view; };
+      big.onload = function () { if (PHOTOS[shown[cur]] === p) lbImg.src = p.view; };
       big.src = p.view;
       lbSave.textContent = canShareFiles ? 'Save' : 'Download';
       lbSave.disabled = false;
       // neighbours' mid-size copies, so swiping feels instant
-      [cur + 1, cur - 1].forEach(function (k) { var pr = PHOTOS[(k + n) % n]; if (pr) new Image().src = pr.view; });
-      $('lb-prev').style.visibility = $('lb-next').style.visibility = n > 1 ? 'visible' : 'hidden';
+      [cur + 1, cur - 1].forEach(function (k) { var pr = PHOTOS[shown[(k + m) % m]]; if (pr) new Image().src = pr.view; });
+      $('lb-prev').style.visibility = $('lb-next').style.visibility = m > 1 ? 'visible' : 'hidden';
     }
     function openLb(i) {
       show(i);
@@ -505,8 +548,7 @@
     });
 
     lbSave.addEventListener('click', function () {
-      var i = cur;
-      var pending = getFile(i);
+      var pending = getFile(shown[cur]);
       lbSave.disabled = true;
       lbSave.textContent = 'Getting full size…';
       pending.then(function (f) {
