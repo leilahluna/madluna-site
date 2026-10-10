@@ -325,6 +325,12 @@ def sync_photo_info(path, per_household, photos_root):
     return {r['photo']: r for r in rows + added}
 
 
+def content_id(path):
+    """Size plus a hash of the first 256 KB: tells photos apart by what they are, not what they're called."""
+    with open(path, 'rb') as f:
+        return f'{path.stat().st_size}-{hashlib.sha1(f.read(256 * 1024)).hexdigest()}'
+
+
 def same_file(src, dst):
     if not dst.exists():
         return False
@@ -447,7 +453,10 @@ def build_household(row, photos, out_dir, template, info=None, moments=(), photo
 
         # thumbnail name comes from the source, so reordering photos reuses old thumbnails
         st = src.stat()
-        key = hashlib.sha1(f'{src.name}|{st.st_size}|{int(st.st_mtime)}|{THUMB_EDGE}'.encode()).hexdigest()[:12]
+        # the photo's id comes from its contents, so the same photo in two folders (even renamed) is one photo
+        # for tags, hiding and arranging; it also names the thumbnail, so changed photos get fresh thumbnails
+        fp = content_id(src)
+        key = hashlib.sha1(f'{fp}|{THUMB_EDGE}'.encode()).hexdigest()[:12]
         thumb = out_dir / 'thumbs' / f'{key}{".gif" if ext == ".gif" else ".jpg"}'
         if not thumb.exists():
             make_thumb(src, thumb)
@@ -458,7 +467,7 @@ def build_household(row, photos, out_dir, template, info=None, moments=(), photo
         # mid-size copy for the full-screen view; GIFs just use the original so they animate at full size
         view_url = f'full/{name}'
         if ext != '.gif':
-            vkey = hashlib.sha1(f'{src.name}|{st.st_size}|{int(st.st_mtime)}|{VIEW_EDGE}'.encode()).hexdigest()[:12]
+            vkey = hashlib.sha1(f'{fp}|{VIEW_EDGE}'.encode()).hexdigest()[:12]
             view = out_dir / 'view' / f'{vkey}.jpg'
             if not view.exists():
                 make_thumb(src, view, VIEW_EDGE, VIEW_QUALITY)

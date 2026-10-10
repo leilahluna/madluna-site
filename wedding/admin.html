@@ -98,6 +98,8 @@
     .arr-bar { padding-top: 8px; padding-bottom: calc(8px + env(safe-area-inset-bottom)); gap: 6px; }
     .arr-bar .status { margin: 0; flex: 1 1 100%; font-size: 0.78rem; min-height: 0; }
     .dirty-dot::after { content: ' •'; color: var(--warn); }
+    .hidden-list { border-color: var(--text-secondary); }
+    .hidden-list .tile img { opacity: 0.4; filter: grayscale(1); }
 
     /* ===== tags ===== */
     .tile .tagl {
@@ -183,6 +185,11 @@
       <p class="sub">"More from the day", in this order.</p>
       <div class="arr-list" id="arr-grid"></div>
     </div>
+    <div class="arr-section">
+      <h2>Hidden</h2>
+      <p class="sub">Not shown on any page this photo is on. Nothing is deleted; drag a photo back up to show it again.</p>
+      <div class="arr-list hidden-list" id="arr-hidden"></div>
+    </div>
     </div>
     <div id="arr-groups" hidden></div>
     <div class="arr-bar">
@@ -202,6 +209,7 @@
         <input id="tag-input" list="tag-list" placeholder="Add a tag, e.g. Stairs" autocomplete="off">
         <button class="btn primary" id="tag-add" type="button">Add</button>
       </div>
+      <button class="btn" id="tag-hide" type="button">Hide from page</button>
       <button class="btn" id="tag-close" type="button">Done</button>
     </div>
   </dialog>
@@ -365,7 +373,7 @@
       if (d) $('arr-status').textContent = 'Unsaved changes';
     }
     function renumber() {
-      [['arr-big', 'Big'], ['arr-grid', '']].forEach(function (l) {
+      [['arr-big', 'Big'], ['arr-grid', ''], ['arr-hidden', '']].forEach(function (l) {
         Array.prototype.forEach.call($(l[0]).children, function (t, k) { t.querySelector('.num').textContent = k + 1; });
       });
     }
@@ -398,14 +406,16 @@
     }
     function renderArrange(data) {
       arr.photos = data.photos;
-      var a = data.arrangement, byId = {}, order = [], bigOf = {};
+      var a = data.arrangement, byId = {}, order = [], bigOf = {}, hidden = data.hidden || [];
       data.photos.forEach(function (p) { byId[p.id] = p; });
+      $('arr-hidden').innerHTML = '';
+      data.photos.forEach(function (p) { if (hidden.indexOf(p.id) >= 0) { $('arr-hidden').appendChild(tile(p, false, false)); delete byId[p.id]; } });
       if (a && a.order) {
         // same rules as the guest page: saved order first, new photos at the end of the grid
         a.order.forEach(function (id) { if (byId[id]) { order.push(byId[id]); bigOf[id] = (a.big || {})[id] || ''; delete byId[id]; } });
         data.photos.forEach(function (p) { if (byId[p.id]) order.push(p); });
       } else {
-        order = data.photos.slice();
+        order = data.photos.filter(function (p) { return byId[p.id]; });
         data.photos.forEach(function (p) { bigOf[p.id] = p.featured ? (p.wide ? 'wide' : 'big') : ''; });
       }
       $('arr-big').innerHTML = ''; $('arr-grid').innerHTML = '';
@@ -422,13 +432,13 @@
         .then(function (r) {
           renderArrange(r[1]);
           if (!arr.sortables.length) {
-            ['arr-big', 'arr-grid'].forEach(function (id) {
+            ['arr-big', 'arr-grid', 'arr-hidden'].forEach(function (id) {
               arr.sortables.push(Sortable.create($(id), {
                 group: 'photos', animation: 150, delay: 180, delayOnTouchOnly: true, filter: '.wide-btn', preventOnFilter: false,
                 onSort: function () { renumber(); setDirty(true); },
                 onAdd: function (e) {
                   // dragged into the grid: no longer big, so drop "full row"
-                  if (e.to.id === 'arr-grid') { e.item.classList.remove('wide'); e.item.querySelector('.wide-btn').setAttribute('aria-pressed', 'false'); }
+                  if (e.to.id !== 'arr-big') { e.item.classList.remove('wide'); e.item.querySelector('.wide-btn').setAttribute('aria-pressed', 'false'); }
                 }
               }));
             });
@@ -480,8 +490,12 @@
       });
     }
     function single(list) { var s = {}; s[editing.id] = list; return s; }
+    function editingTile() { return document.querySelector('#arr-sections .tile[data-id="' + editing.id + '"]'); }
     function openTags(p) {
       editing = p;
+      var t = editingTile();
+      $('tag-hide').textContent = t && t.parentNode.id === 'arr-hidden' ? 'Show on page again' : 'Hide from page';
+      $('tag-hide').hidden = mode !== 'photos';
       $('tag-img').src = 'asset/' + arr.slug + '/' + p.thumb;
       $('tag-input').value = '';
       renderChips();
@@ -498,6 +512,16 @@
     $('tag-add').addEventListener('click', addTag);
     $('tag-input').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); addTag(); } });
     $('tag-close').addEventListener('click', function () { $('tag-dlg').close(); });
+    $('tag-hide').addEventListener('click', function () {
+      var t = editingTile();
+      if (!t) return;
+      var hiding = t.parentNode.id !== 'arr-hidden';
+      t.classList.remove('wide'); t.querySelector('.wide-btn').setAttribute('aria-pressed', 'false');
+      if (hiding) $('arr-hidden').appendChild(t); else $('arr-grid').appendChild(t);
+      renumber(); setDirty(true);
+      $('tag-dlg').close();
+      $('arr-status').textContent = (hiding ? 'Moved to Hidden.' : 'Moved back to the Grid.') + ' Tap Save to apply.';
+    });
 
     // several photos at once
     function selectedIds() { return Array.prototype.map.call(document.querySelectorAll('#view-arrange .tile.selected'), function (t) { return t.dataset.id; }); }
@@ -613,8 +637,14 @@
       var big = {};
       Array.prototype.forEach.call($('arr-big').children, function (t) { big[t.dataset.id] = t.classList.contains('wide') ? 'wide' : 'big'; });
       $('arr-save').disabled = true;
-      post('api/arrange', { slug: arr.slug, order: ids('arr-big').concat(ids('arr-grid')), big: big })
-        .then(function (r) { setDirty(false); $('arr-status').textContent = 'Saved! ' + ($('arr-house').selectedOptions[0] || {}).textContent + '’s page shows this order now.'; })
+      var shown = ids('arr-big').concat(ids('arr-grid')), hide = ids('arr-hidden');
+      post('api/hidden', { hide: hide, show: shown })
+        .then(function () { return post('api/arrange', { slug: arr.slug, order: shown, big: big }); })
+        .then(function (r) {
+          setDirty(false);
+          $('arr-status').textContent = 'Saved! ' + ($('arr-house').selectedOptions[0] || {}).textContent + '’s page shows this order now' +
+            (hide.length ? ', with ' + hide.length + (hide.length === 1 ? ' photo' : ' photos') + ' hidden.' : '.');
+        })
         .catch(function () { $('arr-status').textContent = 'Couldn’t save. Check your connection and try again.'; })
         .then(function () { $('arr-save').disabled = false; });
     });

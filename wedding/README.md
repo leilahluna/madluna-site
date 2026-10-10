@@ -76,6 +76,8 @@ On **madluna.ca/w/admin**, the **Arrange photos** tab lets you pick a household 
 
 **Tags** are your own labels for sorting (guests never see them). Tap a photo in **Arrange photos** to add or remove tags; the first tag is its main one. **Select photos** tags several at once. A tag applies to that photo on every page it's on. The **By tag** view shows one block per main tag: drag a block by its ≡ bar to move the whole group, switch back to **Photos**, then **Save**. Tags are stored with the site in `tags.json`.
 
+**Hiding** a photo (an edited copy put up by mistake, say): tap it in **Arrange photos** and choose **Hide from page**, or drag it into the **Hidden** section, then **Save**. It disappears from every page it's on; nothing is deleted. Drag it back up (or tap it and choose **Show on page again**) to bring it back. Photos are recognized by their contents, so a renamed copy in another folder counts as the same photo for tags and hiding.
+
 ## settings
 
 The top of `build.py` has the wording (headline, default message, sign-off, sticker line), `BATCH_SIZE` (photos per save button, 20 to start), `MAX_UPLOAD_MB` (biggest file a guest can send) and the thumbnail size. The password page is `login.html`. The page design is in `template.html`.

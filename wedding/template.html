@@ -263,6 +263,9 @@
   <script>
     var PHOTOS = {{PHOTOS_JSON}};
     var ARRANGE = null;
+    var HIDDEN = [];
+    // photos hidden on the admin page (an edited copy put up by mistake, say) don't show at all
+    PHOTOS = PHOTOS.filter(function (p) { return HIDDEN.indexOf(p.id) < 0; });
     // An order saved on the admin page (filled in above by the site when there is one): its photos in that
     // order, with "big" ones on top; photos added since then go at the end of the grid.
     (function () {
