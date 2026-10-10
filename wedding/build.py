@@ -55,9 +55,10 @@ SIGNOFF = 'Love, Merrick & Leilah'
 NOTE = ("If you don't spot yourself in a photo immediately, check in the background. "
         "We used Google Photos to detect faces, so if the person detected isn't you, we apologize!")   # under the message on every page; '' for none
 STICKER_LINE = 'Scan for your photos from our day'
-# photos from these photographers (the Artist saved in each file) are shown big at the top of each page;
-# photo-info.csv's "featured" column (yes / no) overrides this for any single photo
-FEATURED_ARTISTS = ["Verita's Eye"]
+# Featured photos are shown big at the top of each page. photo-info.csv's "featured" column sets it per photo:
+# a number is its priority (1 shows first, then 2, ...), "yes" means after the numbered ones, "no" means never.
+# Photos by these photographers (the Artist saved in each file) count as "yes" unless the column says otherwise.
+FEATURED_ARTISTS = []    # e.g. ["Verita's Eye"]
 FEATURED_TITLE = 'From our photographer'
 FEATURED_CREDIT = "Photos by Verita's Eye"
 SHOW_TABS = False        # All / Photos / GIFs / Videos sorting above the photos
@@ -364,21 +365,26 @@ def photographer(path):
         return ''
 
 
-def is_featured(src, info):
+def feature_rank(src, info):
+    """Priority among the big photos (lower shows first), or None if the photo isn't featured."""
     choice = (info or {}).get(src.name, {}).get('featured', '').strip().lower()
-    if choice in ('yes', 'y', 'true', '1', 'x'):
-        return True
+    if choice.isdigit() and int(choice) > 0:
+        return int(choice)
+    if choice in ('yes', 'y', 'true', 'x'):
+        return 1000
     if choice in ('no', 'n', 'false', '0'):
-        return False
-    return photographer(src) in FEATURED_ARTISTS
+        return None
+    return 1000 if photographer(src) in FEATURED_ARTISTS else None
 
 
 def build_household(row, photos, out_dir, template, info=None, moments=()):
     """Writes one household's page. Returns the set of files it owns."""
     owned = set()
     items = []
-    featured = {src: is_featured(src, info) for src in photos}
-    photos = sorted(photos, key=lambda s: not featured[s])   # professional photos first, each group still by date
+    rank = {src: feature_rank(src, info) for src in photos}
+    # featured photos first, by priority; within a priority (and for the rest) still by date
+    photos = sorted(photos, key=lambda s: (rank[s] is None, rank[s] or 0))
+    featured = {src: rank[src] is not None for src in photos}
     for i, src in enumerate(photos, 1):
         ext = src.suffix.lower().replace('.jpeg', '.jpg')
         too_big = ext != '.gif' and src.stat().st_size > FULL_MAX_MB * 1024 * 1024
