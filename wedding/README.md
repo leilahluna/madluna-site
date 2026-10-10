@@ -21,6 +21,7 @@ All commands run in the **VS Code terminal**, from this `wedding` folder.
    - `people`: who's in the household, to help you find their faces in Google Photos. Never shown.
    - `message`: optional, replaces the default note on their page.
    - `slug`: leave empty, step 2 fills it in.
+   - `folder`: optional. If a household's photos are in a folder with its own name (like `photos/bella&chloe`), put that name here. Leave it empty to use `photos/<slug>/`.
    - `password`: leave empty, step 2 fills it in (like `maple 482`). Capitals, spaces and dashes don't matter when guests type it.
 
 2. **Make slugs, passwords and folders.**
@@ -29,7 +30,7 @@ All commands run in the **VS Code terminal**, from this `wedding` folder.
    ```
    This fills in a hard-to-guess slug (like `the-smiths-k7f2`) and a password for each household, and makes an empty `photos/<slug>/` folder for each one. Don't change a slug or password after its sticker is printed.
 
-3. **Add the photos.** Use Google Photos face grouping to find each household's photos, download them, and drop the originals into their `photos/<slug>/` folder. JPG, PNG, HEIC, WebP and GIF all work, and GIFs (like the photobooth ones) stay animated. Pages show photos in the order they were taken.
+3. **Add the photos.** Use Google Photos face grouping to find each household's photos, download them, and drop the originals into their `photos/<slug>/` folder. JPG, PNG, HEIC, WebP and GIF all work, and GIFs (like the photobooth ones) stay animated. Pages show photos in the order they were taken. Photos over 24 MB are re-saved for the page at the same size in pixels so Cloudflare will take them; your originals aren't changed.
 
 4. **Build the pages.**
    ```

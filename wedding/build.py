@@ -51,6 +51,7 @@ DEFAULT_MESSAGE = (
 )
 SIGNOFF = 'Love, Merrick & Leilah'
 STICKER_LINE = 'Scan for your photos from our day'
+FULL_MAX_MB = 24         # Cloudflare won't serve files over 25 MiB; bigger photos get re-saved (same size in pixels)
 MAX_UPLOAD_MB = 95       # biggest single file a guest can send (Cloudflare's free plan stops at 100 MB)
 UPLOAD_BUCKET = 'madluna-wedding-uploads'   # must match r2_buckets in wrangler.jsonc
 
@@ -102,7 +103,7 @@ def read_households(csv_path):
         r.pop(None, None)   # stray cells past the last column
         for k in list(r):
             r[k] = (r[k] or '').strip()
-        for k in ('slug', 'name', 'message', 'password'):
+        for k in ('slug', 'name', 'message', 'password', 'folder'):
             r.setdefault(k, '')
     rows = [r for r in rows if r['name'] or r['slug']]
     seen = set()
@@ -143,6 +144,11 @@ def normalize_password(pw):
     return re.sub(r'[^a-z0-9]', '', pw.lower())
 
 
+def photo_folder(p, r):
+    # the "folder" column lets a household's photos live in a folder with any name, e.g. photos/bella&chloe
+    return p['photos'] / (r['folder'] or r['slug'])
+
+
 def cmd_slugs(p, args):
     rows = read_households(p['csv'])
     taken = {r['slug'] for r in rows if r['slug']}
@@ -159,7 +165,7 @@ def cmd_slugs(p, args):
         write_households(p['csv'], rows)
     made = 0
     for r in rows:
-        folder = p['photos'] / r['slug']
+        folder = photo_folder(p, r)
         if not folder.exists():
             folder.mkdir(parents=True)
             made += 1
@@ -219,6 +225,23 @@ def same_file(src, dst):
     return a.st_size == b.st_size and int(a.st_mtime) == int(b.st_mtime)
 
 
+def shrink_full(src, dst):
+    """Re-saves a photo that's too big for Cloudflare as a JPEG with the same pixel size,
+    keeping its camera info and colour profile. Our original file isn't touched."""
+    limit = FULL_MAX_MB * 1024 * 1024
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    with Image.open(src) as im:
+        extra = {k: im.info[k] for k in ('exif', 'icc_profile') if im.info.get(k)}
+        if im.mode not in ('RGB', 'L'):
+            im = im.convert('RGB')
+        for quality in (92, 88, 84, 80, 75):
+            im.save(dst, 'JPEG', quality=quality, optimize=True, progressive=True, **extra)
+            if dst.stat().st_size <= limit:
+                break
+    st = src.stat()
+    os.utime(dst, (st.st_atime, st.st_mtime))   # matching times = "already done" on the next build
+
+
 def make_gif_thumb(src, dst):
     """Smaller copy of an animated GIF (e.g. from the photobooth) that still animates."""
     dst.parent.mkdir(parents=True, exist_ok=True)
@@ -256,10 +279,17 @@ def build_household(row, photos, out_dir, template):
     items = []
     for i, src in enumerate(photos, 1):
         ext = src.suffix.lower().replace('.jpeg', '.jpg')
+        too_big = ext != '.gif' and src.stat().st_size > FULL_MAX_MB * 1024 * 1024
+        if too_big:
+            ext = '.jpg'
         name = f'{FILE_PREFIX}-{i:03d}{ext}'
 
         full = out_dir / 'full' / name
-        if not same_file(src, full):
+        if too_big:
+            if not (full.exists() and int(full.stat().st_mtime) == int(src.stat().st_mtime)
+                    and full.stat().st_size <= FULL_MAX_MB * 1024 * 1024):
+                shrink_full(src, full)
+        elif not same_file(src, full):
             full.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(src, full)
         owned.add(full)
@@ -346,7 +376,7 @@ def cmd_build(p, args):
     published, empty = [], []
 
     for r in rows:
-        photos = list_photos(p['photos'] / r['slug'])
+        photos = list_photos(photo_folder(p, r))
         if not photos:
             empty.append(r)
             continue
@@ -505,8 +535,7 @@ def cmd_labels(p, args):
     pages = (args.skip + len(rows) + per_page - 1) // per_page
     print(f'wrote {p["pdf"].name}: {len(rows)} sticker(s) on {pages} page(s), {sheet["desc"]}.')
     print('print at 100% / "actual size" (not "fit to page"), and test-scan a few before printing the whole batch.')
-    folder = p['photos']
-    missing = [r for r in rows if not list_photos(folder / r['slug'])]
+    missing = [r for r in rows if not list_photos(photo_folder(p, r))]
     if missing:
         print(f'heads up: {len(missing)} of these have no photos yet, so their code would show "not found".')
 
