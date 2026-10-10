@@ -52,13 +52,14 @@ All commands run in the **VS Code terminal**, from this `wedding` folder.
    ```
    Run this again after every rebuild. It also sets up the private storage for guest uploads (Cloudflare R2). If it says R2 needs turning on, open the Cloudflare dashboard, go to **R2 Object Storage**, and turn it on (Cloudflare may ask for a payment method; the first 10 GB are free). The first time, or if it says "Not logged in", run `npx wrangler login` from a normal (non-network) folder such as your home folder. It opens a browser window to log in to Cloudflare. To take the pages down later, run `npx wrangler delete madluna-wedding` from that same kind of folder.
 
-7. **Collect what guests send.**
+7. **See and collect what guests send.**
+   Open **madluna.ca/w/admin** (password is `admin_password` in `.secrets.json`). It lists every photo and video guests have sent, newest first, with a **New** badge on anything you haven't seen. You can filter by household or photos/videos, play videos, download originals, and delete. Then, to save everything to the server:
    ```
-   python build.py uploads --clear
+   python build.py uploads
    ```
-   This downloads every photo and video guests sent into `uploads/<slug>/`, then removes each one from Cloudflare once it's safely saved here (leave off `--clear` to keep them there too). Run it whenever you like; files already downloaded are skipped. Move any you want on a page into that household's `photos/` folder and rebuild.
+   This downloads anything new into `uploads/<slug>/` and marks it **Saved to server** on the admin page. It never deletes; delete from the admin page once something is saved (it warns you if it isn't yet). `--clear` instead removes each one from Cloudflare right after saving it. Move any you want on a page into that household's photo folder and rebuild.
 
-Keep `.secrets.json` safe. It holds the keys the site uses. If it's lost, a fresh one is made on the next build and everyone just has to type their password again.
+Keep `.secrets.json` safe. It holds the keys the site uses and the admin password. If it's lost, a fresh one (with a new admin password) is made on the next build and everyone just has to type their password again.
 
 ## settings
 

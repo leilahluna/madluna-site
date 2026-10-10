@@ -6,7 +6,7 @@ Wedding guest photo pages + QR sticker sheet for madluna.ca/w/<slug>/.
   python build.py build     build the guest pages into dist/ (thumbnails + originals)
   python build.py labels    make qr-stickers.pdf, a printable sheet of QR stickers with passwords
   python build.py deploy    upload dist/ to Cloudflare so the pages are live (add --dry-run to only check)
-  python build.py uploads   download photos guests sent us into uploads/ (add --clear to free Cloudflare storage)
+  python build.py uploads   download what guests sent us into uploads/ and mark it "Saved to server" on madluna.ca/w/admin
 
 See README.md for the full workflow.
 """
@@ -112,6 +112,8 @@ def read_households(csv_path):
     rows = [r for r in rows if r['name'] or r['slug']]
     seen = set()
     for r in rows:
+        if r['slug'] in ('admin', '_admin'):
+            sys.exit(f'"{r["slug"]}" is reserved for the admin page; pick another slug.')
         if r['slug'] and not SLUG_RE.match(r['slug']):
             sys.exit(f'bad slug "{r["slug"]}": use only lowercase letters, numbers and dashes.')
         if r['slug'] in seen and r['slug']:
@@ -352,13 +354,25 @@ def load_secrets(path):
     """Random keys for the Worker, made once and kept in .secrets.json (never on GitHub).
 
     secret signs the "already entered the password" cookie and salts the password hashes;
-    admin_token lets "python build.py uploads" fetch what guests sent.
+    admin_token lets "python build.py uploads" fetch what guests sent;
+    admin_password opens Merrick & Leilah's page at madluna.ca/w/admin.
     """
-    if path.exists():
-        return json.loads(path.read_text(encoding='utf-8'))
-    s = {'secret': secrets.token_hex(32), 'admin_token': secrets.token_urlsafe(32)}
-    path.write_text(json.dumps(s, indent=2), encoding='utf-8')
+    s = json.loads(path.read_text(encoding='utf-8')) if path.exists() else {}
+    made = {k: v for k, v in (('secret', secrets.token_hex(32)), ('admin_token', secrets.token_urlsafe(32)),
+                              ('admin_password', f'{secrets.choice(PASSWORD_WORDS)}-{secrets.choice(PASSWORD_WORDS)}-'
+                                                 f'{secrets.randbelow(9000) + 1000}')) if k not in s}
+    if made:
+        s.update(made)
+        path.write_text(json.dumps(s, indent=2), encoding='utf-8')
+        if 'admin_password' in made:
+            print(f'new admin password for {SITE}/w/admin: {s["admin_password"]}  (also saved in {path.name})')
     return s
+
+
+def login_page(title, lead, button, help_html):
+    return ((HERE / 'login.html').read_text(encoding='utf-8')
+            .replace('{{TITLE}}', title).replace('{{LEAD}}', lead)
+            .replace('{{BUTTON}}', button).replace('{{HELP}}', help_html))
 
 
 def write_worker_config(p, published):
@@ -372,7 +386,13 @@ def write_worker_config(p, published):
     config = {
         'secret': s['secret'],
         'adminToken': s['admin_token'],
-        'loginHtml': (HERE / 'login.html').read_text(encoding='utf-8'),
+        'adminHash': hashlib.sha256(f'{s["secret"]}:admin:{normalize_password(s["admin_password"])}'.encode()).hexdigest(),
+        'loginHtml': login_page('Your photos from our day',
+                                'Below, enter the password written under the QR code on your thank you card.',
+                                'Open my photos',
+                                '<p class="help">Can\'t find it? <a href="/contact/">Let us know</a> and we\'ll sort it out.</p>'),
+        'adminLoginHtml': login_page('Guest uploads', 'For Merrick &amp; Leilah only.', 'Open', ''),
+        'adminHtml': (HERE / 'admin.html').read_text(encoding='utf-8'),
         'households': households,
     }
     p['generated'].parent.mkdir(parents=True, exist_ok=True)
@@ -590,15 +610,18 @@ def cmd_deploy(p, args):
         print(f'\nlive. each household is at {SITE}/w/<slug>')
 
 
-def admin_request(base, token, path, method='GET'):
-    req = urllib.request.Request(base.rstrip('/') + '/w/_admin' + path, method=method,
-                                 headers={'Authorization': f'Bearer {token}', 'User-Agent': 'madluna-build'})
-    return urllib.request.urlopen(req, timeout=120)
+def admin_request(base, token, path, method='GET', body=None):
+    headers = {'Authorization': f'Bearer {token}', 'User-Agent': 'madluna-build'}
+    if body is not None:
+        body = json.dumps(body).encode()
+        headers['Content-Type'] = 'application/json'
+    req = urllib.request.Request(base.rstrip('/') + '/w/_admin' + path, data=body, method=method, headers=headers)
+    return urllib.request.urlopen(req, timeout=300)
 
 
 def cmd_uploads(p, args):
-    """Downloads what guests sent into uploads/<slug>/. With --clear, removes each one from
-    Cloudflare once its copy here is saved and the size matches, so storage stays near zero."""
+    """Downloads what guests sent into uploads/<slug>/ and marks each one "Saved to server" on the
+    admin page, so it's clearly safe to delete there. Nothing is deleted unless --clear is given."""
     if not p['secrets'].exists():
         sys.exit('no .secrets.json here, so there is nothing deployed from this folder yet.')
     token = load_secrets(p['secrets'])['admin_token']
@@ -609,11 +632,12 @@ def cmd_uploads(p, args):
         print('no guest uploads waiting.')
         return
     got = skipped = cleared = 0
+    newly_saved = []
     for it in items:
         _, slug, fname = it['key'].split('/', 2)
         dest = p['uploads'] / slug / fname
-        if dest.exists() and dest.stat().st_size == it['size']:
-            skipped += 1
+        if it.get('saved') or (dest.exists() and dest.stat().st_size == it['size']):
+            skipped += 1   # already on the server (maybe since moved into a photos folder)
         else:
             dest.parent.mkdir(parents=True, exist_ok=True)
             part = dest.with_name(dest.name + '.part')
@@ -626,11 +650,16 @@ def cmd_uploads(p, args):
             part.replace(dest)
             got += 1
             print(f'  {slug:<32} {fname}')
+        if not it.get('saved'):
+            newly_saved.append(it['key'])
         if args.clear:
             admin_request(base, token, '/file?key=' + urllib.parse.quote(it['key']), method='DELETE').close()
             cleared += 1
-    print(f'\n{got} new, {skipped} already here, in {p["uploads"]}' +
-          (f'. cleared {cleared} from Cloudflare.' if args.clear else '. add --clear to remove them from Cloudflare.'))
+    if newly_saved and not args.clear:
+        admin_request(base, token, '/saved', method='POST', body={'keys': newly_saved}).close()
+    print(f'\n{got} new, {skipped} already saved, in {p["uploads"]}' +
+          (f'. cleared {cleared} from Cloudflare.' if args.clear else
+           f'. marked {len(newly_saved)} "Saved to server" on {SITE}/w/admin.' if newly_saved else '.'))
 
 
 def main():
