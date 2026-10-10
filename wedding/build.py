@@ -87,6 +87,8 @@ def paths(data_dir):
         'photos': d / 'photos',
         'dist': d / 'dist',
         'pdf': d / 'qr-stickers.pdf',
+        'moments': d / 'moments.csv',
+        'info': d / 'photo-info.csv',
         'secrets': d / '.secrets.json',
         'generated': d / 'generated' / 'config.js',
         'uploads': d / 'uploads',
@@ -224,6 +226,73 @@ def list_photos(folder):
     return sorted(unique, key=lambda f: (date_taken(f) or '~', f.name.lower()))
 
 
+# moments.csv: when each part of the day started. Only used to sort photos into moments;
+# times never appear on the site. Starter rows are guesses to be fixed by hand.
+STARTER_MOMENTS = [
+    ('2025-10-25 00:00', 'Getting ready'),
+    ('2025-10-25 16:00', 'Ceremony'),
+    ('2025-10-25 17:30', 'Reception'),
+]
+
+
+def read_csv(path):
+    try:
+        text = path.read_text(encoding='utf-8-sig')
+    except UnicodeDecodeError:
+        text = path.read_text(encoding='cp1252')
+    return [{k: (v or '').strip() for k, v in r.items() if k} for r in csv.DictReader(text.splitlines())]
+
+
+def write_csv(path, fields, rows):
+    with open(path, 'w', newline='', encoding='utf-8-sig') as f:
+        w = csv.DictWriter(f, fieldnames=fields)
+        w.writeheader()
+        for r in rows:
+            w.writerow({k: r.get(k, '') for k in fields})
+
+
+def load_moments(path):
+    if not path.exists():
+        write_csv(path, ['from', 'moment'], [{'from': a, 'moment': b} for a, b in STARTER_MOMENTS])
+        print(f'made {path.name} with starter moments; edit the times and names to match the day.')
+    out = []
+    for r in read_csv(path):
+        m = re.match(r'(\d{4})-(\d{1,2})-(\d{1,2})(?:\s+(\d{1,2}):(\d{2}))?', r.get('from', ''))
+        if m and r.get('moment'):
+            y, mo, d, hh, mm = m.groups()
+            out.append((f'{int(y):04d}:{int(mo):02d}:{int(d):02d} {int(hh or 0):02d}:{int(mm or 0):02d}:00', r['moment']))
+    return sorted(out)
+
+
+def moment_for(taken, moments):
+    """The moment whose start is the latest one at or before the photo's time."""
+    label = ''
+    for start, name in moments:
+        if taken and taken >= start:
+            label = name
+    return label
+
+
+def sync_photo_info(path, per_household):
+    """photo-info.csv has one row per photo (by file name): who's in it and, optionally, its moment.
+    New photos are added with the household's people filled in; existing rows are never changed."""
+    rows = read_csv(path) if path.exists() else []
+    known = {r.get('photo', '') for r in rows}
+    people_for = {}
+    for r, photos in per_household:
+        names = [n.strip() for n in re.split(r'[;,]', r.get('people', '')) if n.strip()]
+        for f in photos:
+            people_for.setdefault(f.name, [])
+            people_for[f.name] += [n for n in names if n not in people_for[f.name]]
+    added = [{'photo': name, 'people': ', '.join(people), 'moment': ''}
+             for name, people in people_for.items() if name not in known]
+    if added or not path.exists():
+        write_csv(path, ['photo', 'people', 'moment'], rows + added)
+        if added:
+            print(f'added {len(added)} photo(s) to {path.name}; fix names or moments there any time and rebuild.')
+    return {r['photo']: r for r in rows + added}
+
+
 def same_file(src, dst):
     if not dst.exists():
         return False
@@ -280,7 +349,7 @@ def make_thumb(src, dst, edge=THUMB_EDGE, quality=THUMB_QUALITY):
         im.save(dst, 'JPEG', quality=quality, optimize=True, progressive=True, **({'icc_profile': icc} if icc else {}))
 
 
-def build_household(row, photos, out_dir, template):
+def build_household(row, photos, out_dir, template, info=None, moments=()):
     """Writes one household's page. Returns the set of files it owns."""
     owned = set()
     items = []
@@ -322,8 +391,15 @@ def build_household(row, photos, out_dir, template):
             view_url = f'view/{view.name}'
 
         kind = 'gif' if ext == '.gif' else 'photo'   # drives the All / Photos / GIFs / Videos tabs
+        # side panel: moment (from photo-info.csv, else moments.csv by time), date without time, people
+        meta = (info or {}).get(src.name, {})
+        taken = date_taken(src)
+        people = [n.strip() for n in re.split(r'[;,]', meta.get('people', '')) if n.strip()]
         items.append({'thumb': f'thumbs/{thumb.name}', 'view': view_url, 'full': f'full/{name}', 'name': name,
-                      'w': w, 'h': h, 'kind': kind})
+                      'w': w, 'h': h, 'kind': kind,
+                      'moment': meta.get('moment') or moment_for(taken, moments),
+                      'date': taken[:10].replace(':', '-') if taken else '',
+                      'people': people})
 
     message = row['message'] or DEFAULT_MESSAGE
     page = (template
@@ -413,13 +489,15 @@ def cmd_build(p, args):
     keep = set()
     published, empty = [], []
 
-    for r in rows:
-        photos = list_photos(photo_folder(p, r))
+    lists = [(r, list_photos(photo_folder(p, r))) for r in rows]
+    moments = load_moments(p['moments'])
+    info = sync_photo_info(p['info'], [(r, ph) for r, ph in lists if ph])
+    for r, photos in lists:
         if not photos:
             empty.append(r)
             continue
         print(f'  {r["slug"]:<32} {len(photos):>4} photo{"" if len(photos) == 1 else "s"}   {r["name"]}')
-        keep |= build_household(r, photos, out_w / r['slug'], template)
+        keep |= build_household(r, photos, out_w / r['slug'], template, info, moments)
         published.append(r)
 
     (out_w / '404.html').write_text(NOT_FOUND, encoding='utf-8', newline='\n')

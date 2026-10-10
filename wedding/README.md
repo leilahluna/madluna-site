@@ -61,6 +61,15 @@ All commands run in the **VS Code terminal**, from this `wedding` folder.
 
 Keep `.secrets.json` safe. It holds the keys the site uses and the admin password. If it's lost, a fresh one (with a new admin password) is made on the next build and everyone just has to type their password again.
 
+## photo info panel
+
+Tapping a photo shows its moment (like *Ceremony*), the date it was taken (no time), and who's in it. Two files feed it, both private and both made automatically on the first build:
+
+- `moments.csv`: when each part of the day started, e.g. `2025-10-25 16:00,Ceremony`. Each photo gets the moment it was taken in. The times are only used for sorting and never shown. Add rows for things like a rehearsal dinner on another day.
+- `photo-info.csv`: one row per photo (by file name). `people` starts as the household's people, so fix it to whoever is really in the photo. `moment` is optional and overrides `moments.csv` for that one photo. New photos are added on every build; your edits are never overwritten.
+
+Rebuild and deploy after editing either one.
+
 ## settings
 
 The top of `build.py` has the wording (headline, default message, sign-off, sticker line), `BATCH_SIZE` (photos per save button, 20 to start), `MAX_UPLOAD_MB` (biggest file a guest can send) and the thumbnail size. The password page is `login.html`. The page design is in `template.html`.

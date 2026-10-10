@@ -16,3 +16,5 @@ wedding/.wrangler/
 wedding/uploads/
 wedding/generated/
 wedding/.secrets.json
+wedding/moments.csv
+wedding/photo-info.csv
