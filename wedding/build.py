@@ -55,6 +55,12 @@ SIGNOFF = 'Love, Merrick & Leilah'
 NOTE = ("If you don't spot yourself in a photo immediately, check in the background. "
         "We used Google Photos to detect faces, so if the person detected isn't you, we apologize!")   # under the message on every page; '' for none
 STICKER_LINE = 'Scan for your photos from our day'
+# photos from these photographers (the Artist saved in each file) are shown big at the top of each page;
+# photo-info.csv's "featured" column (yes / no) overrides this for any single photo
+FEATURED_ARTISTS = ["Verita's Eye"]
+FEATURED_TITLE = 'From our photographer'
+FEATURED_CREDIT = "Photos by Verita's Eye"
+SHOW_TABS = False        # All / Photos / GIFs / Videos sorting above the photos
 FULL_MAX_MB = 24         # Cloudflare won't serve files over 25 MiB; bigger photos get re-saved (same size in pixels)
 MAX_UPLOAD_MB = 4096     # biggest single file a guest can send; must match MAX_FILE in worker.js (big ones go in pieces)
 UPLOAD_BUCKET = 'madluna-wedding-uploads'   # must match r2_buckets in wrangler.jsonc
@@ -284,10 +290,11 @@ def sync_photo_info(path, per_household):
         for f in photos:
             people_for.setdefault(f.name, [])
             people_for[f.name] += [n for n in names if n not in people_for[f.name]]
-    added = [{'photo': name, 'people': ', '.join(people), 'moment': ''}
+    added = [{'photo': name, 'people': ', '.join(people), 'moment': '', 'featured': ''}
              for name, people in people_for.items() if name not in known]
-    if added or not path.exists():
-        write_csv(path, ['photo', 'people', 'moment'], rows + added)
+    old_header = not rows or 'featured' not in rows[0]
+    if added or not path.exists() or old_header:
+        write_csv(path, ['photo', 'people', 'moment', 'featured'], rows + added)
         if added:
             print(f'added {len(added)} photo(s) to {path.name}; fix names or moments there any time and rebuild.')
     return {r['photo']: r for r in rows + added}
@@ -349,10 +356,29 @@ def make_thumb(src, dst, edge=THUMB_EDGE, quality=THUMB_QUALITY):
         im.save(dst, 'JPEG', quality=quality, optimize=True, progressive=True, **({'icc_profile': icc} if icc else {}))
 
 
+def photographer(path):
+    try:
+        with Image.open(path) as im:
+            return str(im.getexif().get(315, '')).strip()
+    except Exception:
+        return ''
+
+
+def is_featured(src, info):
+    choice = (info or {}).get(src.name, {}).get('featured', '').strip().lower()
+    if choice in ('yes', 'y', 'true', '1', 'x'):
+        return True
+    if choice in ('no', 'n', 'false', '0'):
+        return False
+    return photographer(src) in FEATURED_ARTISTS
+
+
 def build_household(row, photos, out_dir, template, info=None, moments=()):
     """Writes one household's page. Returns the set of files it owns."""
     owned = set()
     items = []
+    featured = {src: is_featured(src, info) for src in photos}
+    photos = sorted(photos, key=lambda s: not featured[s])   # professional photos first, each group still by date
     for i, src in enumerate(photos, 1):
         ext = src.suffix.lower().replace('.jpeg', '.jpg')
         too_big = ext != '.gif' and src.stat().st_size > FULL_MAX_MB * 1024 * 1024
@@ -399,7 +425,8 @@ def build_household(row, photos, out_dir, template, info=None, moments=()):
                       'w': w, 'h': h, 'kind': kind,
                       'moment': meta.get('moment') or moment_for(taken, moments),
                       'date': taken[:10].replace(':', '-') if taken else '',
-                      'people': people})
+                      'people': people,
+                      'featured': featured[src]})
 
     message = row['message'] or DEFAULT_MESSAGE
     page = (template
@@ -408,6 +435,9 @@ def build_household(row, photos, out_dir, template, info=None, moments=()):
             .replace('{{NOTE}}', html.escape(NOTE))
             .replace('{{SIGNOFF}}', html.escape(SIGNOFF))
             .replace('{{BATCH_SIZE}}', str(BATCH_SIZE))
+            .replace('{{FEATURED_TITLE}}', html.escape(FEATURED_TITLE))
+            .replace('{{FEATURED_CREDIT}}', html.escape(FEATURED_CREDIT))
+            .replace('{{SHOW_TABS}}', 'true' if SHOW_TABS else 'false')
             .replace('{{MAX_UPLOAD_MB}}', str(MAX_UPLOAD_MB))
             .replace('{{ZIP_NAME_JSON}}', json.dumps(f'{FILE_PREFIX}-photos.zip'))
             .replace('{{PHOTOS_JSON}}', json.dumps(items, separators=(',', ':')).replace('</', '<\\/')))

@@ -66,7 +66,7 @@ Keep `.secrets.json` safe. It holds the keys the site uses and the admin passwor
 Tapping a photo shows its moment (like *Ceremony*), the date it was taken (no time), and who's in it. Two files feed it, both private and both made automatically on the first build:
 
 - `moments.csv`: when each part of the day started, e.g. `2025-10-25 16:00,Ceremony`. Each photo gets the moment it was taken in. The times are only used for sorting and never shown. Add rows for things like a rehearsal dinner on another day.
-- `photo-info.csv`: one row per photo (by file name). `people` starts as the household's people, so fix it to whoever is really in the photo. `moment` is optional and overrides `moments.csv` for that one photo. New photos are added on every build; your edits are never overwritten.
+- `photo-info.csv`: one row per photo (by file name). `people` starts as the household's people, so fix it to whoever is really in the photo. `moment` is optional and overrides `moments.csv` for that one photo. `featured` is optional: `yes` puts a photo in the big "From our photographer" section at the top, `no` keeps it out. Left empty, photos by the photographers in `FEATURED_ARTISTS` (top of `build.py`) are featured automatically. New photos are added on every build; your edits are never overwritten.
 
 Rebuild and deploy after editing either one.
 
