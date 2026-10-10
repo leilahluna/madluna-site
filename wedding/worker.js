@@ -154,7 +154,7 @@ export default {
 		if (rest === '/upload' && req.method === 'POST') return upload(req, env, slug, house);
 		if (req.method !== 'GET' && req.method !== 'HEAD') return new Response('Method not allowed', { status: 405, headers: COMMON });
 		const res = await env.ASSETS.fetch(req);
-		const media = rest.startsWith('/thumbs/') || rest.startsWith('/full/');
+		const media = rest.startsWith('/thumbs/') || rest.startsWith('/view/') || rest.startsWith('/full/');
 		return withHeaders(res, { 'Cache-Control': media ? 'private, max-age=86400' : 'private, no-cache' });
 	},
 };

@@ -409,20 +409,21 @@
 
     // ===== lightbox =====
     var lb = $('lb'), lbImg = $('lb-img'), lbSave = $('lb-save'), cur = 0;
-    $('lb-tip').textContent = isIOS ? 'Or press and hold the photo' : '';
+    $('lb-tip').textContent = 'Saves the full-size photo';
 
     function show(i) {
       cur = (i + n) % n;
       var p = PHOTOS[cur];
       $('lb-pos').textContent = (cur + 1) + ' / ' + n;
       lbImg.src = p.thumb;
-      var full = new Image();
-      full.onload = function () { if (cur === PHOTOS.indexOf(p)) lbImg.src = p.full; };
-      full.src = p.full;
+      // show a lighter mid-size copy; the full-size original only downloads when Save is tapped
+      var big = new Image();
+      big.onload = function () { if (cur === PHOTOS.indexOf(p)) lbImg.src = p.view; };
+      big.src = p.view;
       lbSave.textContent = canShareFiles ? 'Save' : 'Download';
       lbSave.disabled = false;
-      // warm the file so the save tap can share right away
-      if (canShareFiles) getFile(cur).catch(function () {});
+      // neighbours' mid-size copies, so swiping feels instant
+      [cur + 1, cur - 1].forEach(function (k) { var pr = PHOTOS[(k + n) % n]; if (pr) new Image().src = pr.view; });
       $('lb-prev').style.visibility = $('lb-next').style.visibility = n > 1 ? 'visible' : 'hidden';
     }
     function openLb(i) {
@@ -503,7 +504,7 @@
       var i = cur;
       var pending = getFile(i);
       lbSave.disabled = true;
-      lbSave.textContent = 'One sec…';
+      lbSave.textContent = 'Getting full size…';
       pending.then(function (f) {
         lbSave.disabled = false;
         if (!canShareFiles) { downloadFile(f); lbSave.textContent = '✓ Downloaded'; return; }

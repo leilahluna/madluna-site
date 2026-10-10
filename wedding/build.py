@@ -39,8 +39,10 @@ HERE = Path(__file__).resolve().parent
 # ===== settings =====
 SITE = 'https://madluna.ca'
 BATCH_SIZE = 20          # photos per "save" button; tune after testing on our phones
-THUMB_EDGE = 800         # longest side of grid thumbnails, in pixels
-THUMB_QUALITY = 78
+THUMB_EDGE = 600         # longest side of grid thumbnails, in pixels
+THUMB_QUALITY = 75
+VIEW_EDGE = 1800         # longest side of the copy shown when a photo is tapped (saving always gets the original)
+VIEW_QUALITY = 82
 GIF_THUMB_EDGE = 480     # animated thumbnails keep every frame, so they're kept smaller
 FILE_PREFIX = 'merrick-leilah-wedding'   # what saved photos are called, e.g. merrick-leilah-wedding-001.jpg
 HEADLINE = 'Hi, {name}!'
@@ -261,16 +263,17 @@ def make_gif_thumb(src, dst):
         shutil.copyfile(src, dst)
 
 
-def make_thumb(src, dst):
+def make_thumb(src, dst, edge=THUMB_EDGE, quality=THUMB_QUALITY):
     if src.suffix.lower() == '.gif':
         return make_gif_thumb(src, dst)
     with Image.open(src) as im:
         im = ImageOps.exif_transpose(im)
+        icc = im.info.get('icc_profile')
         if im.mode not in ('RGB', 'L'):
             im = im.convert('RGB')
-        im.thumbnail((THUMB_EDGE, THUMB_EDGE), Image.LANCZOS)
+        im.thumbnail((edge, edge), Image.LANCZOS)
         dst.parent.mkdir(parents=True, exist_ok=True)
-        im.save(dst, 'JPEG', quality=THUMB_QUALITY, optimize=True, progressive=True)
+        im.save(dst, 'JPEG', quality=quality, optimize=True, progressive=True, **({'icc_profile': icc} if icc else {}))
 
 
 def build_household(row, photos, out_dir, template):
@@ -304,7 +307,17 @@ def build_household(row, photos, out_dir, template):
         with Image.open(thumb) as t:
             w, h = t.size
 
-        items.append({'thumb': f'thumbs/{thumb.name}', 'full': f'full/{name}', 'name': name, 'w': w, 'h': h})
+        # mid-size copy for the full-screen view; GIFs just use the original so they animate at full size
+        view_url = f'full/{name}'
+        if ext != '.gif':
+            vkey = hashlib.sha1(f'{src.name}|{st.st_size}|{int(st.st_mtime)}|{VIEW_EDGE}'.encode()).hexdigest()[:12]
+            view = out_dir / 'view' / f'{vkey}.jpg'
+            if not view.exists():
+                make_thumb(src, view, VIEW_EDGE, VIEW_QUALITY)
+            owned.add(view)
+            view_url = f'view/{view.name}'
+
+        items.append({'thumb': f'thumbs/{thumb.name}', 'view': view_url, 'full': f'full/{name}', 'name': name, 'w': w, 'h': h})
 
     message = row['message'] or DEFAULT_MESSAGE
     page = (template
