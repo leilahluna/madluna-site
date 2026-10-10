@@ -264,6 +264,9 @@
     var PHOTOS = {{PHOTOS_JSON}};
     var ARRANGE = null;
     var HIDDEN = [];
+    var MOMENTS = {};
+    // time of day set on the admin page wins over the one worked out from when the photo was taken
+    PHOTOS.forEach(function (p) { if (MOMENTS[p.id]) p.moment = MOMENTS[p.id]; });
     // photos hidden on the admin page (an edited copy put up by mistake, say) don't show at all
     PHOTOS = PHOTOS.filter(function (p) { return HIDDEN.indexOf(p.id) < 0; });
     // An order saved on the admin page (filled in above by the site when there is one): its photos in that

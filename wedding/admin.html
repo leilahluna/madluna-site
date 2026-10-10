@@ -133,6 +133,7 @@
     .chip-tag .x { border: 0; background: none; color: inherit; font-size: 1rem; cursor: pointer; padding: 0 6px; }
     .tag-add { display: flex; gap: 8px; }
     .tagdlg .hint { font-size: 0.78rem; color: var(--text-secondary); }
+    .field-label { font-size: 0.78rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-secondary); }
   </style>
 </head>
 <body>
@@ -171,9 +172,12 @@
       <span id="bulk-count">0 selected</span>
       <input id="bulk-tag" list="tag-list" placeholder="Tag for the selected photos" autocomplete="off">
       <button class="btn primary" id="bulk-add" type="button">Add tag</button>
+      <input id="bulk-moment" list="moment-list" placeholder="Time of day for the selected photos" autocomplete="off">
+      <button class="btn primary" id="bulk-moment-set" type="button">Set time of day</button>
       <button class="btn" id="bulk-done" type="button">Done</button>
     </div>
     <datalist id="tag-list"></datalist>
+    <datalist id="moment-list"></datalist>
     <p class="arr-help" id="help-photos">Drag photos to put them in order. Drag a photo up into <b>Big photos</b> to show it large at the top of the page, or down into <b>Grid</b> to make it normal. <b>Full row</b> makes a big photo take the whole width. Tap a photo to tag it, or use <b>Select photos</b> to tag several at once. On a phone, press and hold a photo for a moment, then move it.</p>
     <p class="arr-help" id="help-tags" hidden>Each block is one tag (a photo goes with its first tag). Drag a block by its <b>≡</b> bar to move all of its photos at once, or drag photos inside a block. Switch back to <b>Photos</b> to see the result, then <b>Save</b>.</p>
     <div id="arr-sections">
@@ -205,6 +209,13 @@
   <dialog class="tagdlg" id="tag-dlg" aria-label="Tags for this photo">
     <img id="tag-img" alt="">
     <div class="body">
+      <label class="field-label" for="moment-input">Time of day</label>
+      <div class="tag-add">
+        <input id="moment-input" list="moment-list" placeholder="Automatic" autocomplete="off">
+        <button class="btn primary" id="moment-save" type="button">Set</button>
+      </div>
+      <p class="hint" id="moment-hint"></p>
+      <label class="field-label">Tags</label>
       <div class="chips" id="tag-chips"></div>
       <p class="hint">Tap a tag to make it the main one (the group this photo moves with). Tags are only for you; guests don't see them.</p>
       <div class="tag-add">
@@ -413,6 +424,8 @@
     }
     function renderArrange(data) {
       arr.photos = data.photos;
+      momentOverrides = data.moments || {};
+      refreshMomentList();
       var a = data.arrangement, byId = {}, order = [], bigOf = {}, hidden = data.hidden || [];
       data.photos.forEach(function (p) { byId[p.id] = p; });
       $('arr-hidden').innerHTML = '';
@@ -459,7 +472,7 @@
     var tagData = { photos: {}, tags: [] }, selecting = false, mode = 'photos', groupSortables = [];
     function firstTag(id) { return (tagData.photos[id] || [])[0] || ''; }
     function loadTags() {
-      return fetch('api/tags', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) { tagData = d; refreshTags(); });
+      return fetch('api/tags', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) { tagData = d; refreshTags(); refreshMomentList(); });
     }
     function refreshTags() {
       Array.prototype.forEach.call(document.querySelectorAll('#view-arrange .tile'), function (t) { t.querySelector('.tagl').textContent = firstTag(t.dataset.id); });
@@ -470,6 +483,49 @@
       return post('api/tags', { set: set }).then(function (d) { tagData = d; refreshTags(); if (mode === 'tags') renderGroups(); })
         .catch(function () { $('arr-status').textContent = 'Couldn’t save that tag. Check your connection and try again.'; });
     }
+
+    // ===== time of day =====
+    var momentOverrides = {};
+    function autoMoment(p) { return p.moment || ''; }   // worked out at build time from when it was taken
+    function momentOf(p) { return momentOverrides[p.id] || autoMoment(p); }
+    function refreshMomentList() {
+      var seen = {}, dl = $('moment-list');
+      dl.innerHTML = '';
+      ['Pre-ceremony', 'Ceremony', 'Post-ceremony', 'Reception', 'First Dance']
+        .concat(arr.photos.map(autoMoment), Object.keys(momentOverrides).map(function (k) { return momentOverrides[k]; }), tagData.tags)
+        .forEach(function (m) {
+          if (!m || seen[m.toLowerCase()]) return;
+          seen[m.toLowerCase()] = 1;
+          var o = document.createElement('option'); o.value = m; dl.appendChild(o);
+        });
+    }
+    function saveMoments(set) {
+      return post('api/moments', { set: set }).then(function (d) { momentOverrides = d.moments; refreshMomentList(); })
+        .catch(function () { $('arr-status').textContent = 'Couldn’t save the time of day. Check your connection and try again.'; throw new Error('save'); });
+    }
+    function showMoment() {
+      var own = momentOverrides[editing.id] || '';
+      $('moment-input').value = own;
+      $('moment-input').placeholder = autoMoment(editing) ? 'Automatic: ' + autoMoment(editing) : 'Automatic (none)';
+      $('moment-hint').textContent = own ? 'Set by you. Clear the box and tap Set to go back to automatic.' : 'Worked out from when the photo was taken. Type or pick one to change it.';
+    }
+    $('moment-save').addEventListener('click', function () {
+      var s = {}; s[editing.id] = $('moment-input').value.trim();
+      saveMoments(s).then(function () { showMoment(); $('arr-status').textContent = 'Time of day saved. It shows on the guest pages now.'; }).catch(function () {});
+    });
+    $('moment-input').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); $('moment-save').click(); } });
+    $('bulk-moment-set').addEventListener('click', function () {
+      var m = $('bulk-moment').value.trim(), sel = selectedIds();
+      if (!m || !sel.length) return;
+      var s = {};
+      sel.forEach(function (id) { s[id] = m; });
+      saveMoments(s).then(function () {
+        $('arr-status').textContent = 'Set ' + sel.length + (sel.length === 1 ? ' photo' : ' photos') + ' to “' + m + '”.';
+        $('bulk-moment').value = '';
+        setSelecting(false);
+      }).catch(function () {});
+    });
+    $('bulk-moment').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); $('bulk-moment-set').click(); } });
 
     // one photo's tags
     var editing = null;
@@ -506,6 +562,7 @@
       $('tag-img').src = 'asset/' + arr.slug + '/' + p.thumb;
       $('tag-input').value = '';
       renderChips();
+      showMoment();
       $('tag-dlg').showModal();
     }
     function addTag() {

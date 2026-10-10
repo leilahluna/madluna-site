@@ -242,6 +242,12 @@ async function readHidden(env) {
 	const data = obj ? await obj.json().catch(() => ({})) : {};
 	return data.ids || [];
 }
+// time of day ("Reception", ...) set on the admin page, by photo id; overrides the one worked out at build time
+async function readMoments(env) {
+	const obj = await env.UPLOADS.get('moments.json');
+	const data = obj ? await obj.json().catch(() => ({})) : {};
+	return data.ids || {};
+}
 async function readArrangement(env, slug) {
 	const obj = await env.UPLOADS.get(`arrange/${slug}.json`);
 	return obj ? await obj.json().catch(() => null) : null;
@@ -281,8 +287,8 @@ async function adminPage(req, env, url, rest) {
 	if (rest === '/api/photos') {
 		const slug = url.searchParams.get('slug') || '';
 		if (!config.households[slug]) return json({ error: 'no such household' }, 404);
-		const [photos, arrangement, hidden] = await Promise.all([builtPhotos(env, req, slug), readArrangement(env, slug), readHidden(env)]);
-		return json({ photos, arrangement, hidden });
+		const [photos, arrangement, hidden, moments] = await Promise.all([builtPhotos(env, req, slug), readArrangement(env, slug), readHidden(env), readMoments(env)]);
+		return json({ photos, arrangement, hidden, moments });
 	}
 	// tags: Merrick & Leilah's own labels for photos (by photo id, so a photo shared by households is tagged once).
 	// Private for now: only the admin page reads them.
@@ -304,6 +310,18 @@ async function adminPage(req, env, url, rest) {
 			return json({ photos, tags });
 		}
 		return json({ photos, tags: data.tags || [] });
+	}
+	if (rest === '/api/moments' && req.method === 'POST') {
+		const { set = {} } = await req.json().catch(() => ({}));
+		const ids = await readMoments(env);
+		for (const [id, m] of Object.entries(set)) {
+			if (!/^[0-9a-f]{12}$/.test(id)) continue;
+			const v = String(m || '').trim().slice(0, 40);
+			if (v) ids[id] = v;
+			else delete ids[id];   // empty = back to automatic
+		}
+		await env.UPLOADS.put('moments.json', JSON.stringify({ ids }), { httpMetadata: { contentType: 'application/json' } });
+		return json({ ok: true, moments: ids });
 	}
 	if (rest === '/api/hidden' && req.method === 'POST') {
 		const { hide = [], show = [] } = await req.json().catch(() => ({}));
@@ -398,9 +416,10 @@ export default {
 		const res = await env.ASSETS.fetch(req);
 		if (rest === '/' && res.ok) {
 			// put Merrick & Leilah's saved arrangement and hidden photos (if any) into the page
-			const [arrangement, hidden] = await Promise.all([readArrangement(env, slug), readHidden(env)]);
-			if (arrangement || hidden.length) {
+			const [arrangement, hidden, moments] = await Promise.all([readArrangement(env, slug), readHidden(env), readMoments(env)]);
+			if (arrangement || hidden.length || Object.keys(moments).length) {
 				let page = await res.text();
+				if (Object.keys(moments).length) page = page.replace('var MOMENTS = {};', `var MOMENTS = ${JSON.stringify(moments).replace(/</g, '\\u003c')};`);
 				if (arrangement) page = page.replace('var ARRANGE = null;', `var ARRANGE = ${JSON.stringify(arrangement).replace(/</g, '\\u003c')};`);
 				if (hidden.length) page = page.replace('var HIDDEN = [];', `var HIDDEN = ${JSON.stringify(hidden)};`);
 				return new Response(page, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'private, no-cache', ...COMMON } });

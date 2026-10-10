@@ -76,6 +76,8 @@ On **madluna.ca/w/admin**, the **Arrange photos** tab lets you pick a household 
 
 **Tags** are your own labels for sorting (guests never see them). Tap a photo in **Arrange photos** to add or remove tags; the first tag is its main one. **Select photos** tags several at once. A tag applies to that photo on every page it's on. The **By tag** view shows one block per main tag: drag a block by its ≡ bar to move the whole group, switch back to **Photos**, then **Save**. Tags are stored with the site in `tags.json`.
 
+**Time of day** (the *Ceremony* / *Reception* line in the photo info panel): tap a photo in **Arrange photos** and type or pick one under **Time of day**, then **Set**. **Select photos** can set it for many at once. It's live straight away and applies on every page the photo is on. Clear the box and tap **Set** to go back to the automatic one from `moments.csv`.
+
 **Hiding** a photo (an edited copy put up by mistake, say): tap it in **Arrange photos** and choose **Hide from page**, or drag it into the **Hidden** section, then **Save**. It disappears from every page it's on; nothing is deleted. Drag it back up (or tap it and choose **Show on page again**) to bring it back. Photos are recognized by their contents, so a renamed copy in another folder counts as the same photo for tags and hiding.
 
 ## settings
