@@ -57,7 +57,7 @@ NOTE = ("If you don't spot yourself in a photo immediately, check in the backgro
 STICKER_LINE = 'Scan for your photos from our day'
 # Featured photos are shown big at the top of each page. photo-info.csv's "featured" column sets it per photo:
 # a number is its priority (1 shows first, then 2, ...), "yes" means after the numbered ones, "no" means never.
-# Priority 1 photos also take a whole row on wide screens (like the big group photo).
+# Add "wide" (e.g. "6 wide") to make a photo take a whole row on wide screens, like the big group photo.
 # Photos by these photographers (the Artist saved in each file) count as "yes" unless the column says otherwise.
 FEATURED_ARTISTS = []    # e.g. ["Verita's Eye"]
 FEATURED_TITLE = 'From our photographer'
@@ -281,19 +281,42 @@ def moment_for(taken, moments):
     return label
 
 
-def sync_photo_info(path, per_household):
+def info_key(src, photos_root):
+    """'bella&chloe/1.jpg': the household folder plus file name, for names used in more than one folder."""
+    return f'{src.relative_to(photos_root).parts[0]}/{src.name}'
+
+
+def info_for(src, info, photos_root):
+    """A photo's row in photo-info.csv: by folder/name if there is one, otherwise by file name."""
+    info = info or {}
+    return info.get(info_key(src, photos_root)) or info.get(src.name, {})
+
+
+def sync_photo_info(path, per_household, photos_root):
     """photo-info.csv has one row per photo (by file name): who's in it and, optionally, its moment.
-    New photos are added with the household's people filled in; existing rows are never changed."""
+    If the same file name is a different photo in two folders (say, two households' "1.jpg"),
+    each gets its own "folder/name" row. New photos are added with the household's people filled in;
+    existing rows are never changed."""
     rows = read_csv(path) if path.exists() else []
     known = {r.get('photo', '') for r in rows}
-    people_for = {}
+    people_for, sizes = {}, {}
     for r, photos in per_household:
         names = [n.strip() for n in re.split(r'[;,]', r.get('people', '')) if n.strip()]
         for f in photos:
-            people_for.setdefault(f.name, [])
-            people_for[f.name] += [n for n in names if n not in people_for[f.name]]
-    added = [{'photo': name, 'people': ', '.join(people), 'moment': '', 'featured': ''}
-             for name, people in people_for.items() if name not in known]
+            sizes.setdefault(f.name, set()).add(f.stat().st_size)
+            key = info_key(f, photos_root)
+            for k in (f.name, key):
+                people_for.setdefault(k, [])
+                people_for[k] += [n for n in names if n not in people_for[k]]
+    wanted = set()
+    for k in people_for:
+        if '/' in k:
+            name = k.split('/', 1)[1]
+            if len(sizes[name]) > 1 and k not in known:
+                wanted.add(k)               # same name, different photos: one row per folder
+        elif len(sizes[k]) == 1 and k not in known and not any(q.endswith('/' + k) for q in known):
+            wanted.add(k)
+    added = [{'photo': k, 'people': ', '.join(people_for[k]), 'moment': '', 'featured': ''} for k in sorted(wanted)]
     old_header = not rows or 'featured' not in rows[0]
     if added or not path.exists() or old_header:
         write_csv(path, ['photo', 'people', 'moment', 'featured'], rows + added)
@@ -366,16 +389,19 @@ def photographer(path):
         return ''
 
 
-def feature_rank(src, info):
-    """Priority among the big photos (lower shows first), or None if the photo isn't featured."""
-    choice = (info or {}).get(src.name, {}).get('featured', '').strip().lower()
+def feature_rank(src, row):
+    """(priority among the big photos, lower shows first; whether it takes a whole row),
+    or (None, False) if the photo isn't featured."""
+    choice = row.get('featured', '').strip().lower()
+    wide = 'wide' in choice
+    choice = choice.replace('wide', '').strip()
     if choice.isdigit() and int(choice) > 0:
-        return int(choice)
-    if choice in ('yes', 'y', 'true', 'x'):
-        return 1000
+        return int(choice), wide
+    if choice in ('yes', 'y', 'true', 'x') or (wide and not choice):
+        return 1000, wide
     if choice in ('no', 'n', 'false', '0'):
-        return None
-    return 1000 if photographer(src) in FEATURED_ARTISTS else None
+        return None, False
+    return (1000, wide) if photographer(src) in FEATURED_ARTISTS else (None, False)
 
 
 def detected_line(row):
@@ -392,11 +418,13 @@ def detected_line(row):
     return f'Every photo listed below detected {who}.'
 
 
-def build_household(row, photos, out_dir, template, info=None, moments=()):
+def build_household(row, photos, out_dir, template, info=None, moments=(), photos_root=None):
     """Writes one household's page. Returns the set of files it owns."""
     owned = set()
     items = []
-    rank = {src: feature_rank(src, info) for src in photos}
+    meta_of = {src: info_for(src, info, photos_root) for src in photos}
+    feat = {src: feature_rank(src, meta_of[src]) for src in photos}
+    rank = {src: feat[src][0] for src in photos}
     # featured photos first, by priority; within a priority (and for the rest) still by date
     photos = sorted(photos, key=lambda s: (rank[s] is None, rank[s] or 0))
     featured = {src: rank[src] is not None for src in photos}
@@ -439,7 +467,7 @@ def build_household(row, photos, out_dir, template, info=None, moments=()):
 
         kind = 'gif' if ext == '.gif' else 'photo'   # drives the All / Photos / GIFs / Videos tabs
         # side panel: moment (from photo-info.csv, else moments.csv by time), date without time, people
-        meta = (info or {}).get(src.name, {})
+        meta = meta_of[src]
         taken = date_taken(src)
         people = [n.strip() for n in re.split(r'[;,]', meta.get('people', '')) if n.strip()]
         items.append({'thumb': f'thumbs/{thumb.name}', 'view': view_url, 'full': f'full/{name}', 'name': name,
@@ -448,7 +476,7 @@ def build_household(row, photos, out_dir, template, info=None, moments=()):
                       'date': taken[:10].replace(':', '-') if taken else '',
                       'people': people,
                       'featured': featured[src],
-                      'wide': rank[src] == 1})
+                      'wide': featured[src] and feat[src][1]})
 
     message = row['message'] or DEFAULT_MESSAGE
     page = (template
@@ -543,13 +571,13 @@ def cmd_build(p, args):
 
     lists = [(r, list_photos(photo_folder(p, r))) for r in rows]
     moments = load_moments(p['moments'])
-    info = sync_photo_info(p['info'], [(r, ph) for r, ph in lists if ph])
+    info = sync_photo_info(p['info'], [(r, ph) for r, ph in lists if ph], p['photos'])
     for r, photos in lists:
         if not photos:
             empty.append(r)
             continue
         print(f'  {r["slug"]:<32} {len(photos):>4} photo{"" if len(photos) == 1 else "s"}   {r["name"]}')
-        keep |= build_household(r, photos, out_w / r['slug'], template, info, moments)
+        keep |= build_household(r, photos, out_w / r['slug'], template, info, moments, p['photos'])
         published.append(r)
 
     (out_w / '404.html').write_text(NOT_FOUND, encoding='utf-8', newline='\n')
