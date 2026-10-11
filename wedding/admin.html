@@ -181,6 +181,7 @@
       <select id="arr-house" aria-label="Household to arrange"></select>
       <button class="chip" id="mode-photos" type="button" aria-pressed="true">Photos</button>
       <button class="chip" id="mode-tags" type="button" aria-pressed="false">By tag</button>
+      <button class="chip" id="mode-moments" type="button" aria-pressed="false">By time of day</button>
       <button class="btn" id="arr-select" type="button">Select photos</button>
     </div>
     <div class="bulk" id="bulk" hidden>
@@ -196,6 +197,7 @@
     <datalist id="moment-list"></datalist>
     <p class="arr-help" id="help-photos">Drag photos to put them in order. Drag a photo up into <b>Big photos</b> to show it large at the top of the page, or down into <b>Grid</b> to make it normal. <b>Full row</b> makes a big photo take the whole width. Tap a photo to tag it, or use <b>Select photos</b> to tag several at once. On a phone, press and hold a photo for a moment, then move it.</p>
     <p class="arr-help" id="help-tags" hidden>Each block is one tag (a photo goes with its first tag). Drag a block by its <b>≡</b> bar to move all of its photos at once, or drag photos inside a block. Switch back to <b>Photos</b> to see the result, then <b>Save</b>.</p>
+    <p class="arr-help" id="help-moments" hidden>Each block is one time of day. Drag a block by its <b>≡</b> bar to move all of its photos at once (say, Pre-ceremony before Ceremony), or drag photos inside a block. To move a photo to another time of day, tap it and change it. Switch back to <b>Photos</b> to see the result, then <b>Save</b>.</p>
     <div id="arr-sections">
     <div class="arr-section">
       <h2>Big photos <button class="sel-all" type="button" data-list="arr-big" aria-pressed="false" aria-label="Select all big photos" title="Select all"></button></h2>
@@ -496,7 +498,7 @@
       tagData.tags.forEach(function (tg) { var o = document.createElement('option'); o.value = tg; dl.appendChild(o); });
     }
     function saveTags(set) {
-      return post('api/tags', { set: set }).then(function (d) { tagData = d; refreshTags(); if (mode === 'tags') renderGroups(); })
+      return post('api/tags', { set: set }).then(function (d) { tagData = d; refreshTags(); if (mode === 'tags') { groupState = readGroups(); renderGroups(); } })
         .catch(function () { $('arr-status').textContent = 'Couldn’t save that tag. Check your connection and try again.'; });
     }
 
@@ -516,7 +518,10 @@
         });
     }
     function saveMoments(set) {
-      return post('api/moments', { set: set }).then(function (d) { momentOverrides = d.moments; refreshMomentList(); })
+      return post('api/moments', { set: set }).then(function (d) {
+        momentOverrides = d.moments; refreshMomentList();
+        if (mode === 'moments') { groupState = readGroups(); renderGroups(); }
+      })
         .catch(function () { $('arr-status').textContent = 'Couldn’t save the time of day. Check your connection and try again.'; throw new Error('save'); });
     }
     function showMoment() {
@@ -666,11 +671,13 @@
       return { order: ids('arr-big').concat(ids('arr-grid')), big: big };
     }
     var groupState = null;
+    var pendingMode = '';
     function renderGroups() {
       var st = groupState, byId = {}, groups = [], index = {};
+      var none = (pendingMode || mode) === 'moments' ? 'No time of day' : 'No tag';
       arr.photos.forEach(function (p) { byId[p.id] = p; });
       st.order.forEach(function (id) {
-        var g = firstTag(id);
+        var g = (pendingMode || mode) === 'moments' ? momentOf(byId[id]) : firstTag(id);
         if (!(g in index)) { index[g] = groups.length; groups.push({ tag: g, ids: [] }); }
         groups[index[g]].ids.push(id);
       });
@@ -682,12 +689,12 @@
         var wrap = el('div', 'group'); wrap.dataset.tag = g.tag;
         var head = el('div', 'group-head');
         head.appendChild(el('span', 'ghandle', '≡'));
-        head.appendChild(el('span', null, g.tag || 'No tag'));
+        head.appendChild(el('span', null, g.tag || none));
         head.appendChild(el('span', 'gcount', g.ids.length + (g.ids.length === 1 ? ' photo' : ' photos')));
         var sa = el('button', 'sel-all');
         sa.type = 'button'; sa.title = 'Select all';
         sa.setAttribute('aria-pressed', 'false');
-        sa.setAttribute('aria-label', 'Select all in ' + (g.tag || 'No tag'));
+        sa.setAttribute('aria-label', 'Select all in ' + (g.tag || none));
         head.appendChild(sa);
         wrap.appendChild(head);
         var list = el('div', 'arr-list');
@@ -712,9 +719,12 @@
     }
     function setMode(m) {
       if (m === mode) return;
-      if (m === 'tags') {
-        groupState = currentOrder();
+      if (m !== 'photos') {
+        // grouped view (by tag or by time of day); coming from the other grouped view keeps its order
+        groupState = mode === 'photos' ? currentOrder() : readGroups();
+        pendingMode = m;
         renderGroups();
+        pendingMode = '';
       } else {
         // apply the group order to Big photos and the Grid, keeping which photos are big / full row
         var st = readGroups(), byId = {};
@@ -731,22 +741,25 @@
       mode = m;
       $('mode-photos').setAttribute('aria-pressed', String(m === 'photos'));
       $('mode-tags').setAttribute('aria-pressed', String(m === 'tags'));
+      $('mode-moments').setAttribute('aria-pressed', String(m === 'moments'));
       $('arr-sections').hidden = m !== 'photos';
-      $('arr-groups').hidden = m !== 'tags';
+      $('arr-groups').hidden = m === 'photos';
       $('help-photos').hidden = m !== 'photos';
       $('help-tags').hidden = m !== 'tags';
+      $('help-moments').hidden = m !== 'moments';
     }
     $('mode-photos').addEventListener('click', function () { setMode('photos'); });
     $('mode-tags').addEventListener('click', function () { setMode('tags'); });
+    $('mode-moments').addEventListener('click', function () { setMode('moments'); });
 
     $('arr-house').addEventListener('change', function () {
       if (arr.dirty && !confirm('You have unsaved changes for this household. Switch anyway and lose them?')) { this.value = arr.slug; return; }
       setSelecting(false);
-      if (mode === 'tags') { setMode('photos'); }
+      if (mode !== 'photos') { setMode('photos'); }
       loadHouse(this.value);
     });
     $('arr-save').addEventListener('click', function () {
-      if (mode === 'tags') setMode('photos');
+      if (mode !== 'photos') setMode('photos');
       var big = {};
       Array.prototype.forEach.call($('arr-big').children, function (t) { big[t.dataset.id] = t.classList.contains('wide') ? 'wide' : 'big'; });
       $('arr-save').disabled = true;
@@ -761,7 +774,7 @@
         .catch(function () { $('arr-status').textContent = 'Couldn’t save. Check your connection and try again.'; })
         .then(function () { $('arr-save').disabled = false; });
     });
-    $('arr-undo').addEventListener('click', function () { if (mode === 'tags') setMode('photos'); loadHouse(arr.slug); });
+    $('arr-undo').addEventListener('click', function () { if (mode !== 'photos') setMode('photos'); loadHouse(arr.slug); });
     $('arr-reset').addEventListener('click', function () {
       if (!confirm('Go back to the default order for this household? Your saved order for it will be removed.')) return;
       post('api/arrange', { slug: arr.slug, reset: true }).then(function () { return loadHouse(arr.slug); })
