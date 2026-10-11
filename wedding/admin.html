@@ -253,7 +253,7 @@
     function size(b) {
       if (b >= 1073741824) return (b / 1073741824).toFixed(2) + ' GB';
       if (b >= 1048576) return (b / 1048576).toFixed(1) + ' MB';
-      return Math.max(1, Math.round(b / 1024)) + ' KB';
+      return b ? Math.max(1, Math.round(b / 1024)) + ' KB' : '0 KB';
     }
     function when(iso) {
       return new Date(iso).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
