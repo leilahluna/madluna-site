@@ -188,6 +188,8 @@
       <span id="bulk-count">0 selected</span>
       <input id="bulk-tag" list="tag-list" placeholder="Tag for the selected photos" autocomplete="off">
       <button class="btn primary" id="bulk-add" type="button">Add tag</button>
+      <button class="btn" id="bulk-remove" type="button">Remove tag</button>
+      <button class="btn" id="bulk-clear-tags" type="button">Clear all tags</button>
       <input id="bulk-moment" list="moment-list" placeholder="Time of day for the selected photos" autocomplete="off">
       <button class="btn primary" id="bulk-moment-set" type="button">Set time of day</button>
       <button class="btn" id="bulk-done" type="button">Done</button>
@@ -662,6 +664,37 @@
       });
     }
     $('bulk-add').addEventListener('click', bulkAdd);
+    // take one tag (typed or picked) off every selected photo that has it
+    $('bulk-remove').addEventListener('click', function () {
+      var tg = $('bulk-tag').value.trim(), sel = selectedIds();
+      if (!sel.length) return;
+      if (!tg) { $('arr-status').textContent = 'Type or pick the tag to remove in the tag box first.'; $('bulk-tag').focus(); return; }
+      var set = {}, had = 0;
+      sel.forEach(function (id) {
+        var cur = tagData.photos[id] || [];
+        var l = cur.filter(function (o) { return o.toLowerCase() !== tg.toLowerCase(); });
+        if (l.length !== cur.length) { had++; set[id] = l; }
+      });
+      if (!had) { $('arr-status').textContent = 'None of the selected photos have the tag “' + tg + '”.'; return; }
+      saveTags(set).then(function () {
+        $('arr-status').textContent = 'Removed “' + tg + '” from ' + had + (had === 1 ? ' photo' : ' photos') +
+          (had < sel.length ? ' (' + (sel.length - had) + ' didn’t have it).' : '.');
+        $('bulk-tag').value = '';
+        setSelecting(false);
+      });
+    });
+    // every tag off every selected photo
+    $('bulk-clear-tags').addEventListener('click', function () {
+      var sel = selectedIds().filter(function (id) { return (tagData.photos[id] || []).length; });
+      if (!sel.length) { $('arr-status').textContent = 'None of the selected photos have any tags.'; return; }
+      if (!confirm('Remove all tags from ' + sel.length + (sel.length === 1 ? ' photo' : ' photos') + '? Their time of day stays as it is.')) return;
+      var set = {};
+      sel.forEach(function (id) { set[id] = []; });
+      saveTags(set).then(function () {
+        $('arr-status').textContent = 'Cleared the tags from ' + sel.length + (sel.length === 1 ? ' photo.' : ' photos.');
+        setSelecting(false);
+      });
+    });
     $('bulk-tag').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); bulkAdd(); } });
 
     // ===== "By tag": one block per first tag; drag blocks to move whole groups =====
