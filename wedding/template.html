@@ -284,6 +284,19 @@
       PHOTOS.forEach(function (p) { if (byId[p.id]) { p.featured = false; p.wide = false; out.push(p); } });
       PHOTOS = out.filter(function (p) { return p.featured; }).concat(out.filter(function (p) { return !p.featured; }));
     })();
+    // No saved order: regular photos follow the usual order of the day (professional shots stay on top).
+    // A stable sort, so photos with the same time of day keep their order.
+    (function () {
+      if (ARRANGE && ARRANGE.order) return;
+      var ORDER = {{MOMENT_ORDER_JSON}}.map(function (m) { return m.toLowerCase(); });
+      function rank(p) { var k = ORDER.indexOf((p.moment || '').toLowerCase()); return k < 0 ? ORDER.length : k; }
+      var feat = PHOTOS.filter(function (p) { return p.featured; });
+      var rest = PHOTOS.filter(function (p) { return !p.featured; })
+        .map(function (p, i) { return { p: p, i: i }; })
+        .sort(function (a, b) { return rank(a.p) - rank(b.p) || a.i - b.i; })
+        .map(function (x) { return x.p; });
+      PHOTOS = feat.concat(rest);
+    })();
     var BATCH_SIZE = {{BATCH_SIZE}};
     var SHOW_TABS = {{SHOW_TABS}};
     var MAX_UPLOAD_MB = {{MAX_UPLOAD_MB}};

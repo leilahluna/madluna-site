@@ -63,7 +63,10 @@ FEATURED_ARTISTS = []    # e.g. ["Verita's Eye"]
 FEATURED_TITLE = 'Professional shots'
 FEATURED_CREDIT = "Photos by Verita's Eye"
 SHOW_TABS = False
-DEFAULT_MOMENT = 'Reception'   # time of day for any photo not covered by moments.csv or set on the admin page        # All / Photos / GIFs / Videos sorting above the photos
+DEFAULT_MOMENT = 'Reception'
+# the usual order of the day: pages without a saved order list their regular photos this way, and the admin
+# "By time of day" view starts its blocks in it (any other time of day goes after these)
+MOMENT_ORDER = ['Getting ready', 'Pre-ceremony', 'Ceremony', 'Post-ceremony', 'Reception']   # time of day for any photo not covered by moments.csv or set on the admin page        # All / Photos / GIFs / Videos sorting above the photos
 FULL_MAX_MB = 24         # Cloudflare won't serve files over 25 MiB; bigger photos get re-saved (same size in pixels)
 MAX_UPLOAD_MB = 4096     # biggest single file a guest can send; must match MAX_FILE in worker.js (big ones go in pieces)
 UPLOAD_BUCKET = 'madluna-wedding-uploads'   # must match r2_buckets in wrangler.jsonc
@@ -494,6 +497,7 @@ def build_household(row, photos, out_dir, template, info=None, moments=(), photo
             .replace('{{FEATURED_TITLE}}', html.escape(FEATURED_TITLE))
             .replace('{{FEATURED_CREDIT}}', html.escape(FEATURED_CREDIT))
             .replace('{{SHOW_TABS}}', 'true' if SHOW_TABS else 'false')
+            .replace('{{MOMENT_ORDER_JSON}}', json.dumps(MOMENT_ORDER))
             .replace('{{MAX_UPLOAD_MB}}', str(MAX_UPLOAD_MB))
             .replace('{{ZIP_NAME_JSON}}', json.dumps(f'{FILE_PREFIX}-photos.zip'))
             .replace('{{PHOTOS_JSON}}', json.dumps(items, separators=(',', ':')).replace('</', '<\\/')))
@@ -554,7 +558,7 @@ def write_worker_config(p, published):
                                 'Open my photos',
                                 '<p class="help">Can\'t find it? <a href="/contact/">Let us know</a> and we\'ll sort it out.</p>'),
         'adminLoginHtml': login_page('Guest uploads', 'For Merrick &amp; Leilah only.', 'Open', ''),
-        'adminHtml': (HERE / 'admin.html').read_text(encoding='utf-8'),
+        'adminHtml': (HERE / 'admin.html').read_text(encoding='utf-8').replace('{{MOMENT_ORDER_JSON}}', json.dumps(MOMENT_ORDER)),
         'households': households,
     }
     p['generated'].parent.mkdir(parents=True, exist_ok=True)

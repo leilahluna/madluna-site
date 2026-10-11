@@ -506,6 +506,11 @@
 
     // ===== time of day =====
     var momentOverrides = {};
+    var MOMENT_ORDER = {{MOMENT_ORDER_JSON}};   // filled in by build.py
+    function momentRank(m) {
+      var k = MOMENT_ORDER.map(function (x) { return x.toLowerCase(); }).indexOf((m || '').toLowerCase());
+      return k < 0 ? MOMENT_ORDER.length : k;
+    }
     function autoMoment(p) { return p.moment || ''; }   // worked out at build time from when it was taken
     function momentOf(p) { return momentOverrides[p.id] || autoMoment(p); }
     function refreshMomentList() {
@@ -718,7 +723,14 @@
         groups[index[g]].ids.push(id);
       });
       // untagged photos last
-      groups.sort(function (a, b) { return (a.tag === '') - (b.tag === ''); });
+      if (skipBig) {
+        // time of day: blocks start in the usual order of the day; others after, in the order they appear
+        groups = groups.map(function (g, k) { return { g: g, k: k }; })
+          .sort(function (a, b) { return momentRank(a.g.tag) - momentRank(b.g.tag) || (a.g.tag === '') - (b.g.tag === '') || a.k - b.k; })
+          .map(function (x) { return x.g; });
+      } else {
+        groups.sort(function (a, b) { return (a.tag === '') - (b.tag === ''); });
+      }
       groupSortables.forEach(function (s) { s.destroy(); }); groupSortables = [];
       var box = $('arr-groups'); box.innerHTML = '';
       groups.forEach(function (g, k) {
