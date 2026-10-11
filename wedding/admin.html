@@ -152,14 +152,14 @@
 </head>
 <body>
   <header class="wrap">
-    <h1>Guest uploads</h1>
+    <h1>Arrange photos</h1>
     <nav class="tabs" role="tablist">
-      <button type="button" role="tab" id="tab-uploads" aria-selected="true">Uploads</button>
-      <button type="button" role="tab" id="tab-arrange" aria-selected="false">Arrange photos</button>
+      <button type="button" role="tab" id="tab-arrange" aria-selected="true">Arrange photos</button>
+      <button type="button" role="tab" id="tab-uploads" aria-selected="false">Uploads</button>
     </nav>
   </header>
 
-  <section class="wrap" id="view-uploads">
+  <section class="wrap" id="view-uploads" hidden>
     <p class="summary" id="summary">Loading…</p>
     <div class="meter" title="Share of Cloudflare's free 10 GB"><span id="meter"></span></div>
     <div class="controls">
@@ -175,7 +175,7 @@
     <p class="empty" id="empty" hidden>Nothing here yet. Photos and videos guests send will show up here.</p>
   </section>
 
-  <section class="wrap" id="view-arrange" hidden>
+  <section class="wrap" id="view-arrange">
     <div class="arr-top">
     <div class="controls">
       <select id="arr-house" aria-label="Household to arrange"></select>
@@ -787,6 +787,7 @@
     }
     $('tab-uploads').addEventListener('click', function () { showTab('uploads'); });
     $('tab-arrange').addEventListener('click', function () { showTab('arrange'); });
+    showTab('arrange');   // Arrange photos is the first tab; uploads still load in the background
   })();
   </script>
 </body>
