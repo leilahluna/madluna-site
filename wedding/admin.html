@@ -199,7 +199,7 @@
     <datalist id="moment-list"></datalist>
     <p class="arr-help" id="help-photos">Drag photos to put them in order. Drag a photo up into <b>Big photos</b> to show it large at the top of the page, or down into <b>Grid</b> to make it normal. <b>Full row</b> makes a big photo take the whole width. Tap a photo to tag it, or use <b>Select photos</b> to tag several at once. On a phone, press and hold a photo for a moment, then move it.</p>
     <p class="arr-help" id="help-tags" hidden>Each block is one tag (a photo goes with its first tag). Drag a block by its <b>≡</b> bar to move all of its photos at once, or drag photos inside a block. Switch back to <b>Photos</b> to see the result, then <b>Save</b>.</p>
-    <p class="arr-help" id="help-moments" hidden>Each block is one time of day. Drag a block by its <b>≡</b> bar to move all of its photos at once (say, Pre-ceremony before Ceremony), or drag photos inside a block. To move a photo to another time of day, tap it and change it. Switch back to <b>Photos</b> to see the result, then <b>Save</b>.</p>
+    <p class="arr-help" id="help-moments" hidden>Each block is one time of day, for the Grid photos only: big photos keep their own place and order and aren't sorted here. Drag a block by its <b>≡</b> bar to move all of its photos at once (say, Pre-ceremony before Ceremony), or drag photos inside a block. To move a photo to another time of day, tap it and change it. Switch back to <b>Photos</b> to see the result, then <b>Save</b>.</p>
     <div id="arr-sections">
     <div class="arr-section">
       <h2>Big photos <button class="sel-all" type="button" data-list="arr-big" aria-pressed="false" aria-label="Select all big photos" title="Select all"></button></h2>
@@ -709,7 +709,10 @@
       var st = groupState, byId = {}, groups = [], index = {};
       var none = (pendingMode || mode) === 'moments' ? 'No time of day' : 'No tag';
       arr.photos.forEach(function (p) { byId[p.id] = p; });
+      // by time of day leaves big / full-row photos out: they stay where they are in Big photos
+      var skipBig = (pendingMode || mode) === 'moments';
       st.order.forEach(function (id) {
+        if (skipBig && st.big[id]) return;
         var g = (pendingMode || mode) === 'moments' ? momentOf(byId[id]) : firstTag(id);
         if (!(g in index)) { index[g] = groups.length; groups.push({ tag: g, ids: [] }); }
         groups[index[g]].ids.push(id);
@@ -748,6 +751,10 @@
     }
     function readGroups() {
       var order = Array.prototype.map.call(document.querySelectorAll('#arr-groups .tile'), function (t) { return t.dataset.id; });
+      if (mode === 'moments') {
+        // big photos weren't in the blocks; put them back first, in the order they had
+        order = groupState.order.filter(function (id) { return groupState.big[id]; }).concat(order);
+      }
       return { order: order, big: groupState.big };
     }
     function setMode(m) {
