@@ -22,7 +22,7 @@ All commands run in the **VS Code terminal**, from this `wedding` folder.
    - `message`: optional, replaces the default note on their page.
    - `slug`: leave empty, step 2 fills it in.
    - `folder`: optional. If a household's photos are in a folder with its own name (like `photos/bella&chloe`), put that name here. Leave it empty to use `photos/<slug>/`.
-   - `password`: leave empty, step 2 fills it in (like `maple 482`). Capitals, spaces and dashes don't matter when guests type it.
+   - `password`: leave empty, step 2 fills it in with a random code like `KTRV47` (4 letters, 2 numbers, no look-alike characters or vowels). Capitals, spaces and dashes don't matter when guests type it.
 
 2. **Make slugs, passwords and folders.**
    ```

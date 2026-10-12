@@ -71,21 +71,11 @@ FULL_MAX_MB = 24         # Cloudflare won't serve files over 25 MiB; bigger phot
 MAX_UPLOAD_MB = 4096     # biggest single file a guest can send; must match MAX_FILE in worker.js (big ones go in pieces)
 UPLOAD_BUCKET = 'madluna-wedding-uploads'   # must match r2_buckets in wrangler.jsonc
 
-# passwords are one of these words plus 3 digits, e.g. "maple 482": easy to read off a card and type
-PASSWORD_WORDS = """
-acorn amber apple aspen autumn bagel bamboo banjo basil beach berry birch biscuit bloom blossom
-breeze brook bubble butter button cabin cactus candle canoe canyon cedar cherry cider cinnamon clover
-cobalt cocoa comet coral cosmos cotton cozy crane cricket crystal daisy dandelion dawn dazzle dolphin
-dream ember falcon fern fiddle firefly flamingo forest fossil fox garden ginger glacier glow gumdrop
-harbor harvest hazel heather hello honey horizon island ivory jasmine jelly jolly juniper kettle kiwi
-koala lagoon lantern lark lemon lilac lily linen lotus lucky lullaby magnolia mango maple marble
-meadow melody mint misty mitten moonbeam mossy muffin nectar nutmeg oasis ocean olive orbit orchid
-otter paddle pancake panda papaya parade peach pebble pepper petal piano pickle pine pistachio plum
-poppy pretzel puffin pumpkin quartz quill rainbow raven ribbon river robin rocket rosy ruby saffron
-sage sailor sapphire seashell sequoia shadow silver sky snowflake sparrow spruce starlight sugar
-summit sunny sunset swan tango teacup thistle thunder tiger toffee topaz tulip tundra turtle twinkle
-valley velvet violet waffle walnut willow winter wren yellow zephyr zinnia
-""".split()
+# passwords are random codes like "KTRV47": 4 letters then 2 digits, leaving out look-alikes
+# (no I, L, O or S; no 0, 1 or 5) so nobody types the wrong one off a printed sticker, and vowels
+# (no A, E, U, Y) so the letters can't accidentally spell a word
+PASSWORD_LETTERS = 'BCDFGHJKMNPQRTVWXZ'
+PASSWORD_DIGITS = '2346789'
 
 IMAGE_EXTS = {'.jpg', '.jpeg', '.png', '.heic', '.heif', '.webp', '.gif'}
 SLUG_RE = re.compile(r'^[a-z0-9]+(?:-[a-z0-9]+)*$')
@@ -157,7 +147,7 @@ def make_slug(name, taken):
 
 
 def make_password():
-    return f'{secrets.choice(PASSWORD_WORDS)} {secrets.randbelow(900) + 100}'
+    return ''.join(secrets.choice(PASSWORD_LETTERS) for _ in range(4)) + ''.join(secrets.choice(PASSWORD_DIGITS) for _ in range(2))
 
 
 def normalize_password(pw):
@@ -526,8 +516,7 @@ def load_secrets(path):
     """
     s = json.loads(path.read_text(encoding='utf-8')) if path.exists() else {}
     made = {k: v for k, v in (('secret', secrets.token_hex(32)), ('admin_token', secrets.token_urlsafe(32)),
-                              ('admin_password', f'{secrets.choice(PASSWORD_WORDS)}-{secrets.choice(PASSWORD_WORDS)}-'
-                                                 f'{secrets.randbelow(9000) + 1000}')) if k not in s}
+                              ('admin_password', make_password() + '-' + make_password())) if k not in s}
     if made:
         s.update(made)
         path.write_text(json.dumps(s, indent=2), encoding='utf-8')
