@@ -798,8 +798,8 @@ def make_sticker_image(url, r, w_mm, h_mm, show_name, show_pw, sizes=None):
 
 STICKER_LOGO = 'sticker-logo.png'   # the M + L logo (black on white) put in the middle of each QR code
 PRINTER_DOTS_PER_MM = 8              # 203 dpi thermal head (Katasymbol T50M Pro): stickers are drawn dot-for-dot
-STICKER_MARGIN_MM = 1.2              # blank border all round; the printer can't reach the label's very edge
-QR_QUIET_MODULES = 1                 # white ring round the code, in squares (the white label adds more)
+STICKER_MARGIN_MM = 1.0              # blank border all round; at 0.5 mm the printer clipped the code's edge
+QR_QUIET_MODULES = 0                 # no extra white ring: the margin and the white label do that job
 # Where this printer really lands, measured with a "--calibrate" print. Whole dots, applied by shifting only
 # (never scaling, which blurs the QR squares). dx: + moves right, dy: + moves down, as the image looks on screen.
 STICKER_OFFSET_MM = {'dx': 0.0, 'dy': 0.0}
@@ -816,26 +816,35 @@ def qr_for(url):
     return qr
 
 
-def qr_image_with_logo(qr, box, logo_turn=0):
-    """The code at `box` dots per square, with the logo on a white square over its middle ~23%.
+def qr_image_with_logo(qr, size, logo_turn=0):
+    """The code drawn `size` dots across (quiet zone included), with the logo on a white square over its middle
+    ~23%. Squares are whole dots; when `size` doesn't divide evenly they mix two widths (e.g. 7 and 8 dots),
+    which lets the code be any size instead of jumping a whole dot per square.
     logo_turn: degrees counter-clockwise, so the logo stands upright once the sticker is turned to read."""
     from PIL import Image, ImageDraw
     n = qr.modules_count
     q = qr.border
     modules = n + 2 * q
-    qimg = qr.make_image(fill_color='black', back_color='white').convert('1').resize((modules * box,) * 2, Image.NEAREST)
+    edge = [round(i * size / modules) for i in range(modules + 1)]   # dot where each square starts
+    qimg = Image.new('1', (edge[-1], edge[-1]), 1)
+    d = ImageDraw.Draw(qimg)
+    for r, row in enumerate(qr.modules):
+        for c, dark in enumerate(row):
+            if dark:
+                d.rectangle([edge[c + q], edge[r + q], edge[c + q + 1] - 1, edge[r + q + 1] - 1], fill=0)
     logo_file = HERE / STICKER_LOGO
     if logo_file.exists():
         side = round(n * 0.23) | 1
         m0 = q + (n - side) // 2
-        ImageDraw.Draw(qimg).rectangle([m0 * box, m0 * box, (m0 + side) * box - 1, (m0 + side) * box - 1], fill=1)
+        d.rectangle([edge[m0], edge[m0], edge[m0 + side] - 1, edge[m0 + side] - 1], fill=1)
         lg = Image.open(logo_file).convert('L')
         if logo_turn:
             lg = lg.rotate(logo_turn, expand=True, fillcolor=255)
-        inner = (side - 2) * box
+        x0, x1 = edge[m0 + 1], edge[m0 + side - 1]
+        inner = x1 - x0
         lg.thumbnail((inner, inner), Image.LANCZOS)
         lg = lg.point(lambda v: 0 if v < 140 else 255).convert('1')
-        qimg.paste(lg, ((m0 + 1) * box + (inner - lg.width) // 2, (m0 + 1) * box + (inner - lg.height) // 2))
+        qimg.paste(lg, (x0 + (inner - lg.width) // 2, x0 + (inner - lg.height) // 2))
     return qimg
 
 
@@ -848,9 +857,9 @@ def make_password_sticker(url, r, w_mm, h_mm, pw_size=None):
     W, H = round(w_mm * k), round(h_mm * k)      # landscape: e.g. 320 x 240 dots for 40 x 30 mm
     margin = round(STICKER_MARGIN_MM * k)
     qr = qr_for(url)
-    box = (H - 2 * margin) // (qr.modules_count + 2 * qr.border)   # whole dots per square
-    # the sticker is read upright (turned a quarter clockwise), so turn the logo the other way to match the text
-    qimg = qr_image_with_logo(qr, box, logo_turn=90)
+    # the code fills the label's height inside the margin; the sticker is read upright (turned a quarter
+    # clockwise), so turn the logo the other way to match the text
+    qimg = qr_image_with_logo(qr, H - 2 * margin, logo_turn=90)
     # password, drawn upright then turned to read bottom-to-top beside the code
     text = re.sub(r'[^A-Za-z0-9]', '', r['password']).upper()
     room_w = W - 2 * margin - qimg.width          # space left of the code's width, across
