@@ -46,6 +46,12 @@ All commands run in the **VS Code terminal**, from this `wedding` folder.
    - `--sheet 22806` (default) is 2" square labels. `--sheet 22807` is 2" round and `--sheet 5160` is regular address labels. The margins are best guesses, so always check with `--outline` first.
    - `--only the-smiths-k7f2` reprints one sticker, `--skip 5` starts on a part-used sheet, `--no-names` leaves names off the stickers, and `--no-passwords` leaves passwords off (if you'd rather write them on the cards by hand).
 
+   **Label maker instead (e.g. Katasymbol T50M Pro):**
+   ```
+   python build.py labels --sheet labelmaker
+   ```
+   This makes one black-and-white image per household in `stickers/` (private, has the passwords), sized for 40 × 30 mm labels (`--size 50x30` for other rolls). Print them from the label maker's phone app as an image, filling the whole label.
+
 6. **Put it live** (only once everything is checked):
    ```
    python build.py deploy

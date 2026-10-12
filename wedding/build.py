@@ -99,6 +99,7 @@ def paths(data_dir):
         'photos': d / 'photos',
         'dist': d / 'dist',
         'pdf': d / 'qr-stickers.pdf',
+        'stickers': d / 'stickers',
         'moments': d / 'moments.csv',
         'info': d / 'photo-info.csv',
         'secrets': d / '.secrets.json',
@@ -708,7 +709,111 @@ def draw_label(c, sheet, x, y, url, r, show_name, show_pw, outline):
         draw_lines(c, lines, tx, y + h / 2 + block_height(lines) / 2, x + w - 0.1 * inch - tx, centred=False)
 
 
+# ===== single stickers for a label maker (e.g. the Katasymbol T50M Pro, printed from its phone app) =====
+
+STICKER_PX_PER_MM = 16    # twice a 203 dpi thermal head (8 dots/mm), so the app can scale it down cleanly
+
+
+def sticker_font(names, size):
+    from PIL import ImageFont
+    for n in names:
+        for folder in ('C:/Windows/Fonts', '/usr/share/fonts/truetype/dejavu', '/Library/Fonts'):
+            try:
+                return ImageFont.truetype(f'{folder}/{n}', size)
+            except OSError:
+                pass
+    return ImageFont.load_default()
+
+
+def fit(draw, text, names, size, max_w):
+    while size > 8:
+        f = sticker_font(names, size)
+        if draw.textlength(text, font=f) <= max_w:
+            return f
+        size -= 1
+    return sticker_font(names, size)
+
+
+def make_sticker_image(url, r, w_mm, h_mm, show_name, show_pw, sizes=None):
+    """One black-and-white sticker: QR code on the left, words on the right. Returns (image, text sizes used);
+    pass the smallest sizes across all stickers back in as `sizes` so every sticker's text matches."""
+    import qrcode
+    from PIL import Image, ImageDraw
+    k = STICKER_PX_PER_MM
+    W, H = round(w_mm * k), round(h_mm * k)
+    img = Image.new('1', (W, H), 1)
+    d = ImageDraw.Draw(img)
+    pad = round(1.5 * k)
+
+    # QR: whole pixels per module (sharp edges on a thermal printer), 2-module quiet zone (the label is white anyway)
+    qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_M, border=2, box_size=1)
+    qr.add_data(url)
+    qr.make(fit=True)
+    modules = qr.modules_count + 4
+    box = (H - 2 * pad) // modules
+    qimg = qr.make_image(fill_color='black', back_color='white').convert('1').resize((modules * box,) * 2, Image.NEAREST)
+    qy = (H - qimg.height) // 2
+    img.paste(qimg, (pad // 2, qy))
+
+    # words, stacked and centred vertically in the space to the right of the code
+    x0 = pad // 2 + qimg.width + round(0.5 * k)
+    max_w = W - x0 - round(1.0 * k)
+    serif_i, sans, sans_b = ['georgiai.ttf', 'DejaVuSerif-Italic.ttf'], ['arial.ttf', 'DejaVuSans.ttf'], ['arialbd.ttf', 'DejaVuSans-Bold.ttf']
+    lines = [('Scan for your', serif_i, 3.4), ('photos from', serif_i, 3.4), ('our day', serif_i, 3.4)]
+    if show_pw:
+        lines += [(None, None, 1.2), ('Password:', sans, 2.8), (r['password'], sans_b, 4.2)]
+    if show_name:
+        lines += [(None, None, 1.0), (r['name'], sans, 2.6)]
+    # lines in the same style share one size (the one that fits the longest), so "our day" isn't bigger
+    shared = {}
+    for text, font, mm in lines:
+        if text:
+            key = (tuple(font), mm)
+            shared[key] = min(shared.get(key, 10 ** 6), fit(d, text, font, round(mm * k), max_w).size)
+    if sizes:
+        shared = {key: min(v, sizes.get(key, v)) for key, v in shared.items()}
+    laid = []
+    for text, font, mm in lines:
+        if text is None:
+            laid.append((None, None, round(mm * k)))
+            continue
+        f = sticker_font(font, shared[(tuple(font), mm)])
+        top, bottom = f.getbbox('Ag')[1], f.getbbox('Ag')[3]
+        laid.append((text, f, bottom - top + round(0.35 * k)))
+    total = sum(h for _, _, h in laid)
+    y = (H - total) // 2
+    for text, f, h in laid:
+        if text:
+            d.text((x0, y - f.getbbox('Ag')[1]), text, font=f, fill=0)
+        y += h
+    return img, shared
+
+
+def cmd_label_images(p, args):
+    w_mm, h_mm = (float(v) for v in args.size.lower().split('x'))
+    rows = read_households(p['csv'])
+    if args.only:
+        rows = [r for r in rows if r['slug'] in args.only]
+    out = p['stickers']
+    out.mkdir(parents=True, exist_ok=True)
+    dpi = STICKER_PX_PER_MM * 25.4
+    opts = (w_mm, h_mm, not args.no_names, not args.no_passwords)
+    # first pass: the text size each sticker could use; then use the smallest everywhere so they all match
+    sizes = {}
+    for r in read_households(p['csv']):
+        for key, v in make_sticker_image(f'{SITE}/w/{r["slug"]}', r, *opts)[1].items():
+            sizes[key] = min(v, sizes.get(key, v))
+    for r in rows:
+        img, _ = make_sticker_image(f'{SITE}/w/{r["slug"]}', r, *opts, sizes=sizes)
+        safe = re.sub(r'[^\w&-]+', '-', r['name']).strip('-') or r['slug']
+        img.save(out / f'{safe}.png', dpi=(dpi, dpi))
+        print(f'  {out.name}/{safe}.png   {r["name"]}')
+    print(f'made {len(rows)} sticker image(s), {w_mm:g} x {h_mm:g} mm each, in {out}')
+
+
 def cmd_labels(p, args):
+    if args.sheet == 'labelmaker':
+        return cmd_label_images(p, args)
     from reportlab.lib.pagesizes import letter
     from reportlab.lib.units import inch
     from reportlab.pdfgen import canvas
@@ -837,7 +942,9 @@ def main():
     sub.add_parser('slugs', help='fill in missing slugs and make empty photo folders')
     sub.add_parser('build', help='build the guest pages into dist/')
     lp = sub.add_parser('labels', help='make the printable QR sticker PDF')
-    lp.add_argument('--sheet', choices=sorted(SHEETS), default='22806', help='label sheet type (default 22806)')
+    lp.add_argument('--sheet', choices=sorted(SHEETS) + ['labelmaker'], default='22806',
+                    help='label sheet type (default 22806), or "labelmaker" for one image per sticker')
+    lp.add_argument('--size', default='40x30', help='label size in mm for --sheet labelmaker (default 40x30)')
     lp.add_argument('--outline', action='store_true', help='draw label outlines, for test prints on plain paper')
     lp.add_argument('--no-names', action='store_true', help="leave the household's name off each sticker")
     lp.add_argument('--no-passwords', action='store_true', help='leave passwords off (if writing them on the cards by hand)')
