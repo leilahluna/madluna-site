@@ -115,6 +115,13 @@ def read_households(csv_path):
         for k in ('slug', 'name', 'message', 'password', 'folder', 'downloads'):
             r.setdefault(k, '')
     rows = [r for r in rows if r['name'] or r['slug']]
+    # if there's a card-number column, only rows with a card number are households; the rest (notes,
+    # questions) are kept as they are when the sheet is saved again, but otherwise ignored
+    card_col = next((k for k in (rows[0] if rows else {}) if k.strip().lower().startswith('card')), None)
+    _notes_rows.clear()
+    if card_col:
+        _notes_rows.extend(r for r in rows if not r[card_col].strip())
+        rows = [r for r in rows if r[card_col].strip()]
     seen = set()
     for r in rows:
         if r['slug'] in ('admin', '_admin'):
@@ -127,8 +134,12 @@ def read_households(csv_path):
     return rows
 
 
+_notes_rows = []   # rows without a card number, put back after the households when the sheet is saved
+
+
 def write_households(csv_path, rows):
     # keep the sheet's own columns (and their order); utf-8-sig so Excel shows accents right
+    rows = list(rows) + [r for r in _notes_rows if r not in rows]
     fields = list(dict.fromkeys(k for r in rows for k in r))
     with open(csv_path, 'w', newline='', encoding='utf-8-sig') as f:
         w = csv.DictWriter(f, fieldnames=fields)
@@ -401,9 +412,15 @@ def feature_rank(src, row):
     return (1000, wide) if photographer(src) in FEATURED_ARTISTS else (None, False)
 
 
+def greeting_name(name):
+    """'Emily A.' -> 'Emily': the sheet keeps last initials to tell people apart, the page greets by first name."""
+    name = re.sub(r'\s+[A-Z]\.$', '', name.strip())
+    return re.sub(r'^The ', 'the ', name)   # "Hi, the Hartmanns!" reads better than "Hi, The Hartmanns!"
+
+
 def detected_line(row):
     """'Every photo listed below detected either Bella or Chloe (or both!).' from the household's people."""
-    first = [n.split()[0] for n in re.split(r'[;,]', row.get('people', '')) if n.strip()]
+    first = [n.split()[0] for n in re.split(r'[;,&]| and ', row.get('people', '')) if n.strip()]
     if not first:
         return ''
     if len(first) == 1:
@@ -486,7 +503,7 @@ def build_household(row, photos, out_dir, template, info=None, moments=(), photo
 
     message = row['message'] or DEFAULT_MESSAGE
     page = (template
-            .replace('{{HEADLINE}}', html.escape(HEADLINE.format(name=row['name'])))
+            .replace('{{HEADLINE}}', html.escape(HEADLINE.format(name=greeting_name(row['name']))))
             .replace('{{MESSAGE}}', html.escape(message.replace('\\n', '\n')))
             .replace('{{NOTE}}', html.escape(' '.join(x for x in (detected_line(row), NOTE) if x)))
             .replace('{{SIGNOFF}}', html.escape(SIGNOFF))
@@ -948,6 +965,10 @@ def cmd_password_stickers(p, args):
     for r in rows:
         img, _ = make_password_sticker(f'{SITE}/w/{r["slug"]}', r, w_mm, h_mm, size)
         safe = re.sub(r'[^\w&-]+', '-', r['name']).strip('-') or r['slug']
+        # start with the card number when there is one: two households can share a name ("The Widemans")
+        card = next((v for k, v in r.items() if k.strip().lower().startswith('card') and v.strip().isdigit()), '')
+        if card:
+            safe = f'{int(card):03d} {safe}'
         img.save(out / f'{safe} (sideways).png', dpi=(dpi, dpi))
         img.rotate(-90, expand=True).save(out / f'{safe}.png', dpi=(dpi, dpi))
         print(f'  {out.name}/{safe} (sideways).png  (+ upright copy)   {r["name"]}')
