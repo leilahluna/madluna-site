@@ -703,14 +703,25 @@ def draw_label(c, sheet, x, y, url, r, show_name, show_pw, outline):
 STICKER_PX_PER_MM = 16    # twice a 203 dpi thermal head (8 dots/mm), so the app can scale it down cleanly
 
 
+# the password on label-maker stickers: the website's own Plus Jakarta Sans, in Bold (fonts/ in this folder)
+STICKER_FONT = ['fonts/PlusJakartaSans.ttf:Bold', 'arialbd.ttf', 'DejaVuSans-Bold.ttf']
+
+
 def sticker_font(names, size):
+    """First font that loads. "file.ttf:Style" picks a weight from a variable font; plain names come from
+    the system font folders, paths with a folder are relative to this script."""
     from PIL import ImageFont
     for n in names:
-        for folder in ('C:/Windows/Fonts', '/usr/share/fonts/truetype/dejavu', '/Library/Fonts'):
+        name, _, style = n.partition(':')
+        places = [HERE / name] if '/' in name else [f'{folder}/{name}' for folder in ('C:/Windows/Fonts', '/usr/share/fonts/truetype/dejavu', '/Library/Fonts')]
+        for place in places:
             try:
-                return ImageFont.truetype(f'{folder}/{n}', size)
+                f = ImageFont.truetype(str(place), size)
             except OSError:
-                pass
+                continue
+            if style:
+                f.set_variation_by_name(style)
+            return f
     return ImageFont.load_default()
 
 
@@ -796,12 +807,11 @@ def make_password_sticker(url, r, w_mm, h_mm, pw_size=None):
     box = min(W - 2 * pad, H - text_h - pad) // modules
     qimg = qr.make_image(fill_color='black', back_color='white').convert('1').resize((modules * box,) * 2, Image.NEAREST)
     img.paste(qimg, ((W - qimg.width) // 2, pad))
-    text = r['password'].upper()
-    bold = ['arialbd.ttf', 'DejaVuSans-Bold.ttf']
-    size = fit(d, text, bold, round(text_h * 0.62), W - 2 * pad).size
+    text = re.sub(r'[^A-Za-z0-9]', '', r['password']).upper()   # just the code, no spaces: looks like a password
+    size = fit(d, text, STICKER_FONT, round(text_h * 0.62), W - 2 * pad).size
     if pw_size:
         size = min(size, pw_size)
-    f = sticker_font(bold, size)
+    f = sticker_font(STICKER_FONT, size)
     top, bottom = f.getbbox(text)[1], f.getbbox(text)[3]
     area_top = pad + qimg.height
     y = area_top + (H - area_top - (bottom - top)) // 2 - top
@@ -843,8 +853,9 @@ def cmd_password_stickers(p, args):
         rows = [r for r in rows if r['slug'] in args.only]
     out = p['stickers']
     out.mkdir(parents=True, exist_ok=True)
-    for old in out.glob('*.png'):
-        old.unlink()
+    if not args.only:   # a full run starts clean (drops stickers of removed households); --only leaves the rest alone
+        for old in out.glob('*.png'):
+            old.unlink()
     dpi = STICKER_PX_PER_MM * 25.4
     size = min(make_password_sticker(f'{SITE}/w/{r["slug"]}', r, w_mm, h_mm)[1] for r in read_households(p['csv']))
     for r in rows:
