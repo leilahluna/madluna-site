@@ -394,7 +394,7 @@ export default {
 	async fetch(req, env) {
 		const url = new URL(req.url);
 		// QR codes on stickers spell the link in capitals (it makes a smaller, sturdier code): send those to lowercase
-		if (/^\/w\/[^/]*[A-Z]/.test(url.pathname)) {
+		if (/^\/(W\/|w\/[^/]*[A-Z])/.test(url.pathname)) {
 			return Response.redirect(`${url.origin}${url.pathname.toLowerCase()}${url.search}`, 301);
 		}
 		const m = url.pathname.match(/^\/w\/([a-z0-9_-]+)(\/.*)?$/);

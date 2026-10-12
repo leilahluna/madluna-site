@@ -19,7 +19,9 @@
 		{ "binding": "UPLOADS", "bucket_name": "madluna-wedding-uploads" }
 	],
 	"routes": [
-		{ "pattern": "madluna.ca/w/*", "zone_name": "madluna.ca" }
+		{ "pattern": "madluna.ca/w/*", "zone_name": "madluna.ca" },
+		// QR codes spell links in capitals (HTTPS://MADLUNA.CA/W/...); route those here too so they redirect
+		{ "pattern": "madluna.ca/W/*", "zone_name": "madluna.ca" }
 	],
 	// no public *.workers.dev copy of the photos
 	"workers_dev": false,
