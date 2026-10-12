@@ -798,7 +798,8 @@ def make_sticker_image(url, r, w_mm, h_mm, show_name, show_pw, sizes=None):
 
 STICKER_LOGO = 'sticker-logo.png'   # the M + L logo (black on white) put in the middle of each QR code
 PRINTER_DOTS_PER_MM = 8              # 203 dpi thermal head (Katasymbol T50M Pro): stickers are drawn dot-for-dot
-STICKER_MARGIN_MM = 2.0              # blank border all round; the printer can't reach the label's very edge
+STICKER_MARGIN_MM = 1.2              # blank border all round; the printer can't reach the label's very edge
+QR_QUIET_MODULES = 1                 # white ring round the code, in squares (the white label adds more)
 # Where this printer really lands, measured with a "--calibrate" print. Whole dots, applied by shifting only
 # (never scaling, which blurs the QR squares). dx: + moves right, dy: + moves down, as the image looks on screen.
 STICKER_OFFSET_MM = {'dx': 0.0, 'dy': 0.0}
@@ -809,24 +810,28 @@ def qr_for(url):
     so the code has fewer, bigger squares. (The site sends capitalised links to the lowercase page.)
     Highest error correction, so the logo can cover the middle."""
     import qrcode
-    qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_H, border=2, box_size=1)
+    qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_H, border=QR_QUIET_MODULES, box_size=1)
     qr.add_data(url.upper())
     qr.make(fit=True)
     return qr
 
 
-def qr_image_with_logo(qr, box):
-    """The code at `box` dots per square, with the logo on a white square over its middle ~23%."""
+def qr_image_with_logo(qr, box, logo_turn=0):
+    """The code at `box` dots per square, with the logo on a white square over its middle ~23%.
+    logo_turn: degrees counter-clockwise, so the logo stands upright once the sticker is turned to read."""
     from PIL import Image, ImageDraw
     n = qr.modules_count
-    modules = n + 4
+    q = qr.border
+    modules = n + 2 * q
     qimg = qr.make_image(fill_color='black', back_color='white').convert('1').resize((modules * box,) * 2, Image.NEAREST)
     logo_file = HERE / STICKER_LOGO
     if logo_file.exists():
         side = round(n * 0.23) | 1
-        m0 = 2 + (n - side) // 2
+        m0 = q + (n - side) // 2
         ImageDraw.Draw(qimg).rectangle([m0 * box, m0 * box, (m0 + side) * box - 1, (m0 + side) * box - 1], fill=1)
         lg = Image.open(logo_file).convert('L')
+        if logo_turn:
+            lg = lg.rotate(logo_turn, expand=True, fillcolor=255)
         inner = (side - 2) * box
         lg.thumbnail((inner, inner), Image.LANCZOS)
         lg = lg.point(lambda v: 0 if v < 140 else 255).convert('1')
@@ -843,8 +848,9 @@ def make_password_sticker(url, r, w_mm, h_mm, pw_size=None):
     W, H = round(w_mm * k), round(h_mm * k)      # landscape: e.g. 320 x 240 dots for 40 x 30 mm
     margin = round(STICKER_MARGIN_MM * k)
     qr = qr_for(url)
-    box = (H - 2 * margin) // (qr.modules_count + 4)   # whole dots per square
-    qimg = qr_image_with_logo(qr, box)
+    box = (H - 2 * margin) // (qr.modules_count + 2 * qr.border)   # whole dots per square
+    # the sticker is read upright (turned a quarter clockwise), so turn the logo the other way to match the text
+    qimg = qr_image_with_logo(qr, box, logo_turn=90)
     # password, drawn upright then turned to read bottom-to-top beside the code
     text = re.sub(r'[^A-Za-z0-9]', '', r['password']).upper()
     room_w = W - 2 * margin - qimg.width          # space left of the code's width, across
