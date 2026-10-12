@@ -789,7 +789,40 @@ def make_sticker_image(url, r, w_mm, h_mm, show_name, show_pw, sizes=None):
     return img, shared
 
 
+def make_password_sticker(url, r, w_mm, h_mm, pw_size=None):
+    """Upright sticker: big QR code on top, the password in capitals underneath, nothing else.
+    Returns (image, password text size); pass the smallest size back in as pw_size so all stickers match."""
+    import qrcode
+    from PIL import Image, ImageDraw
+    k = STICKER_PX_PER_MM
+    W, H = round(w_mm * k), round(h_mm * k)
+    img = Image.new('1', (W, H), 1)
+    d = ImageDraw.Draw(img)
+    pad = round(1.0 * k)
+    qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_M, border=2, box_size=1)
+    qr.add_data(url)
+    qr.make(fit=True)
+    modules = qr.modules_count + 4
+    text_h = round(H * 0.24)                       # bottom quarter or so for the password
+    box = min(W - 2 * pad, H - text_h - pad) // modules
+    qimg = qr.make_image(fill_color='black', back_color='white').convert('1').resize((modules * box,) * 2, Image.NEAREST)
+    img.paste(qimg, ((W - qimg.width) // 2, pad))
+    text = r['password'].upper()
+    bold = ['arialbd.ttf', 'DejaVuSans-Bold.ttf']
+    size = fit(d, text, bold, round(text_h * 0.62), W - 2 * pad).size
+    if pw_size:
+        size = min(size, pw_size)
+    f = sticker_font(bold, size)
+    top, bottom = f.getbbox(text)[1], f.getbbox(text)[3]
+    area_top = pad + qimg.height
+    y = area_top + (H - area_top - (bottom - top)) // 2 - top
+    d.text(((W - d.textlength(text, font=f)) // 2, y), text, font=f, fill=0)
+    return img, size
+
+
 def cmd_label_images(p, args):
+    if args.style == 'password':
+        return cmd_password_stickers(p, args)
     w_mm, h_mm = (float(v) for v in args.size.lower().split('x'))
     rows = read_households(p['csv'])
     if args.only:
@@ -809,6 +842,29 @@ def cmd_label_images(p, args):
         img.save(out / f'{safe}.png', dpi=(dpi, dpi))
         print(f'  {out.name}/{safe}.png   {r["name"]}')
     print(f'made {len(rows)} sticker image(s), {w_mm:g} x {h_mm:g} mm each, in {out}')
+
+
+def cmd_password_stickers(p, args):
+    """One upright image per household (QR + password), plus a copy turned on its side for apps that
+    show the label sideways. --size is the roll's label size; the sticker stands on its short side."""
+    a, b = (float(v) for v in args.size.lower().split('x'))
+    w_mm, h_mm = min(a, b), max(a, b)
+    rows = read_households(p['csv'])
+    if args.only:
+        rows = [r for r in rows if r['slug'] in args.only]
+    out = p['stickers']
+    out.mkdir(parents=True, exist_ok=True)
+    for old in out.glob('*.png'):
+        old.unlink()
+    dpi = STICKER_PX_PER_MM * 25.4
+    size = min(make_password_sticker(f'{SITE}/w/{r["slug"]}', r, w_mm, h_mm)[1] for r in read_households(p['csv']))
+    for r in rows:
+        img, _ = make_password_sticker(f'{SITE}/w/{r["slug"]}', r, w_mm, h_mm, size)
+        safe = re.sub(r'[^\w&-]+', '-', r['name']).strip('-') or r['slug']
+        img.save(out / f'{safe}.png', dpi=(dpi, dpi))
+        img.rotate(90, expand=True).save(out / f'{safe} (sideways).png', dpi=(dpi, dpi))
+        print(f'  {out.name}/{safe}.png  (+ sideways copy)   {r["name"]}')
+    print(f'made {len(rows)} sticker(s), {w_mm:g} mm wide x {h_mm:g} mm tall, in {out}')
 
 
 def cmd_labels(p, args):
@@ -945,6 +1001,8 @@ def main():
     lp.add_argument('--sheet', choices=sorted(SHEETS) + ['labelmaker'], default='22806',
                     help='label sheet type (default 22806), or "labelmaker" for one image per sticker')
     lp.add_argument('--size', default='40x30', help='label size in mm for --sheet labelmaker (default 40x30)')
+    lp.add_argument('--style', choices=['password', 'full'], default='password',
+                    help='labelmaker style: "password" (QR + password only, upright; default) or "full" (QR + wording)')
     lp.add_argument('--outline', action='store_true', help='draw label outlines, for test prints on plain paper')
     lp.add_argument('--no-names', action='store_true', help="leave the household's name off each sticker")
     lp.add_argument('--no-passwords', action='store_true', help='leave passwords off (if writing them on the cards by hand)')

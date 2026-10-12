@@ -50,7 +50,7 @@ All commands run in the **VS Code terminal**, from this `wedding` folder.
    ```
    python build.py labels --sheet labelmaker
    ```
-   This makes one black-and-white image per household in `stickers/` (private, has the passwords), sized for 40 × 30 mm labels (`--size 50x30` for other rolls). Print them from the label maker's phone app as an image, filling the whole label.
+   This makes one black-and-white image per household in `stickers/` (private, has the passwords): an upright sticker with the QR code on top and the password in capitals underneath, sized for a 40 × 30 mm roll (`--size 50x30` for other rolls), plus a `(sideways)` copy for apps that show the label lying down. Print from the label maker's phone app as an image, filling the whole label. `--style full` makes the older layout with the wording and name.
 
 6. **Put it live** (only once everything is checked):
    ```
