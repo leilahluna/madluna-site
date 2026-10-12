@@ -796,84 +796,94 @@ def make_sticker_image(url, r, w_mm, h_mm, show_name, show_pw, sizes=None):
     return img, shared
 
 
-STICKER_LOGO = 'sticker-logo.png'
-# Calibration for the label maker, applied to the "(sideways)" image that gets printed: shrink the design
-# a little (printers can't reach the label edges) and nudge it to where this printer actually lands.
-# dx_mm: + moves right; dy_mm: + moves down (as the sideways image looks on screen). Tune from a
-# "python build.py labels --sheet labelmaker --calibrate" print.
-STICKER_CALIBRATION = {'scale': 0.85, 'dx_mm': 1.0, 'dy_mm': -1.5}
+STICKER_LOGO = 'sticker-logo.png'   # the M + L logo (black on white) put in the middle of each QR code
+PRINTER_DOTS_PER_MM = 8              # 203 dpi thermal head (Katasymbol T50M Pro): stickers are drawn dot-for-dot
+STICKER_MARGIN_MM = 2.0              # blank border all round; the printer can't reach the label's very edge
+# Where this printer really lands, measured with a "--calibrate" print. Whole dots, applied by shifting only
+# (never scaling, which blurs the QR squares). dx: + moves right, dy: + moves down, as the image looks on screen.
+STICKER_OFFSET_MM = {'dx': 0.0, 'dy': 0.0}
 
 
-def calibrate(img, cal=None):
-    """Shrink a sticker image around its centre, then shift it, keeping the canvas size."""
-    from PIL import Image
-    cal = cal or STICKER_CALIBRATION
-    k = STICKER_PX_PER_MM
-    small = img.resize((round(img.width * cal['scale']), round(img.height * cal['scale'])), Image.NEAREST)
-    out = Image.new('1', img.size, 1)
-    out.paste(small, ((img.width - small.width) // 2 + round(cal['dx_mm'] * k), (img.height - small.height) // 2 + round(cal['dy_mm'] * k)))
-    return out
-
-
-def calibration_sticker(w_mm, h_mm):
-    """Boxes 1, 2 and 3 mm in from each edge, a centre cross and numbered edges, to see where this printer
-    really prints. Uses the sideways (printed) orientation, with no calibration applied."""
-    from PIL import Image, ImageDraw
-    k = STICKER_PX_PER_MM
-    W, H = round(w_mm * k), round(h_mm * k)
-    img = Image.new('1', (W, H), 1)
-    d = ImageDraw.Draw(img)
-    for mm in (1, 2, 3):
-        d.rectangle([mm * k, mm * k, W - mm * k - 1, H - mm * k - 1], outline=0, width=2)
-    d.line([W // 2, H // 2 - 3 * k, W // 2, H // 2 + 3 * k], fill=0, width=3)
-    d.line([W // 2 - 3 * k, H // 2, W // 2 + 3 * k, H // 2], fill=0, width=3)
-    f = sticker_font(STICKER_FONT, round(2.2 * k))
-    for label, xy in (('TOP', (W // 2, 5 * k)), ('BOTTOM', (W // 2, H - 5 * k)), ('L', (5 * k, H // 2)), ('R', (W - 5 * k, H // 2))):
-        d.text(xy, label, font=f, fill=0, anchor='mm')
-    return img   # the M + L logo (black on white) put in the middle of each QR code
-
-
-def make_password_sticker(url, r, w_mm, h_mm, pw_size=None):
-    """Upright sticker: big QR code with the logo in its middle, the password in capitals underneath.
-    Returns (image, password text size); pass the smallest size back in as pw_size so all stickers match."""
+def qr_for(url):
+    """QR code for a page link, written in capitals: QR's alphanumeric mode packs A-Z/0-9/:/. much tighter,
+    so the code has fewer, bigger squares. (The site sends capitalised links to the lowercase page.)
+    Highest error correction, so the logo can cover the middle."""
     import qrcode
-    from PIL import Image, ImageDraw
-    k = STICKER_PX_PER_MM
-    W, H = round(w_mm * k), round(h_mm * k)
-    img = Image.new('1', (W, H), 1)
-    d = ImageDraw.Draw(img)
-    pad = round(1.0 * k)
-    # highest error correction (30%) so the logo can cover the middle and the code still reads
     qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_H, border=2, box_size=1)
-    qr.add_data(url)
+    qr.add_data(url.upper())
     qr.make(fit=True)
+    return qr
+
+
+def qr_image_with_logo(qr, box):
+    """The code at `box` dots per square, with the logo on a white square over its middle ~23%."""
+    from PIL import Image, ImageDraw
     n = qr.modules_count
     modules = n + 4
-    text_h = round(H * 0.24)                       # bottom quarter or so for the password
-    box = min(W - 2 * pad, H - text_h - pad) // modules
     qimg = qr.make_image(fill_color='black', back_color='white').convert('1').resize((modules * box,) * 2, Image.NEAREST)
     logo_file = HERE / STICKER_LOGO
     if logo_file.exists():
-        # a white square over the middle ~23% of the code, with the logo inside a one-module margin
         side = round(n * 0.23) | 1
         m0 = 2 + (n - side) // 2
         ImageDraw.Draw(qimg).rectangle([m0 * box, m0 * box, (m0 + side) * box - 1, (m0 + side) * box - 1], fill=1)
         lg = Image.open(logo_file).convert('L')
-        lg.thumbnail(((side - 2) * box, (side - 2) * box), Image.LANCZOS)
-        lg = lg.point(lambda v: 0 if v < 128 else 255).convert('1')
         inner = (side - 2) * box
+        lg.thumbnail((inner, inner), Image.LANCZOS)
+        lg = lg.point(lambda v: 0 if v < 140 else 255).convert('1')
         qimg.paste(lg, ((m0 + 1) * box + (inner - lg.width) // 2, (m0 + 1) * box + (inner - lg.height) // 2))
-    img.paste(qimg, ((W - qimg.width) // 2, pad))
-    text = re.sub(r'[^A-Za-z0-9]', '', r['password']).upper()   # just the code, no spaces: looks like a password
-    size = fit(d, text, STICKER_FONT, round(text_h * 0.62), W - 2 * pad).size
+    return qimg
+
+
+def make_password_sticker(url, r, w_mm, h_mm, pw_size=None):
+    """The printed (sideways) sticker, dot-for-dot at the printer's resolution: the QR code as tall as the label
+    allows on the left, the password in capitals running up the right-hand side.
+    Returns (image, password text size); pass the smallest size back in as pw_size so all stickers match."""
+    from PIL import Image, ImageDraw
+    k = PRINTER_DOTS_PER_MM
+    W, H = round(w_mm * k), round(h_mm * k)      # landscape: e.g. 320 x 240 dots for 40 x 30 mm
+    margin = round(STICKER_MARGIN_MM * k)
+    qr = qr_for(url)
+    box = (H - 2 * margin) // (qr.modules_count + 4)   # whole dots per square
+    qimg = qr_image_with_logo(qr, box)
+    # password, drawn upright then turned to read bottom-to-top beside the code
+    text = re.sub(r'[^A-Za-z0-9]', '', r['password']).upper()
+    room_w = W - 2 * margin - qimg.width          # space left of the code's width, across
+    probe = ImageDraw.Draw(Image.new('1', (1, 1)))
+    size = fit(probe, text, STICKER_FONT, round(room_w * 0.9), H - 2 * margin).size
     if pw_size:
         size = min(size, pw_size)
     f = sticker_font(STICKER_FONT, size)
-    top, bottom = f.getbbox(text)[1], f.getbbox(text)[3]
-    area_top = pad + qimg.height
-    y = area_top + (H - area_top - (bottom - top)) // 2 - top
-    d.text(((W - d.textlength(text, font=f)) // 2, y), text, font=f, fill=0)
+    l, t_, rgt, b = f.getbbox(text)
+    timg = Image.new('1', (rgt - l + 2, b - t_ + 2), 1)
+    ImageDraw.Draw(timg).text((1 - l, 1 - t_), text, font=f, fill=0)
+    timg = timg.rotate(90, expand=True)
+    # centre the pair (code + gap + text) on the label, then apply this printer's offset
+    gap = max(2, (room_w - timg.width) // 3)
+    group_w = qimg.width + gap + timg.width
+    x0 = (W - group_w) // 2 + round(STICKER_OFFSET_MM['dx'] * k)
+    dy = round(STICKER_OFFSET_MM['dy'] * k)
+    img = Image.new('1', (W, H), 1)
+    img.paste(qimg, (x0, (H - qimg.height) // 2 + dy))
+    img.paste(timg, (x0 + qimg.width + gap, (H - timg.height) // 2 + dy))
     return img, size
+
+
+def calibration_sticker(w_mm, h_mm):
+    """Boxes 1, 2 and 3 mm in from each edge, a centre cross and edge labels, to see where this printer really
+    prints. Dot-for-dot, with no offset applied."""
+    from PIL import Image, ImageDraw
+    k = PRINTER_DOTS_PER_MM
+    W, H = round(w_mm * k), round(h_mm * k)
+    img = Image.new('1', (W, H), 1)
+    d = ImageDraw.Draw(img)
+    for mm in (1, 2, 3):
+        d.rectangle([mm * k, mm * k, W - mm * k - 1, H - mm * k - 1], outline=0, width=1)
+    d.line([W // 2, H // 2 - 3 * k, W // 2, H // 2 + 3 * k], fill=0, width=2)
+    d.line([W // 2 - 3 * k, H // 2, W // 2 + 3 * k, H // 2], fill=0, width=2)
+    f = sticker_font(STICKER_FONT, round(2.4 * k))
+    for label, xy in (('TOP', (W // 2, 6 * k)), ('BOTTOM', (W // 2, H - 6 * k)), ('L', (6 * k, H // 2)), ('R', (W - 6 * k, H // 2))):
+        d.text(xy, label, font=f, fill=0, anchor='mm')
+    return img
 
 
 def cmd_label_images(p, args):
@@ -901,15 +911,15 @@ def cmd_label_images(p, args):
 
 
 def cmd_password_stickers(p, args):
-    """One upright image per household (QR + password), plus a copy turned on its side for apps that
-    show the label sideways. --size is the roll's label size; the sticker stands on its short side."""
+    """One sticker per household, drawn dot-for-dot for the label maker. "(sideways)" is the one to print on a
+    40 x 30 mm label; the plain file is the same sticker turned upright, for looking at."""
     a, b = (float(v) for v in args.size.lower().split('x'))
-    w_mm, h_mm = min(a, b), max(a, b)
+    w_mm, h_mm = max(a, b), min(a, b)
     out = p['stickers']
     out.mkdir(parents=True, exist_ok=True)
+    dpi = PRINTER_DOTS_PER_MM * 25.4
     if args.calibrate:
-        dpi = STICKER_PX_PER_MM * 25.4
-        calibration_sticker(h_mm, w_mm).save(out / 'calibration (sideways).png', dpi=(dpi, dpi))
+        calibration_sticker(w_mm, h_mm).save(out / 'calibration (sideways).png', dpi=(dpi, dpi))
         print(f'made {out.name}/calibration (sideways).png: print it like a sticker and look where the boxes land')
         return
     rows = read_households(p['csv'])
@@ -917,16 +927,16 @@ def cmd_password_stickers(p, args):
         rows = [r for r in rows if r['slug'] in args.only]
     if not args.only:   # a full run starts clean (drops stickers of removed households); --only leaves the rest alone
         for old in out.glob('*.png'):
-            old.unlink()
-    dpi = STICKER_PX_PER_MM * 25.4
+            if not old.name.startswith('calibration'):
+                old.unlink()
     size = min(make_password_sticker(f'{SITE}/w/{r["slug"]}', r, w_mm, h_mm)[1] for r in read_households(p['csv']))
     for r in rows:
         img, _ = make_password_sticker(f'{SITE}/w/{r["slug"]}', r, w_mm, h_mm, size)
         safe = re.sub(r'[^\w&-]+', '-', r['name']).strip('-') or r['slug']
-        img.save(out / f'{safe}.png', dpi=(dpi, dpi))
-        calibrate(img.rotate(90, expand=True)).save(out / f'{safe} (sideways).png', dpi=(dpi, dpi))
-        print(f'  {out.name}/{safe}.png  (+ sideways copy)   {r["name"]}')
-    print(f'made {len(rows)} sticker(s), {w_mm:g} mm wide x {h_mm:g} mm tall, in {out}')
+        img.save(out / f'{safe} (sideways).png', dpi=(dpi, dpi))
+        img.rotate(-90, expand=True).save(out / f'{safe}.png', dpi=(dpi, dpi))
+        print(f'  {out.name}/{safe} (sideways).png  (+ upright copy)   {r["name"]}')
+    print(f'made {len(rows)} sticker(s) for {w_mm:g} x {h_mm:g} mm labels, dot-for-dot at {PRINTER_DOTS_PER_MM} dots/mm, in {out}')
 
 
 def cmd_labels(p, args):
