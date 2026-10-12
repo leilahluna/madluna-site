@@ -21,6 +21,7 @@ All commands run in the **VS Code terminal**, from this `wedding` folder.
    - `people`: who's in the household, to help you find their faces in Google Photos. Never shown.
    - `message`: optional, replaces the default note on their page.
    - `slug`: leave empty, step 2 fills it in.
+   - `downloads`: optional. `no` hides the save buttons on that page and skips uploading its full-size originals (handy for a test page).
    - `folder`: optional. If a household's photos are in a folder with its own name (like `photos/bella&chloe`), put that name here. Leave it empty to use `photos/<slug>/`.
    - `password`: leave empty, step 2 fills it in with a random code like `KTRV47` (4 letters, 2 numbers, no look-alike characters or vowels). Capitals, spaces and dashes don't matter when guests type it.
 

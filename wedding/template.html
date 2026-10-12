@@ -298,6 +298,7 @@
       PHOTOS = feat.concat(rest);
     })();
     var BATCH_SIZE = {{BATCH_SIZE}};
+    var DOWNLOADS = {{DOWNLOADS}};   // false on pages where saving is turned off
     var SHOW_TABS = {{SHOW_TABS}};
     var MAX_UPLOAD_MB = {{MAX_UPLOAD_MB}};
     var ZIP_NAME = {{ZIP_NAME_JSON}};
@@ -600,7 +601,8 @@
 
     // ===== lightbox =====
     var lb = $('lb'), lbImg = $('lb-img'), lbSave = $('lb-save'), cur = 0;
-    $('lb-tip').textContent = 'Saves the full-size photo';
+    $('lb-tip').textContent = DOWNLOADS ? 'Saves the full-size photo' : '';
+    if (!DOWNLOADS) { $('save').hidden = true; lbSave.hidden = true; }
 
     // cur is a position within the current tab (shown), not an index into PHOTOS
     function show(i) {

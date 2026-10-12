@@ -112,7 +112,7 @@ def read_households(csv_path):
         r.pop(None, None)   # stray cells past the last column
         for k in list(r):
             r[k] = (r[k] or '').strip()
-        for k in ('slug', 'name', 'message', 'password', 'folder'):
+        for k in ('slug', 'name', 'message', 'password', 'folder', 'downloads'):
             r.setdefault(k, '')
     rows = [r for r in rows if r['name'] or r['slug']]
     seen = set()
@@ -419,6 +419,8 @@ def build_household(row, photos, out_dir, template, info=None, moments=(), photo
     """Writes one household's page. Returns the set of files it owns."""
     owned = set()
     items = []
+    # downloads column: "no" turns off saving for this household (e.g. a test page)
+    no_downloads = row.get('downloads', '').strip().lower() in ('no', 'n', 'false', '0', 'off')
     meta_of = {src: info_for(src, info, photos_root) for src in photos}
     feat = {src: feature_rank(src, meta_of[src]) for src in photos}
     rank = {src: feat[src][0] for src in photos}
@@ -433,14 +435,17 @@ def build_household(row, photos, out_dir, template, info=None, moments=(), photo
         name = f'{FILE_PREFIX}-{i:03d}{ext}'
 
         full = out_dir / 'full' / name
-        if too_big:
+        if no_downloads and ext != '.gif':
+            pass   # page without downloads: no full-size original needed (GIFs keep theirs, it's what they show)
+        elif too_big:
             if not (full.exists() and int(full.stat().st_mtime) == int(src.stat().st_mtime)
                     and full.stat().st_size <= FULL_MAX_MB * 1024 * 1024):
                 shrink_full(src, full)
         elif not same_file(src, full):
             full.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(src, full)
-        owned.add(full)
+        if full.exists() and not (no_downloads and ext != '.gif'):
+            owned.add(full)
 
         # thumbnail name comes from the source, so reordering photos reuses old thumbnails
         st = src.stat()
@@ -470,7 +475,8 @@ def build_household(row, photos, out_dir, template, info=None, moments=(), photo
         meta = meta_of[src]
         taken = date_taken(src)
         people = [n.strip() for n in re.split(r'[;,]', meta.get('people', '')) if n.strip()]
-        items.append({'id': key, 'thumb': f'thumbs/{thumb.name}', 'view': view_url, 'full': f'full/{name}', 'name': name,
+        full_url = view_url if no_downloads and ext != '.gif' else f'full/{name}'
+        items.append({'id': key, 'thumb': f'thumbs/{thumb.name}', 'view': view_url, 'full': full_url, 'name': name,
                       'w': w, 'h': h, 'kind': kind,
                       'moment': meta.get('moment') or moment_for(taken, moments),
                       'date': taken[:10].replace(':', '-') if taken else '',
@@ -485,6 +491,7 @@ def build_household(row, photos, out_dir, template, info=None, moments=(), photo
             .replace('{{NOTE}}', html.escape(' '.join(x for x in (detected_line(row), NOTE) if x)))
             .replace('{{SIGNOFF}}', html.escape(SIGNOFF))
             .replace('{{BATCH_SIZE}}', str(BATCH_SIZE))
+            .replace('{{DOWNLOADS}}', 'false' if no_downloads else 'true')
             .replace('{{FEATURED_TITLE}}', html.escape(FEATURED_TITLE))
             .replace('{{FEATURED_CREDIT}}', html.escape(FEATURED_CREDIT))
             .replace('{{SHOW_TABS}}', 'true' if SHOW_TABS else 'false')
