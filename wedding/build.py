@@ -789,8 +789,11 @@ def make_sticker_image(url, r, w_mm, h_mm, show_name, show_pw, sizes=None):
     return img, shared
 
 
+STICKER_LOGO = 'sticker-logo.png'   # the M + L logo (black on white) put in the middle of each QR code
+
+
 def make_password_sticker(url, r, w_mm, h_mm, pw_size=None):
-    """Upright sticker: big QR code on top, the password in capitals underneath, nothing else.
+    """Upright sticker: big QR code with the logo in its middle, the password in capitals underneath.
     Returns (image, password text size); pass the smallest size back in as pw_size so all stickers match."""
     import qrcode
     from PIL import Image, ImageDraw
@@ -799,13 +802,26 @@ def make_password_sticker(url, r, w_mm, h_mm, pw_size=None):
     img = Image.new('1', (W, H), 1)
     d = ImageDraw.Draw(img)
     pad = round(1.0 * k)
-    qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_M, border=2, box_size=1)
+    # highest error correction (30%) so the logo can cover the middle and the code still reads
+    qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_H, border=2, box_size=1)
     qr.add_data(url)
     qr.make(fit=True)
-    modules = qr.modules_count + 4
+    n = qr.modules_count
+    modules = n + 4
     text_h = round(H * 0.24)                       # bottom quarter or so for the password
     box = min(W - 2 * pad, H - text_h - pad) // modules
     qimg = qr.make_image(fill_color='black', back_color='white').convert('1').resize((modules * box,) * 2, Image.NEAREST)
+    logo_file = HERE / STICKER_LOGO
+    if logo_file.exists():
+        # a white square over the middle ~23% of the code, with the logo inside a one-module margin
+        side = round(n * 0.23) | 1
+        m0 = 2 + (n - side) // 2
+        ImageDraw.Draw(qimg).rectangle([m0 * box, m0 * box, (m0 + side) * box - 1, (m0 + side) * box - 1], fill=1)
+        lg = Image.open(logo_file).convert('L')
+        lg.thumbnail(((side - 2) * box, (side - 2) * box), Image.LANCZOS)
+        lg = lg.point(lambda v: 0 if v < 128 else 255).convert('1')
+        inner = (side - 2) * box
+        qimg.paste(lg, ((m0 + 1) * box + (inner - lg.width) // 2, (m0 + 1) * box + (inner - lg.height) // 2))
     img.paste(qimg, ((W - qimg.width) // 2, pad))
     text = re.sub(r'[^A-Za-z0-9]', '', r['password']).upper()   # just the code, no spaces: looks like a password
     size = fit(d, text, STICKER_FONT, round(text_h * 0.62), W - 2 * pad).size
