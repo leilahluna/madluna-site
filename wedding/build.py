@@ -789,7 +789,41 @@ def make_sticker_image(url, r, w_mm, h_mm, show_name, show_pw, sizes=None):
     return img, shared
 
 
-STICKER_LOGO = 'sticker-logo.png'   # the M + L logo (black on white) put in the middle of each QR code
+STICKER_LOGO = 'sticker-logo.png'
+# Calibration for the label maker, applied to the "(sideways)" image that gets printed: shrink the design
+# a little (printers can't reach the label edges) and nudge it to where this printer actually lands.
+# dx_mm: + moves right; dy_mm: + moves down (as the sideways image looks on screen). Tune from a
+# "python build.py labels --sheet labelmaker --calibrate" print.
+STICKER_CALIBRATION = {'scale': 0.85, 'dx_mm': 1.0, 'dy_mm': -1.5}
+
+
+def calibrate(img, cal=None):
+    """Shrink a sticker image around its centre, then shift it, keeping the canvas size."""
+    from PIL import Image
+    cal = cal or STICKER_CALIBRATION
+    k = STICKER_PX_PER_MM
+    small = img.resize((round(img.width * cal['scale']), round(img.height * cal['scale'])), Image.NEAREST)
+    out = Image.new('1', img.size, 1)
+    out.paste(small, ((img.width - small.width) // 2 + round(cal['dx_mm'] * k), (img.height - small.height) // 2 + round(cal['dy_mm'] * k)))
+    return out
+
+
+def calibration_sticker(w_mm, h_mm):
+    """Boxes 1, 2 and 3 mm in from each edge, a centre cross and numbered edges, to see where this printer
+    really prints. Uses the sideways (printed) orientation, with no calibration applied."""
+    from PIL import Image, ImageDraw
+    k = STICKER_PX_PER_MM
+    W, H = round(w_mm * k), round(h_mm * k)
+    img = Image.new('1', (W, H), 1)
+    d = ImageDraw.Draw(img)
+    for mm in (1, 2, 3):
+        d.rectangle([mm * k, mm * k, W - mm * k - 1, H - mm * k - 1], outline=0, width=2)
+    d.line([W // 2, H // 2 - 3 * k, W // 2, H // 2 + 3 * k], fill=0, width=3)
+    d.line([W // 2 - 3 * k, H // 2, W // 2 + 3 * k, H // 2], fill=0, width=3)
+    f = sticker_font(STICKER_FONT, round(2.2 * k))
+    for label, xy in (('TOP', (W // 2, 5 * k)), ('BOTTOM', (W // 2, H - 5 * k)), ('L', (5 * k, H // 2)), ('R', (W - 5 * k, H // 2))):
+        d.text(xy, label, font=f, fill=0, anchor='mm')
+    return img   # the M + L logo (black on white) put in the middle of each QR code
 
 
 def make_password_sticker(url, r, w_mm, h_mm, pw_size=None):
@@ -864,11 +898,16 @@ def cmd_password_stickers(p, args):
     show the label sideways. --size is the roll's label size; the sticker stands on its short side."""
     a, b = (float(v) for v in args.size.lower().split('x'))
     w_mm, h_mm = min(a, b), max(a, b)
+    out = p['stickers']
+    out.mkdir(parents=True, exist_ok=True)
+    if args.calibrate:
+        dpi = STICKER_PX_PER_MM * 25.4
+        calibration_sticker(h_mm, w_mm).save(out / 'calibration (sideways).png', dpi=(dpi, dpi))
+        print(f'made {out.name}/calibration (sideways).png: print it like a sticker and look where the boxes land')
+        return
     rows = read_households(p['csv'])
     if args.only:
         rows = [r for r in rows if r['slug'] in args.only]
-    out = p['stickers']
-    out.mkdir(parents=True, exist_ok=True)
     if not args.only:   # a full run starts clean (drops stickers of removed households); --only leaves the rest alone
         for old in out.glob('*.png'):
             old.unlink()
@@ -878,7 +917,7 @@ def cmd_password_stickers(p, args):
         img, _ = make_password_sticker(f'{SITE}/w/{r["slug"]}', r, w_mm, h_mm, size)
         safe = re.sub(r'[^\w&-]+', '-', r['name']).strip('-') or r['slug']
         img.save(out / f'{safe}.png', dpi=(dpi, dpi))
-        img.rotate(90, expand=True).save(out / f'{safe} (sideways).png', dpi=(dpi, dpi))
+        calibrate(img.rotate(90, expand=True)).save(out / f'{safe} (sideways).png', dpi=(dpi, dpi))
         print(f'  {out.name}/{safe}.png  (+ sideways copy)   {r["name"]}')
     print(f'made {len(rows)} sticker(s), {w_mm:g} mm wide x {h_mm:g} mm tall, in {out}')
 
@@ -1017,6 +1056,7 @@ def main():
     lp.add_argument('--sheet', choices=sorted(SHEETS) + ['labelmaker'], default='22806',
                     help='label sheet type (default 22806), or "labelmaker" for one image per sticker')
     lp.add_argument('--size', default='40x30', help='label size in mm for --sheet labelmaker (default 40x30)')
+    lp.add_argument('--calibrate', action='store_true', help='labelmaker: make a calibration sticker instead')
     lp.add_argument('--style', choices=['password', 'full'], default='password',
                     help='labelmaker style: "password" (QR + password only, upright; default) or "full" (QR + wording)')
     lp.add_argument('--outline', action='store_true', help='draw label outlines, for test prints on plain paper')
