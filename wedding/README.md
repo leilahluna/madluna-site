@@ -89,7 +89,7 @@ On **madluna.ca/w/admin**, the **Arrange photos** tab lets you pick a household 
 
 ## settings
 
-The top of `build.py` has the wording (headline, default message, sign-off, sticker line), `BATCH_SIZE` (photos per save button, 20 to start), `MAX_UPLOAD_MB` (biggest file a guest can send) and the thumbnail size. The password page is `login.html`. The page design is in `template.html`.
+The top of `build.py` has the wording (headline, default message, sign-off, sticker line), `BATCH_SIZE` (photos per save button, 20 to start), `MAX_UPLOAD_MB` (biggest file a guest can send; set to no real limit) and the thumbnail size. The password page is `login.html`. The page design is in `template.html`.
 
 ## before printing everything
 

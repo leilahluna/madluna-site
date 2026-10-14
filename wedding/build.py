@@ -68,7 +68,7 @@ DEFAULT_MOMENT = 'Reception'
 # "By time of day" view starts its blocks in it (any other time of day goes after these)
 MOMENT_ORDER = ['Getting ready', 'Pre-ceremony', 'Ceremony', 'Post-ceremony', 'Reception']   # time of day for any photo not covered by moments.csv or set on the admin page        # All / Photos / GIFs / Videos sorting above the photos
 FULL_MAX_MB = 24         # Cloudflare won't serve files over 25 MiB; bigger photos get re-saved (same size in pixels)
-MAX_UPLOAD_MB = 4096     # biggest single file a guest can send; must match MAX_FILE in worker.js (big ones go in pieces)
+MAX_UPLOAD_MB = 950000   # no real limit (about 900 GB, the most R2 can join); must match MAX_FILE in worker.js
 UPLOAD_BUCKET = 'madluna-wedding-uploads'   # must match r2_buckets in wrangler.jsonc
 
 # passwords are random codes like "KTRV47": 4 letters then 2 digits, leaving out look-alikes

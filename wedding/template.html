@@ -666,6 +666,11 @@
     var upInput = $('up-input'), upLabel = $('up-label'), upStatus = $('up-status');
     var uploading = false;
     var PIECE = 5 * 1024 * 1024;
+    // R2 joins at most 10,000 pieces, so huge files get bigger pieces (whole MB, up to 95 MB) to fit
+    function pieceSize(size) {
+      var mb = 1024 * 1024;
+      return Math.min(95 * mb, Math.max(PIECE, Math.ceil(size / 10000 / mb) * mb));
+    }
 
     // one request with upload progress; resolves with the response text, rejects on failure
     function send(method, url, body, headers, onProgress) {
@@ -688,13 +693,13 @@
     function sendInPieces(f, type, onProgress) {
       var json = { 'Content-Type': 'application/json' };
       return send('POST', 'upload/start', JSON.stringify({ name: f.name, type: type, size: f.size }), json).then(function (txt) {
-        var up = JSON.parse(txt), parts = [], count = Math.ceil(f.size / PIECE), k = 0;
+        var up = JSON.parse(txt), parts = [], size = pieceSize(f.size), count = Math.ceil(f.size / size), k = 0;
         var q = 'upload/part?key=' + encodeURIComponent(up.key) + '&uploadId=' + encodeURIComponent(up.uploadId) + '&n=';
         function nextPiece() {
           if (k >= count) {
             return send('POST', 'upload/complete', JSON.stringify({ key: up.key, uploadId: up.uploadId, parts: parts }), json);
           }
-          var n = ++k, from = (n - 1) * PIECE, chunk = f.slice(from, Math.min(from + PIECE, f.size));
+          var n = ++k, from = (n - 1) * size, chunk = f.slice(from, Math.min(from + size, f.size));
           return retry(function () {
             return send('PUT', q + n, chunk, { 'Content-Type': 'application/octet-stream' }, function (loaded) { onProgress(from + loaded); });
           }, 8).then(function (txt) { parts.push(JSON.parse(txt)); return nextPiece(); });

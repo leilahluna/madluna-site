@@ -1,7 +1,7 @@
 // Runs in front of every madluna.ca/w/* request.
 //  - /w/<slug>/...      needs that household's password (from their card) before any page or photo is sent
 //  - /w/<slug>/upload   lets a logged-in guest send us a photo or video; it lands in the private R2 bucket.
-//                       Big files (dance videos!) come in 5 MB pieces via /upload/start, /part, /complete.
+//                       Big files (dance videos!) come in pieces (5 MB, bigger for huge files) via /upload/start, /part, /complete.
 //  - /w/admin/          Merrick & Leilah's page for everything guests sent (its own password), and for
 //                       arranging each household's photos; arrangements live in R2 at arrange/<slug>.json
 //  - /w/_admin/...      lists, fetches and marks guest uploads for "python build.py uploads" (needs the admin token)
@@ -10,7 +10,7 @@ import config from './generated/config.js';
 
 const enc = new TextEncoder();
 const MAX_UPLOAD = 95 * 1024 * 1024;   // Cloudflare's free plan accepts requests up to 100 MB
-const MAX_FILE = 4 * 1024 * 1024 * 1024;   // biggest single file, sent in pieces (a long 4K video fits)
+const MAX_FILE = 10000 * MAX_UPLOAD;   // no real limit: R2 takes up to 10,000 pieces, so about 900 GB per file
 const YEAR = 60 * 60 * 24 * 365;
 const STATE_KEY = 'admin/state.json';   // which uploads have been seen on the admin page / saved to the server
 const COMMON = {
