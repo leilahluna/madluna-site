@@ -330,6 +330,27 @@ async function adminPage(req, env, url, rest) {
 		await env.UPLOADS.put('hidden.json', JSON.stringify({ ids: [...ids] }), { httpMetadata: { contentType: 'application/json' } });
 		return json({ ok: true, hidden: [...ids] });
 	}
+	// "done arranging" marks, per household: the photo ids that were there when it was marked.
+	// A household counts as done only while every photo it has now was in that list, so new photos undo it.
+	if (rest === '/api/done') {
+		const obj = await env.UPLOADS.get('done.json');
+		const marks = obj ? await obj.json().catch(() => ({})) : {};
+		if (req.method === 'POST') {
+			const { slug = '', done = false, ids = [] } = await req.json().catch(() => ({}));
+			if (!config.households[slug]) return json({ error: 'no such household' }, 404);
+			if (done) marks[slug] = { ids: ids.filter((id) => /^[0-9a-f]{12}$/.test(id)), at: new Date().toISOString() };
+			else delete marks[slug];
+			await env.UPLOADS.put('done.json', JSON.stringify(marks), { httpMetadata: { contentType: 'application/json' } });
+			return json({ ok: true });
+		}
+		const done = {};
+		await Promise.all(Object.entries(marks).map(async ([slug, m]) => {
+			if (!config.households[slug]) return;
+			const photos = await builtPhotos(env, req, slug);
+			if (photos.every((p) => m.ids.includes(p.id))) done[slug] = m.at;
+		}));
+		return json({ done });
+	}
 	if (rest === '/api/arrange' && req.method === 'POST') {
 		const { slug = '', order = [], big = {}, reset = false } = await req.json().catch(() => ({}));
 		if (!config.households[slug]) return json({ error: 'no such household' }, 404);

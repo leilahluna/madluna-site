@@ -100,6 +100,7 @@
     .arr-bar { padding-top: 8px; padding-bottom: calc(8px + env(safe-area-inset-bottom)); gap: 6px; }
     .arr-bar .status { margin: 0; flex: 1 1 100%; font-size: 0.78rem; min-height: 0; }
     .dirty-dot::after { content: ' •'; color: var(--warn); }
+    .done-btn[aria-pressed="true"] { background: var(--good); border-color: var(--good); color: #000; }
     .hidden-list { border-color: var(--text-secondary); }
     .hidden-list .tile img { opacity: 0.4; filter: grayscale(1); }
 
@@ -222,6 +223,7 @@
       <button class="btn primary" id="arr-save" type="button">Save</button>
       <button class="btn" id="arr-undo" type="button">Undo changes</button>
       <button class="btn" id="arr-reset" type="button">Reset to default</button>
+      <button class="btn done-btn" id="arr-done" type="button" aria-pressed="false">Mark as done</button>
       <p class="status" id="arr-status" role="status" aria-live="polite"></p>
     </div>
   </section>
@@ -389,7 +391,22 @@
 
     // ===== Arrange photos: drag each household's photos into order, saved to arrange/<slug>.json =====
     var arr = { slug: '', photos: [], dirty: false, sortables: [] };
-    var houses = [];
+    var houses = [], doneMap = {};
+    // done = arranged and confirmed; the server drops it once new photos show up for that household
+    function showDone() {
+      var on = !!doneMap[arr.slug], b = $('arr-done');
+      b.setAttribute('aria-pressed', String(on));
+      b.textContent = on ? '✓ Done' : 'Mark as done';
+      b.title = on ? 'Marked done ' + when(doneMap[arr.slug]) + '. Click to unmark.' : 'Confirm this household’s photos are arranged';
+      Array.prototype.forEach.call($('arr-house').options, function (o) {
+        var h = houses.filter(function (x) { return x.slug === o.value; })[0];
+        if (h) o.textContent = (doneMap[h.slug] ? '✓ ' : '') + h.name;
+      });
+    }
+    function loadDone() {
+      return fetch('api/done', { cache: 'no-store' }).then(function (r) { return r.json(); })
+        .then(function (d) { doneMap = d.done || {}; showDone(); }).catch(function () {});
+    }
 
     function loadSortable() {
       if (window.Sortable) return Promise.resolve();
@@ -463,6 +480,7 @@
       order.filter(function (p) { return !bigOf[p.id]; }).forEach(function (p) { $('arr-grid').appendChild(tile(p, false, false)); });
       renumber();
       setDirty(false);
+      showDone();
       $('arr-status').textContent = a ? 'Showing your saved order (last saved ' + when(a.saved) + ').' : 'Showing the default order. Nothing saved yet for this household.';
     }
     function loadHouse(slug) {
@@ -832,6 +850,19 @@
       post('api/arrange', { slug: arr.slug, reset: true }).then(function () { return loadHouse(arr.slug); })
         .then(function () { $('arr-status').textContent = 'Back to the default order.'; });
     });
+    $('arr-done').addEventListener('click', function () {
+      var on = !doneMap[arr.slug];
+      if (on && arr.dirty && !confirm('You have unsaved changes. Mark as done anyway? (Save first if you want to keep them.)')) return;
+      var b = $('arr-done'); b.disabled = true;
+      post('api/done', { slug: arr.slug, done: on, ids: arr.photos.map(function (p) { return p.id; }) })
+        .then(function () {
+          if (on) doneMap[arr.slug] = new Date().toISOString(); else delete doneMap[arr.slug];
+          showDone();
+          $('arr-status').textContent = on ? 'Marked done. This will reset if new photos are added for this household.' : 'No longer marked done.';
+        })
+        .catch(function () { $('arr-status').textContent = 'Couldn’t update. Check your connection and try again.'; })
+        .then(function () { b.disabled = false; });
+    });
     window.addEventListener('beforeunload', function (e) { if (arr.dirty) { e.preventDefault(); e.returnValue = ''; } });
 
     function showTab(name) {
@@ -847,6 +878,7 @@
           var sel = $('arr-house'); sel.innerHTML = '';
           houses.forEach(function (h) { var o = el('option', null, h.name); o.value = h.slug; sel.appendChild(o); });
           if (houses.length) loadHouse(houses[0].slug);
+          loadDone();
         });
       }
     }
